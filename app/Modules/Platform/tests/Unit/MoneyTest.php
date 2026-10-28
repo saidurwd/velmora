@@ -109,3 +109,13 @@ it('compares', function () {
         ->and(Money::of(6)->greaterThan(Money::of(5)))->toBeTrue()
         ->and(Money::of(4)->lessThan(Money::of(5)))->toBeTrue();
 });
+
+it('renders a plain major-unit string that parses back to the same amount', function () {
+    foreach ([0, 5, 99, 100, 125050, -5, -125050] as $minor) {
+        expect(Money::fromMajorString(Money::of($minor)->toMajorString())->amountMinor)->toBe($minor);
+    }
+
+    expect(Money::of(125050)->toMajorString())->toBe('1250.50')
+        ->and(Money::of(5)->toMajorString())->toBe('0.05')
+        ->and(Money::of(1000, 'JPY')->toMajorString())->toBe('1000');
+});

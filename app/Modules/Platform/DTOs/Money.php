@@ -183,6 +183,16 @@ final readonly class Money implements JsonSerializable
      * Locale-aware display: en = "৳ 1,250.00"; bn = lakh/crore grouping ("৳ 12,50,000.00"),
      * optionally with Bangla digits (BD-35: display option only, storage stays ASCII).
      */
+    /** Plain decimal in major units for form fields, e.g. "1250.50" (no grouping, no float). */
+    public function toMajorString(): string
+    {
+        $exponent = self::EXPONENTS[$this->currency];
+        $digits = str_pad((string) abs($this->amountMinor), $exponent + 1, '0', STR_PAD_LEFT);
+        $text = $exponent === 0 ? $digits : substr($digits, 0, -$exponent).'.'.substr($digits, -$exponent);
+
+        return ($this->amountMinor < 0 ? '-' : '').$text;
+    }
+
     public function format(string $locale = 'en', bool $banglaDigits = false): string
     {
         $exponent = self::EXPONENTS[$this->currency];
