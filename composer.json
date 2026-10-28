@@ -2,12 +2,16 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "laravel/laravel",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Velmora — bilingual (en/bn) e-commerce platform for Bangladesh",
+    "keywords": [
+        "laravel",
+        "framework"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.3",
         "laravel/framework": "^13.17",
+        "laravel/horizon": "^5.50",
         "laravel/tinker": "^3.0"
     },
     "require-dev": {
@@ -48,7 +52,7 @@
             "@php artisan dev"
         ],
         "test": [
-            "@php artisan config:clear --ansi @no_additional_args",
+            "@php artisan config:clear --ansi",
             "@php artisan test"
         ],
         "post-autoload-dump": [
@@ -68,6 +72,21 @@
         ],
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
+        ],
+        "lint": [
+            "vendor/bin/pint --test"
+        ],
+        "analyse": [
+            "vendor/bin/phpstan analyse --no-progress"
+        ],
+        "arch": [
+            "@php artisan test --testsuite=Architecture"
+        ],
+        "check": [
+            "@lint",
+            "@analyse",
+            "@php artisan test",
+            "@php -r \"echo 'composer check passed'.PHP_EOL;\""
         ]
     },
     "extra": {

@@ -28,7 +28,14 @@ class HealthController
 
                 return Cache::get('health:probe') === '1';
             }),
-            'storage' => $this->check(fn () => Storage::disk(config('filesystems.default'))->exists('.') || true),
+            'storage' => $this->check(function (): bool {
+                $disk = Storage::disk((string) config('filesystems.default'));
+                $disk->put('health/probe.txt', 'ok');
+                $ok = $disk->get('health/probe.txt') === 'ok';
+                $disk->delete('health/probe.txt');
+
+                return $ok;
+            }),
         ];
 
         $heartbeat = Cache::get('scheduler:heartbeat');

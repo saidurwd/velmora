@@ -4,19 +4,23 @@ declare(strict_types=1);
 
 namespace App\Modules\Platform\Providers;
 
+use App\Modules\Platform\Console\DispatchOutboxCommand;
 use App\Modules\Platform\Console\MakeModuleCommand;
 use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\DTOs\RequestContext;
+use App\Modules\Platform\Events\OutboxProbe;
 use App\Modules\Platform\Http\Middleware\AssignRequestContext;
 use App\Modules\Platform\Http\Middleware\EnsureIdempotency;
 use App\Modules\Platform\Http\Middleware\SecureHeaders;
+use App\Modules\Platform\Listeners\AcknowledgeOutboxProbe;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use App\Modules\Platform\Support\SystemClock;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
@@ -29,7 +33,7 @@ class PlatformServiceProvider extends ModuleServiceProvider
 
     public function register(): void
     {
-        $this->commands([MakeModuleCommand::class]);
+        $this->commands([MakeModuleCommand::class, DispatchOutboxCommand::class]);
 
         $this->app->singleton(Clock::class, SystemClock::class);
         $this->app->singleton(OutboxRegistry::class);
@@ -51,6 +55,9 @@ class PlatformServiceProvider extends ModuleServiceProvider
         $router->aliasMiddleware('idempotent', EnsureIdempotency::class);
         $router->aliasMiddleware('request.context', AssignRequestContext::class);
         $router->aliasMiddleware('secure.headers', SecureHeaders::class);
+
+        $this->app->make(OutboxRegistry::class)->register(OutboxProbe::class);
+        Event::listen(OutboxProbe::class, [AcknowledgeOutboxProbe::class, 'handle']);
 
         $this->defineRateLimiters();
         $this->assertSafeConfiguration();

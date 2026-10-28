@@ -1,0 +1,66 @@
+# Local development services for Velmora. Host ports are in a private range (6390/1035/8035/3317/9010) because
+# other local projects commonly occupy 6379/1025/8025/3307/9000.
+# The app itself runs on the host (php artisan serve / npm run dev) against the local MariaDB `velmora`.
+#   docker compose up -d                       -> redis, mailpit
+#   docker compose --profile storage up -d     -> adds MinIO (S3-compatible). NOTE: image pull failed in the Phase 1 sandbox
+#                                                  (docker.io and quay.io refused); revisit in Phase 3 (media) — until then
+#                                                  FILESYSTEM_DISK=local is used.
+#   docker compose --profile ci-parity up -d   -> adds a throwaway MariaDB 11.4 on :3317 (CI parity, never your data)
+services:
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports: ["127.0.0.1:6390:6379"]
+    volumes: ["redis-data:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+  minio:
+    profiles: ["storage"]
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-velmora}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-velmora-dev-secret}
+    ports: ["127.0.0.1:9010:9000", "127.0.0.1:9011:9001"]
+    volumes: ["minio-data:/data"]
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      retries: 10
+
+  minio-setup:
+    profiles: ["storage"]
+    image: minio/mc:latest
+    depends_on:
+      minio: { condition: service_healthy }
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-velmora}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-velmora-dev-secret}
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD &&
+      mc mb --ignore-existing local/velmora-media local/velmora-private &&
+      mc anonymous set download local/velmora-media &&
+      mc anonymous set none local/velmora-private &&
+      echo buckets ready"
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports: ["127.0.0.1:1035:1025", "127.0.0.1:8035:8025"]
+
+  mariadb-ci:
+    profiles: ["ci-parity"]
+    image: mariadb:11.4
+    environment:
+      MARIADB_ROOT_PASSWORD: ci-root
+      MARIADB_DATABASE: velmora_test
+      MARIADB_CHARACTER_SET: utf8mb4
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_uca1400_ai_ci"]
+    ports: ["127.0.0.1:3317:3306"]
+
+volumes:
+  redis-data:
+  minio-data:

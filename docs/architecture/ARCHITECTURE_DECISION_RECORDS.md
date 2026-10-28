@@ -5,7 +5,7 @@ Format: Context → Options → Decision → Consequences → Reversal. Status: 
 | ADR | Decision | Status |
 |---|---|---|
 | 000 | MariaDB ≥ 11.4 instead of PostgreSQL → `DATABASE_ENGINE_DECISION.md` | **Accepted** |
-| 001 | Laravel latest stable + newest PHP supported by it and the host; exact versions recorded at scaffold [UNVERIFIED] | Proposed |
+| 001 | Laravel 13.39.0 (latest stable on 2026-10-27, requires PHP ^8.3) on PHP 8.4.27; Pest 4.7.8, Larastan 3.13.2 (level 8), Pint 1.32.1, Horizon 5.50.1, Node 22, Tailwind 4, Alpine; verified working against MariaDB 12.1.2 | **Accepted (owner, 2026-10-28)** |
 | 002 | Modular monolith in `app/Modules/<Module>` with contract-only cross-module use (BD-10/11) | Proposed |
 | 003 | Blade + Tailwind + Alpine via Vite; no SPA/Livewire (BD-03) | Proposed |
 | 004 | Money = BIGINT minor units + CHAR(3) currency; `Money` value object (BD-20) | Proposed |

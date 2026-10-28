@@ -4,12 +4,14 @@
 Velmora: bilingual (en/bn, **English default**) e-commerce platform for Bangladesh: physical products, digital products, services. Laravel + Blade + **MariaDB** modular monolith, with a versioned REST API for future mobile apps.
 Authoritative docs: `docs/architecture/*` (esp. `ARCHITECTURE_DECISION_RECORDS.md`, `DATABASE_ENGINE_DECISION.md`, `DOMAIN_MODEL_AND_MODULE_BOUNDARIES.md`, `DATABASE_DESIGN.md`), `docs/spikes/*`, backlog `docs/backlog/BACKLOG.md`. `docs/AI_Prompts/phases/*` hold per-phase tasks but their PostgreSQL wording is **void** (ADR-000). If code and docs disagree, **stop and ask**; do not guess.
 
-## Commands (fill in Phase 1)
-* Setup (fill in Phase 1): `{{docker compose up -d && composer install && npm ci && php artisan migrate --seed}}`
-* Tests: `{{php artisan test --parallel}}` · single: `{{php artisan test --filter=…}}`
-* Static analysis: `{{vendor/bin/phpstan analyse}}` · Style: `{{vendor/bin/pint --test}}`
-* Architecture rules: `{{vendor/bin/pest --group=arch}}`
-* Frontend: `{{npm run build}}` · E2E: `{{npx playwright test}}`
+## Commands
+* Setup: `docker compose up -d && composer install && npm ci && cp .env.example .env && php artisan key:generate && php artisan migrate --seed` (see README)
+* **Full gate: `composer check`** (Pint → Larastan 8 → all tests). Tests: `php artisan test` · one suite `--testsuite=Architecture|Database|Feature|Unit` · filter `--filter=Name`
+* Static analysis: `composer analyse` · Style: `vendor/bin/pint` (fix) / `composer lint`
+* New module: `php artisan make:module Name`
+* Frontend: `npm run build` / `npm run dev` · E2E (Playwright) arrives in Phase 12
+* Tool output is compact JSON (laravel/pao); that is expected.
+* **Never** run `migrate:fresh`, `db:wipe` or `--env=testing` against the dev database `velmora`; tests use `velmora_test` only.
 
 ## Workflow for every task
 1. **Read first.** Inspect the repo, the relevant ADRs, the module's docs and existing tests. Never overwrite or delete work you do not understand.
