@@ -7,8 +7,12 @@ namespace App\Modules\IdentityAccess\Models;
 use App\Modules\IdentityAccess\Database\Factories\UserFactory;
 use App\Modules\IdentityAccess\Enums\AccountType;
 use App\Modules\IdentityAccess\Enums\UserStatus;
+use App\Modules\IdentityAccess\Notifications\ResetPasswordNotification;
+use App\Modules\IdentityAccess\Notifications\VerifyEmailNotification;
 use App\Modules\Platform\Concerns\HasPublicId;
+use App\Modules\Platform\Contracts\Clock;
 use Carbon\CarbonImmutable;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -35,7 +39,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property CarbonImmutable|null $email_verified_at
  * @property CarbonImmutable|null $phone_verified_at
  */
-class User extends Authenticatable
+class User extends Authenticatable implements HasLocalePreference
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasPublicId, HasRoles, Notifiable;
@@ -66,6 +70,21 @@ class User extends Authenticatable
         return UserFactory::new();
     }
 
+    public function preferredLocale(): string
+    {
+        return $this->locale;
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification((string) $token));
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifyEmailNotification);
+    }
+
     public function isStaff(): bool
     {
         return $this->account_type === AccountType::Staff;
@@ -74,7 +93,7 @@ class User extends Authenticatable
     public function isActive(): bool
     {
         return $this->status === UserStatus::Active
-            && ($this->locked_until === null || $this->locked_until->isPast());
+            && ($this->locked_until === null || $this->locked_until->lessThanOrEqualTo(app(Clock::class)->now()));
     }
 
     /** @return HasOne<StaffMfaCredential, $this> */
