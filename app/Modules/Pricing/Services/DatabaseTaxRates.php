@@ -14,6 +14,11 @@ final class DatabaseTaxRates implements TaxRates
 {
     public function __construct(private readonly Settings $settings, private readonly Clock $clock) {}
 
+    public function classCodes(): array
+    {
+        return array_values(array_map('strval', DB::table('tax_classes')->orderBy('code')->pluck('code')->all()));
+    }
+
     public function rateBp(string $taxClassCode, ?CarbonInterface $on = null, string $jurisdiction = 'BD'): int
     {
         if (! $this->settings->bool('tax.enabled', false)) {

@@ -9,6 +9,9 @@ use Carbon\CarbonInterface;
 /** The one place tax rates are read. Returns 0 when tax is disabled or no rate is in force. */
 interface TaxRates
 {
+    /** @return list<string> codes of the defined tax classes (standard, zero_rated, exempt, …) */
+    public function classCodes(): array;
+
     /** @return int basis points in force for the tax class on that date (Asia/Dhaka calendar date) */
     public function rateBp(string $taxClassCode, ?CarbonInterface $on = null, string $jurisdiction = 'BD'): int;
 }

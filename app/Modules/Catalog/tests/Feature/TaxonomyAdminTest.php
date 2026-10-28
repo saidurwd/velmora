@@ -6,33 +6,14 @@ use App\Modules\Catalog\Models\Brand;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\IdentityAccess\Database\Seeders\RolesAndPermissionsSeeder;
 use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
-use App\Modules\IdentityAccess\Models\User;
 use App\Modules\Platform\Database\Seeders\LanguageSeeder;
 use Illuminate\Support\Facades\DB;
-use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
     $this->seed(LanguageSeeder::class);
     $this->withoutMiddleware(EnforceSessionPolicy::class);
 });
-
-/** @param list<string> $permissions */
-function catalogStaff(array $permissions): User
-{
-    $staff = User::factory()->staff()->create(['email' => 'cat'.uniqid().'@example.com']);
-    foreach ($permissions as $p) {
-        $staff->givePermissionTo($p);
-    }
-    app(PermissionRegistrar::class)->forgetCachedPermissions();
-
-    return $staff;
-}
-
-function enBn(string $en, ?string $bn = null): array
-{
-    return ['en' => ['name' => $en], 'bn' => ['name' => $bn ?? '']];
-}
 
 it('gates every taxonomy screen by permission', function () {
     $viewer = catalogStaff(['catalog.view']);
@@ -99,4 +80,28 @@ it('renders the Bangla admin chrome', function () {
 
     $this->actingAs($staff, 'admin')->withSession(['locale' => 'bn'])->get('/admin/catalog/categories')->assertOk();
     expect(trans('catalog::admin.categories.title', [], 'bn'))->toBe('ক্যাটাগরি');
+});
+
+it('creates and edits an attribute with bilingual values', function () {
+    $staff = catalogStaff(['catalog.view', 'catalog.create', 'catalog.update']);
+
+    $this->actingAs($staff, 'admin')->post('/admin/catalog/attributes', [
+        'code' => 'color', 'kind' => 'option', 'is_filterable' => '1',
+        'names' => ['en' => 'Colour', 'bn' => 'রঙ'],
+        'values' => "red | Red | লাল\nblue | Blue | নীল",
+    ])->assertRedirect('/admin/catalog/attributes');
+
+    $this->actingAs($staff, 'admin')->get('/admin/catalog/attributes')->assertOk()->assertSee('Colour');
+    $this->actingAs($staff, 'admin')->get('/admin/catalog/attributes/color/edit')->assertOk()->assertSee('red | Red | লাল', false);
+
+    $this->actingAs($staff, 'admin')->put('/admin/catalog/attributes/color', [
+        'code' => 'color', 'kind' => 'option', 'names' => ['en' => 'Colour'], 'values' => "red | Red | লাল\ngreen | Green | সবুজ",
+    ])->assertRedirect();
+
+    expect(DB::table('attribute_values')->count())->toBe(3);
+});
+
+it('rejects an attribute without an English name and forbids viewers from creating', function () {
+    $this->actingAs(catalogStaff(['catalog.create']), 'admin')->post('/admin/catalog/attributes', ['code' => 'size', 'kind' => 'option', 'names' => ['en' => '']])->assertSessionHasErrors('names.en');
+    $this->actingAs(catalogStaff(['catalog.view']), 'admin')->get('/admin/catalog/attributes/create')->assertForbidden();
 });

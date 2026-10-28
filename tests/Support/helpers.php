@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Modules\IdentityAccess\Models\User;
 use Illuminate\Testing\TestResponse;
+use Spatie\Permission\PermissionRegistrar;
 
 // Shared test helpers (loaded from tests/Pest.php).
 
@@ -16,4 +18,21 @@ function carrySession(object $test, TestResponse $response): void
         $cookies[$cookie->getName()] = $cookie->getValue();
     }
     $test->withUnencryptedCookies($cookies);
+}
+
+/** @param list<string> $permissions */
+function catalogStaff(array $permissions): User
+{
+    $staff = User::factory()->staff()->create(['email' => 'cat'.uniqid().'@example.com']);
+    foreach ($permissions as $p) {
+        $staff->givePermissionTo($p);
+    }
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+    return $staff;
+}
+
+function enBn(string $en, ?string $bn = null): array
+{
+    return ['en' => ['name' => $en], 'bn' => ['name' => $bn ?? '']];
 }

@@ -23,4 +23,22 @@ final readonly class VariantData
         public bool $isDefault = false,
         public array $optionValueIds = [],
     ) {}
+
+    /** @param  array<string, mixed>  $v  validated form input (see VariantRequest) */
+    public static function fromInput(array $v, bool $isDefault = false): self
+    {
+        $int = fn (string $k): ?int => ($v[$k] ?? '') === '' ? null : (int) $v[$k];
+
+        return new self(
+            (string) ($v['sku'] ?? ''),
+            ($v['barcode'] ?? '') === '' ? null : (string) $v['barcode'],
+            ! empty($v['track_inventory']),
+            $int('weight_g'), $int('length_mm'), $int('width_mm'), $int('height_mm'),
+            $int('min_qty') ?? 1, $int('max_qty'), $int('qty_step') ?? 1,
+            (string) ($v['status'] ?? 'active'),
+            0,
+            $isDefault || ! empty($v['is_default']),
+            array_values(array_map('intval', array_filter((array) ($v['options'] ?? []), fn ($o) => $o !== null && $o !== ''))),
+        );
+    }
 }
