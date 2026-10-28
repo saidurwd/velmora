@@ -17,11 +17,13 @@ use App\Modules\Platform\Http\Middleware\SetLocale;
 use App\Modules\Platform\Listeners\AcknowledgeOutboxProbe;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
+use App\Modules\Platform\Support\Branding;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use App\Modules\Platform\Support\SystemClock;
 use Closure;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
@@ -47,6 +49,7 @@ class PlatformServiceProvider extends ModuleServiceProvider
         $this->app->singleton(Clock::class, SystemClock::class);
         $this->app->singleton(OutboxRegistry::class);
         $this->app->singleton(AdminMenu::class);
+        $this->app->singleton(Branding::class);
 
         // One RequestContext per request / queued job / console run.
         $this->app->scoped(RequestContext::class, fn () => new RequestContext(
@@ -60,6 +63,9 @@ class PlatformServiceProvider extends ModuleServiceProvider
     {
         parent::boot();
 
+        Paginator::defaultView('platform::pagination');
+        Paginator::defaultSimpleView('platform::pagination');
+
         /** @var Router $router */
         $router = $this->app->make(Router::class);
         $router->aliasMiddleware('idempotent', EnsureIdempotency::class);
@@ -71,6 +77,7 @@ class PlatformServiceProvider extends ModuleServiceProvider
         Event::listen(OutboxProbe::class, [AcknowledgeOutboxProbe::class, 'handle']);
 
         $this->app->make(AdminMenu::class)->add('platform::admin.dashboard', 'admin.dashboard', 'dashboard.view', 10);
+        $this->app->make(AdminMenu::class)->add('platform::branding.menu', 'admin.settings.branding', 'settings.view', 90);
 
         $this->defineRateLimiters();
         $this->assertSafeConfiguration();

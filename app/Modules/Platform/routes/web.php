@@ -14,6 +14,10 @@ Route::get('/', [LocaleController::class, 'root'])->name('root');
 
 Route::localized(function (): void {
     Route::view('/', 'platform::home')->name('home');
+
+    if (! app()->isProduction()) {
+        Route::view('/dev/components', 'platform::dev.components')->name('dev.components'); // component library, never served in production
+    }
 });
 
 // Unmatched GETs still run the web middleware (locale, session) so 404 pages render in the visitor's language.

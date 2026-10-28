@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', config('app.name'))</title>
     <x-platform::hreflang />
+    <style>{!! app(\App\Modules\Platform\Support\Branding::class)->cssVariables() !!}</style>
     @stack('head')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>

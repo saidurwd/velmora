@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 const PUBLIC_WEB = [
     '/' => 'locale redirect',
     '{locale}' => 'storefront home',
+    '{locale}/dev/components' => 'component library (not registered in production)',
     'healthz' => 'liveness probe', 'readyz' => 'readiness probe',
     '{locale}/locale' => 'language switch (validated, throttled)',
     '{locale}/login' => 'sign-in', '{locale}/register' => 'sign-up', '{locale}/register/check-your-email' => 'sign-up confirmation',
