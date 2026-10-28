@@ -12,6 +12,7 @@ use App\Modules\Catalog\Models\Collection;
 use App\Modules\Catalog\Services\CategoryTree;
 use App\Modules\Catalog\Services\Storefront\ListingFacets;
 use App\Modules\Catalog\Services\Storefront\ListingQuery;
+use App\Modules\Search\Contracts\CatalogSearch;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -25,6 +26,27 @@ class ListingController
     public function shop(Request $request): View
     {
         return $this->render($request, ListingScope::all(), __('catalog::storefront.shop'), null, [['label' => __('catalog::storefront.shop'), 'url' => null]], []);
+    }
+
+    public function search(Request $request, CatalogSearch $search): View
+    {
+        $locale = app()->getLocale();
+        $q = $request->query('q');
+        $raw = is_string($q) ? trim(mb_substr($q, 0, 100)) : ''; // q[]=… and other junk count as an empty search
+        $result = $search->search($raw, $locale);
+        $title = $raw === '' ? __('catalog::storefront.search') : __('catalog::storefront.search_results_for', ['query' => $raw]);
+
+        // the first page of a real search is logged (text, language, count: nothing about the visitor)
+        if ($raw !== '' && ! $request->query('page') && ! $request->boolean('sf')) {
+            $search->logQuery($result->normalizedQuery, $locale, count($result->productIds));
+        }
+
+        $query = $request->query() + [];
+        if (! isset($query['sort'])) {
+            $query['sort'] = 'relevance';
+        }
+
+        return $this->render($request, ListingScope::ids($result->productIds), $title, null, [['label' => __('catalog::storefront.search'), 'url' => null]], [], null, $query, ['searchQuery' => $raw, 'correctedQuery' => $result->correctedQuery]);
     }
 
     public function category(Request $request, string $slug): View
@@ -68,11 +90,13 @@ class ListingController
     /**
      * @param  list<array{label: string, url: string|null}>  $breadcrumb
      * @param  list<array{name: string, url: string}>  $children
+     * @param  array<string, mixed>|null  $queryOverride
+     * @param  array<string, mixed>  $extra
      */
-    private function render(Request $request, ListingScope $scope, string $title, ?string $description, array $breadcrumb, array $children, ?string $metaDescription = null): View
+    private function render(Request $request, ListingScope $scope, string $title, ?string $description, array $breadcrumb, array $children, ?string $metaDescription = null, ?array $queryOverride = null, array $extra = []): View
     {
         $locale = app()->getLocale();
-        $filters = ListingFilters::fromQuery($request->query());
+        $filters = ListingFilters::fromQuery($queryOverride ?? $request->query());
         $products = $this->query->paginate($scope, $filters, $locale);
 
         // a page past the end shows the last page's worth of nothing: send people back rather than an empty grid
@@ -81,7 +105,7 @@ class ListingController
             'breadcrumb' => $breadcrumb, 'children' => $children,
             'products' => $products, 'filters' => $filters, 'facets' => $this->facets->for($scope, $locale),
             'basePath' => $request->url(),
-        ]);
+        ] + $extra);
     }
 
     /**

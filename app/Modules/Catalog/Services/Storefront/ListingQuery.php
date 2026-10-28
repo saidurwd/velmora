@@ -29,14 +29,20 @@ final class ListingQuery
         }
         $total = (clone $query)->count();
 
-        $rows = $query
+        $query = $query
             ->leftJoin('product_translations as pl', fn ($j) => $j->on('pl.product_id', '=', 'l.product_id')->where('pl.locale', $locale))
             ->leftJoin('product_translations as pd', fn ($j) => $j->on('pd.product_id', '=', 'l.product_id')->where('pd.locale', $default))
             ->join('products as p', 'p.id', '=', 'l.product_id')
-            ->select('l.*', 'p.public_id', DB::raw('COALESCE(pl.name, pd.name) as name'), DB::raw('COALESCE(pl.slug, pd.slug) as slug'))
-            ->tap(fn (Builder $q) => $this->sort($q, $filters->sort))
-            ->forPage($filters->page, $perPage)
-            ->get();
+            ->select('l.*', 'p.public_id', DB::raw('COALESCE(pl.name, pd.name) as name'), DB::raw('COALESCE(pl.slug, pd.slug) as slug'));
+
+        if ($filters->sort === 'relevance' && $scope->productIds !== null && $scope->productIds !== []) {
+            // search results arrive already ranked (at most a couple of hundred): order them in PHP, then take the page
+            $rank = array_flip($scope->productIds);
+            $all = $query->get()->sortBy(fn ($r) => $rank[(int) $r->product_id] ?? PHP_INT_MAX)->values();
+            $rows = $all->slice(($filters->page - 1) * $perPage, $perPage)->values();
+        } else {
+            $rows = $query->tap(fn (Builder $q) => $this->sort($q, $filters->sort))->forPage($filters->page, $perPage)->get();
+        }
 
         return new LengthAwarePaginator($rows->map(fn ($r) => $this->card($r))->all(), $total, $perPage, $filters->page, ['path' => request()->url(), 'query' => request()->query()]);
     }
@@ -69,6 +75,9 @@ final class ListingQuery
 
         if ($scope->categoryIds !== []) {
             $q->whereIn('l.product_id', DB::table('product_categories')->whereIn('category_id', $scope->categoryIds)->select('product_id'));
+        }
+        if ($scope->productIds !== null) {
+            $q->whereIn('l.product_id', $scope->productIds === [] ? [0] : $scope->productIds);
         }
         if ($scope->brandId !== null) {
             $q->where('l.brand_id', $scope->brandId);

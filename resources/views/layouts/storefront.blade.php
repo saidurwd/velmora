@@ -13,7 +13,7 @@
                 @endif
                 @if ($brand->tagline() !== '')<span class="hidden text-sm text-muted md:inline">{{ $brand->tagline() }}</span>@endif
             </a>
-            @stack('header-search')
+            <x-platform::search-box :action="url('/'.app()->getLocale().'/search')" :suggest-url="url('/'.app()->getLocale().'/search/suggest')" />
             <x-platform::language-switcher />
         </div>
     </header>

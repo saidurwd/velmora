@@ -13,12 +13,19 @@
         $q = array_filter(array_merge($query, ['page' => null], $change), fn ($v) => $v !== null && $v !== [] && $v !== '');
         return $basePath.($q ? '?'.http_build_query($q) : '');
     };
-    $sortLabels = ['newest' => __('catalog::storefront.sort.newest'), 'popular' => __('catalog::storefront.sort.popular'), 'price_asc' => __('catalog::storefront.sort.price_asc'), 'price_desc' => __('catalog::storefront.sort.price_desc')];
+    $searching = isset($searchQuery);
+    $minValue = is_scalar(request('min')) ? (string) request('min') : '';
+    $maxValue = is_scalar(request('max')) ? (string) request('max') : '';
+    $sortLabels = ($searching ? ['relevance' => __('catalog::storefront.sort.relevance')] : []) + ['newest' => __('catalog::storefront.sort.newest'), 'popular' => __('catalog::storefront.sort.popular'), 'price_asc' => __('catalog::storefront.sort.price_asc'), 'price_desc' => __('catalog::storefront.sort.price_desc')];
 @endphp
 
 @section('content')
 <div class="space-y-6">
     <x-platform::breadcrumb :items="$breadcrumb" />
+
+    @if ($searching && ($correctedQuery ?? null))
+        <x-platform::alert>{{ __('catalog::storefront.showing_for', ['corrected' => $correctedQuery, 'query' => $searchQuery]) }}</x-platform::alert>
+    @endif
 
     <header class="space-y-2">
         <h1 class="text-3xl font-bold">{{ $title }}</h1>
@@ -40,15 +47,16 @@
                 <summary class="min-h-11 cursor-pointer font-semibold lg:hidden">{{ __('catalog::storefront.filters') }}</summary>
                 <form method="GET" action="{{ $basePath }}" class="mt-4 space-y-6 lg:mt-0">
                     <input type="hidden" name="sort" value="{{ $filters->sort }}">
+                    @if ($searching)<input type="hidden" name="q" value="{{ $searchQuery }}">@endif
 
                     @if ($facets['price'])
                         <fieldset class="space-y-2"><legend class="font-medium">{{ __('catalog::storefront.price') }} (৳)</legend>
                             <div class="flex items-center gap-2">
                                 <div><label for="min" class="sr-only">{{ __('catalog::storefront.price_min') }}</label>
-                                    <input id="min" name="min" inputmode="decimal" value="{{ request('min') }}" placeholder="{{ \App\Modules\Platform\Support\Fmt::number(intdiv($facets['price']['min'], 100)) }}" class="w-full rounded-md border border-line px-2 py-2"></div>
+                                    <input id="min" name="min" inputmode="decimal" value="{{ $minValue }}" placeholder="{{ \App\Modules\Platform\Support\Fmt::number(intdiv($facets['price']['min'], 100)) }}" class="w-full rounded-md border border-line px-2 py-2"></div>
                                 <span aria-hidden="true">–</span>
                                 <div><label for="max" class="sr-only">{{ __('catalog::storefront.price_max') }}</label>
-                                    <input id="max" name="max" inputmode="decimal" value="{{ request('max') }}" placeholder="{{ \App\Modules\Platform\Support\Fmt::number(intdiv($facets['price']['max'], 100)) }}" class="w-full rounded-md border border-line px-2 py-2"></div>
+                                    <input id="max" name="max" inputmode="decimal" value="{{ $maxValue }}" placeholder="{{ \App\Modules\Platform\Support\Fmt::number(intdiv($facets['price']['max'], 100)) }}" class="w-full rounded-md border border-line px-2 py-2"></div>
                             </div>
                         </fieldset>
                     @endif
@@ -108,6 +116,7 @@
             @if ($products->isEmpty())
                 <x-platform::empty-state :title="__('catalog::storefront.none_title')" :text="__('catalog::storefront.none_text')">
                     @if ($filters->isFiltered())<x-platform::btn variant="secondary" :href="$url(['brand' => null, 'min' => null, 'max' => null, 'type' => null, 'in_stock' => null, 'attr' => null])">{{ __('catalog::storefront.clear') }}</x-platform::btn>@endif
+                    @if ($searching)<p class="mt-3 text-sm text-muted">{{ __('catalog::storefront.search_tips') }}</p>@endif
                 </x-platform::empty-state>
             @else
                 <ul class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">

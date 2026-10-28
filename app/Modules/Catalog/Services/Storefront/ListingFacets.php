@@ -75,6 +75,9 @@ final class ListingFacets
         if ($scope->categoryIds !== []) {
             $q->whereIn('l.product_id', DB::table('product_categories')->whereIn('category_id', $scope->categoryIds)->select('product_id'));
         }
+        if ($scope->productIds !== null) {
+            $q->whereIn('l.product_id', $scope->productIds === [] ? [0] : $scope->productIds);
+        }
         if ($scope->brandId !== null) {
             $q->where('l.brand_id', $scope->brandId);
         }

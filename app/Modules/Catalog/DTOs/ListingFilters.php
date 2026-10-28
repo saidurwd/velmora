@@ -14,7 +14,7 @@ use App\Modules\Platform\Support\BanglaText;
  */
 final readonly class ListingFilters
 {
-    public const SORTS = ['newest', 'price_asc', 'price_desc', 'popular'];
+    public const SORTS = ['newest', 'price_asc', 'price_desc', 'popular', 'relevance'];
 
     public const TYPES = ['physical', 'digital', 'service'];
 
