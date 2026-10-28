@@ -78,6 +78,14 @@ jobs:
           php artisan serve --host=127.0.0.1 --port=8000 > /tmp/serve.log 2>&1 &
           for i in $(seq 1 30); do curl -fs http://127.0.0.1:8000/healthz && break || sleep 1; done
 
+      - name: Smoke-check the pages Lighthouse will load
+        run: |
+          for u in /en /bn /en/shop /en/c/clothing /en/p/cotton-panjabi; do
+            code=$(curl -s -o /tmp/page.html -w "%{http_code}" "http://127.0.0.1:8000$u")
+            echo "$u -> $code"
+            if [ "$code" != "200" ]; then head -c 1500 /tmp/page.html; echo; tail -n 30 storage/logs/laravel.log 2>/dev/null; tail -n 20 /tmp/serve.log; fi
+          done
+
       - name: Lighthouse (mobile, throttled)
         run: npx --yes @lhci/cli@0.14.x autorun --config=lighthouserc.json
 
