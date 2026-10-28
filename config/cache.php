@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Modules\Catalog\DTOs\ProductCard;
+use App\Modules\Cms\DTOs\BannerView;
+use App\Modules\Cms\DTOs\PageLink;
+use App\Modules\Platform\DTOs\Money;
 use Illuminate\Support\Str;
 
 return [
@@ -133,6 +137,13 @@ return [
     |
     */
 
-    'serializable_classes' => false,
+    // Cached objects can only be unserialized if listed here (gadget-chain protection). The storefront cache stores
+    // exactly these immutable value objects (no magic methods, no behaviour); everything else must be plain arrays.
+    'serializable_classes' => [
+        ProductCard::class,
+        BannerView::class,
+        PageLink::class,
+        Money::class,
+    ],
 
 ];

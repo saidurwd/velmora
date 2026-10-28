@@ -24,7 +24,9 @@ use App\Modules\Platform\Support\StorefrontCache;
 use App\Modules\Pricing\Actions\SetRegularPrice;
 use App\Modules\Pricing\Database\Seeders\PriceListSeeder;
 use App\Modules\Pricing\Database\Seeders\TaxClassSeeder;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
@@ -149,4 +151,23 @@ it('preloads only the fonts the page language needs', function () {
 
     expect($en)->toContain('rel="preload"')->toContain('inter-latin-wght')->not->toContain('noto-sans-bengali-bengali-400')
         ->and($bn)->toContain('inter-latin-wght')->toContain('noto-sans-bengali-bengali-400-normal');
+});
+
+it('works with a cache that really serializes (file/Redis), not only the in-memory test driver', function () {
+    $dir = storage_path('framework/testing/cache-'.uniqid());
+    config(['cache.stores.file.path' => $dir]);
+    $this->app->singleton(StorefrontCache::class, fn () => new StorefrontCache(Cache::store('file')));
+
+    try {
+        $this->get('/en')->assertOk()->assertSee('Shop by category')->assertSee('Cotton Panjabi');
+        $second = listingQueries(fn () => $this->get('/en')->assertOk()->assertSee('Cotton Panjabi')->assertSee('Everyday essentials, delivered'));
+        $list = listingQueries(fn () => $this->get('/en/shop?min=1850&max=1850')->assertOk()->assertSee('Cotton Panjabi'));
+        $listAgain = listingQueries(fn () => $this->get('/en/shop?min=1850&max=1850')->assertOk()->assertSee('Cotton Panjabi')->assertSee('1,850'));
+        $this->get('/bn/shop?min=1850&max=1850')->assertOk()->assertSee('সুতির পাঞ্জাবি');
+        $this->get('/en/shop?type[]=digital')->assertOk()->assertSee('Bangladeshi Cooking e-book')->assertSee('Digital');
+
+        expect($second)->toBe(0)->and($list)->toBeGreaterThan(0)->and($listAgain)->toBe(0);
+    } finally {
+        File::deleteDirectory($dir);
+    }
 });
