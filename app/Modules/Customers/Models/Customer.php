@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Customers\Models;
 
 use App\Modules\Platform\Concerns\HasPublicId;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -18,6 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $phone
  * @property string|null $email
  * @property bool $marketing_consent
+ * @property CarbonImmutable|null $birth_date
  */
 class Customer extends Model
 {

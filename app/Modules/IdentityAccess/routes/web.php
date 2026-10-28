@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\IdentityAccess\Http\Controllers\Web\AccountSecurityController;
 use App\Modules\IdentityAccess\Http\Controllers\Web\AuthController;
 use App\Modules\IdentityAccess\Http\Controllers\Web\EmailVerificationController;
 use App\Modules\IdentityAccess\Http\Controllers\Web\PasswordResetController;
@@ -36,5 +37,26 @@ Route::localized(function (): void {
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
         Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
         Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])->middleware('throttle:otp')->name('verification.send');
+
+        // Re-authentication (password, or an SMS code for phone-only accounts)
+        Route::get('/account/confirm', [AccountSecurityController::class, 'showConfirm'])->name('account.confirm');
+        Route::post('/account/confirm', [AccountSecurityController::class, 'confirmWithPassword'])->middleware('throttle:auth');
+        Route::post('/account/confirm/send-code', [AccountSecurityController::class, 'sendConfirmOtp'])->middleware('throttle:otp')->name('account.confirm.send');
+        Route::post('/account/confirm/code', [AccountSecurityController::class, 'confirmWithOtp'])->middleware('throttle:auth')->name('account.confirm.code');
+
+        Route::post('/account/security/sessions/revoke-others', [AccountSecurityController::class, 'revokeOtherDevices'])->middleware('throttle:write')->name('account.sessions.revoke');
+
+        // The emailed confirmation link: the owner must be signed in, the signature protects the contents
+        Route::get('/account/email/confirm/{user}', [AccountSecurityController::class, 'confirmEmail'])->middleware(['signed', 'throttle:auth'])->name('account.email.confirm');
+
+        // Sensitive changes require a confirmation within the last 10 minutes
+        Route::middleware('recent.auth')->group(function (): void {
+            Route::get('/account/security', [AccountSecurityController::class, 'show'])->name('account.security');
+            Route::put('/account/security/password', [AccountSecurityController::class, 'changePassword'])->middleware('throttle:critical')->name('account.password.update');
+            Route::post('/account/security/email', [AccountSecurityController::class, 'requestEmail'])->middleware('throttle:critical')->name('account.email.request');
+            Route::post('/account/security/phone', [AccountSecurityController::class, 'requestPhone'])->middleware('throttle:otp')->name('account.phone.request');
+            Route::post('/account/security/phone/confirm', [AccountSecurityController::class, 'confirmPhone'])->middleware('throttle:auth')->name('account.phone.confirm');
+            Route::post('/account/delete-request', [AccountSecurityController::class, 'requestDeletion'])->middleware('throttle:critical')->name('account.delete');
+        });
     });
 });

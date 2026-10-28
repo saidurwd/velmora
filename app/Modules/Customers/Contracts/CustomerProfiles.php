@@ -15,4 +15,7 @@ interface CustomerProfiles
     public function ensureForUser(int $userId, ?string $name, ?string $email, ?string $phone): CustomerProfile;
 
     public function updateName(int $userId, string $name): void;
+
+    /** Name, optional birth date, and the marketing consent decision (timestamped when it changes). */
+    public function updateProfile(int $userId, string $name, ?string $birthDate, bool $marketingConsent): void;
 }

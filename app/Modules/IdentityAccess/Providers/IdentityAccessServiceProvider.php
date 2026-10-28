@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Modules\IdentityAccess\Providers;
 
 use App\Modules\IdentityAccess\Auth\AccountTypeUserProvider;
+use App\Modules\IdentityAccess\Auth\RecentAuth;
 use App\Modules\IdentityAccess\Console\CreateSuperAdminCommand;
 use App\Modules\IdentityAccess\Console\RbacMatrixCommand;
 use App\Modules\IdentityAccess\Events\UserRegistered;
 use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
 use App\Modules\IdentityAccess\Http\Middleware\RequirePendingStaffLogin;
 use App\Modules\IdentityAccess\Http\Middleware\RequirePermission;
+use App\Modules\IdentityAccess\Http\Middleware\RequireRecentAuth;
 use App\Modules\IdentityAccess\Listeners\SaveUserLocale;
 use App\Modules\IdentityAccess\Listeners\TrackSession;
 use App\Modules\IdentityAccess\Mfa\PendingStaffLogin;
@@ -35,6 +37,7 @@ class IdentityAccessServiceProvider extends ModuleServiceProvider
     {
         $this->app->singleton(SuperAdminBypass::class);
         $this->commands([CreateSuperAdminCommand::class, RbacMatrixCommand::class]);
+        $this->app->scoped(RecentAuth::class, fn ($app) => new RecentAuth($app['session.store'], $app->make(Clock::class)));
         $this->app->scoped(PendingStaffLogin::class, fn ($app) => new PendingStaffLogin($app['session.store'], $app->make(Clock::class)));
     }
 
@@ -55,6 +58,7 @@ class IdentityAccessServiceProvider extends ModuleServiceProvider
         $this->app->make(Router::class)->aliasMiddleware('session.policy', EnforceSessionPolicy::class);
         $this->app->make(Router::class)->aliasMiddleware('admin.pending', RequirePendingStaffLogin::class);
         $this->app->make(Router::class)->aliasMiddleware('permission', RequirePermission::class);
+        $this->app->make(Router::class)->aliasMiddleware('recent.auth', RequireRecentAuth::class);
 
         // Super Admin passes catalogue permissions explicitly; sensitive uses are audited (see SuperAdminBypass).
         Gate::before($this->app->make(SuperAdminBypass::class));

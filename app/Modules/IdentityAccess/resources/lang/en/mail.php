@@ -30,4 +30,17 @@ return [
         'expiry' => 'This link expires in :minutes minutes.',
         'mfa' => 'On your first sign-in you will also set up two-step verification with an authenticator app.',
     ],
+    'email_change' => [
+        'subject' => 'Confirm your new email address for :app',
+        'intro' => 'Please confirm that this is your new email address.',
+        'action' => 'Confirm new email address',
+        'expiry' => 'This link expires in :minutes minutes.',
+    ],
+    'changed' => [
+        'subject_password' => 'Your :app password was changed',
+        'body_password' => 'The password for your account was just changed, and all other devices were signed out.',
+        'subject_email' => 'The email address on your :app account was changed',
+        'body_email' => 'The email address on your account was just changed to a new one. This message was sent to your previous address.',
+        'not_you' => 'If this was not you, reset your password immediately and contact support.',
+    ],
 ];
