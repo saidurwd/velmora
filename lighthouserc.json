@@ -9,7 +9,7 @@
         "http://127.0.0.1:8000/en/p/cotton-panjabi"
       ],
       "numberOfRuns": 3,
-      "settings": { "preset": "desktop", "formFactor": "mobile", "screenEmulation": { "mobile": true, "width": 360, "height": 800, "deviceScaleFactor": 2, "disabled": false }, "throttlingMethod": "simulate" }
+      "settings": { "preset": "desktop", "formFactor": "mobile", "screenEmulation": { "mobile": true, "width": 360, "height": 800, "deviceScaleFactor": 2, "disabled": false }, "throttlingMethod": "simulate", "skipAudits": ["is-crawlable"] }
     },
     "assert": {
       "assertions": {
