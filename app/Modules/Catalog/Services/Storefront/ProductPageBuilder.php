@@ -14,6 +14,7 @@ use App\Modules\Catalog\Services\CategoryTree;
 use App\Modules\Catalog\Services\Media\MediaUrls;
 use App\Modules\Inventory\Contracts\Availability;
 use App\Modules\Platform\Contracts\Clock;
+use App\Modules\Platform\Support\SlugRedirects;
 use App\Modules\Pricing\Contracts\PriceCatalog;
 use DomainException;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +30,7 @@ final class ProductPageBuilder
         private readonly CategoryTree $tree,
         private readonly MediaUrls $media,
         private readonly Clock $clock,
+        private readonly SlugRedirects $redirects,
     ) {}
 
     /**
@@ -40,7 +42,8 @@ final class ProductPageBuilder
     {
         $default = (string) config('app.default_locale');
         $id = DB::table('product_translations')->where('locale', $locale)->where('slug', $slug)->value('product_id')
-            ?? DB::table('product_translations')->where('slug', $slug)->orderByRaw('locale = ? DESC', [$default])->value('product_id');
+            ?? DB::table('product_translations')->where('slug', $slug)->orderByRaw('locale = ? DESC', [$default])->value('product_id')
+            ?? $this->redirects->resolve('product', $locale, $slug); // a retired slug leads to the product's current address
         $product = $id === null ? null : Product::query()->with(['translations', 'brand.translations'])->whereKey($id)->first();
 
         if ($product === null || $product->status !== ProductStatus::Published || ($product->publish_at !== null && $product->publish_at->greaterThan($this->clock->now()))) {
@@ -50,6 +53,21 @@ final class ProductPageBuilder
         $canonical = $product->translate('slug', $locale) ?? $slug;
 
         return ['product' => $product, 'canonicalSlug' => (string) $canonical];
+    }
+
+    /**
+     * The same product's address in every language it exists in (hreflang, language switcher).
+     *
+     * @return array<string, string>
+     */
+    public function alternates(Product $product): array
+    {
+        $out = [];
+        foreach (DB::table('product_translations')->where('product_id', $product->id)->get(['locale', 'slug']) as $t) {
+            $out[(string) $t->locale] = url("/{$t->locale}/p/".rawurlencode((string) $t->slug));
+        }
+
+        return $out;
     }
 
     /** @param  array<string, string>  $requested  attribute code => value code */

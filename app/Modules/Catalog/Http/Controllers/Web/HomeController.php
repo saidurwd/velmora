@@ -8,14 +8,21 @@ use App\Modules\Catalog\Models\Category;
 use App\Modules\Catalog\Models\Collection;
 use App\Modules\Catalog\Services\Storefront\ListingQuery;
 use App\Modules\Cms\Contracts\BannerSource;
+use App\Modules\Platform\Support\Branding;
+use App\Modules\Platform\Support\PageSeo;
+use App\Modules\Platform\Support\StructuredData;
 use Illuminate\Contracts\View\View;
 
 /** The storefront home page: banners from the CMS, categories, curated collections, new arrivals, popular products. */
 class HomeController
 {
-    public function __invoke(BannerSource $banners, ListingQuery $listing): View
+    public function __invoke(BannerSource $banners, ListingQuery $listing, PageSeo $seo, Branding $brand): View
     {
         $locale = app()->getLocale();
+        $home = url("/{$locale}");
+        $seo->describe($brand->tagline())
+            ->jsonLd(StructuredData::organization($brand, $home))
+            ->jsonLd(StructuredData::website($brand, $home, url("/{$locale}/search")));
 
         $categories = Category::query()->with('translations')->whereNull('parent_id')->where('is_active', true)->orderBy('sort_order')->orderBy('id')->limit(8)->get()
             ->map(fn (Category $c) => ['name' => (string) $c->translate('name'), 'url' => url("/{$locale}/c/".$c->translate('slug'))])->all();

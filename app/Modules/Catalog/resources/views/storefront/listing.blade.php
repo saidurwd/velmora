@@ -2,10 +2,6 @@
 
 @section('title', $title)
 
-@push('head')
-    @if ($metaDescription)<meta name="description" content="{{ \Illuminate\Support\Str::limit(strip_tags($metaDescription), 160) }}">@endif
-@endpush
-
 @php
     /** Builds a URL for this page with the current filters, changing only what is passed (null removes a key). */
     $query = request()->query();

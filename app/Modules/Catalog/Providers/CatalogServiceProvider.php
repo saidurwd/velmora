@@ -7,11 +7,13 @@ namespace App\Modules\Catalog\Providers;
 use App\Modules\Catalog\Console\ReindexListingCommand;
 use App\Modules\Catalog\Contracts\MalwareScanner;
 use App\Modules\Catalog\Contracts\SearchableProducts;
+use App\Modules\Catalog\Contracts\SitemapSource;
 use App\Modules\Catalog\Contracts\VariantDirectory;
 use App\Modules\Catalog\Events\ProductListingChanged;
 use App\Modules\Catalog\Services\DatabaseVariantDirectory;
 use App\Modules\Catalog\Services\Media\NullMalwareScanner;
 use App\Modules\Catalog\Services\Storefront\DatabaseSearchableProducts;
+use App\Modules\Catalog\Services\Storefront\DatabaseSitemapSource;
 use App\Modules\Catalog\Services\Storefront\ListingProjection;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
@@ -44,6 +46,7 @@ class CatalogServiceProvider extends ModuleServiceProvider
     public function register(): void
     {
         $this->app->bind(SearchableProducts::class, DatabaseSearchableProducts::class);
+        $this->app->bind(SitemapSource::class, DatabaseSitemapSource::class);
         $this->app->bind(MalwareScanner::class, NullMalwareScanner::class);
         $this->app->bind(VariantDirectory::class, DatabaseVariantDirectory::class);
     }

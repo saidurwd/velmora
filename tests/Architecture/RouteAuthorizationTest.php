@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 const PUBLIC_WEB = [
     '/' => 'locale redirect',
     '{locale}' => 'storefront home',
+    'robots.txt' => 'crawler rules', 'sitemap.xml' => 'sitemap index', 'sitemaps/{file}' => 'sitemap files (generated names only)',
     '{locale}/search' => 'storefront: search results (throttled)', '{locale}/search/suggest' => 'storefront: autocomplete JSON (throttled)',
     '{locale}/p/{slug}' => 'storefront: product page (live products only)',
     '{locale}/shop' => 'storefront: all products', '{locale}/c/{slug}' => 'storefront: category', '{locale}/brands/{slug}' => 'storefront: brand', '{locale}/collections/{slug}' => 'storefront: collection',

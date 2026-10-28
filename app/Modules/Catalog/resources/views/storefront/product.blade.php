@@ -2,10 +2,6 @@
 
 @section('title', $page->seoTitle ?: $page->name)
 
-@push('head')
-    @if ($page->seoDescription ?: $page->shortDescription)<meta name="description" content="{{ \Illuminate\Support\Str::limit(strip_tags((string) ($page->seoDescription ?: $page->shortDescription)), 160) }}">@endif
-@endpush
-
 @section('content')
 @php
     $stockTone = ['in_stock' => 'success', 'low_stock' => 'warning', 'out_of_stock' => 'danger'][$page->stockState] ?? null;

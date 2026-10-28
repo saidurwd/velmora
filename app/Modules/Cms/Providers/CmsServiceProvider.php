@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Cms\Providers;
 
+use App\Modules\Cms\Console\GenerateSitemapsCommand;
 use App\Modules\Cms\Contracts\BannerSource;
 use App\Modules\Cms\Contracts\PageDirectory;
 use App\Modules\Cms\Services\DatabaseBannerSource;
@@ -27,6 +28,8 @@ class CmsServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+
+        $this->commands([GenerateSitemapsCommand::class]);
 
         $menu = $this->app->make(AdminMenu::class);
         $menu->add('cms::admin.menu.pages', 'admin.cms.pages.index', 'cms.view', 60);

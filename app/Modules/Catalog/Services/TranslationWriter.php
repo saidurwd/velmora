@@ -9,6 +9,7 @@ use App\Modules\Catalog\Exceptions\CatalogException;
 use App\Modules\Platform\Support\BanglaText;
 use App\Modules\Platform\Support\HtmlSanitizer;
 use App\Modules\Platform\Support\Slugger;
+use App\Modules\Platform\Support\SlugRedirects;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -19,7 +20,10 @@ use Illuminate\Support\Facades\Schema;
  */
 final class TranslationWriter
 {
-    public function __construct(private readonly HtmlSanitizer $html) {}
+    /** Translation table => the entity type used by slug redirects (tags have no public page). */
+    private const REDIRECT_TYPES = ['product_translations' => 'product', 'category_translations' => 'category', 'brand_translations' => 'brand', 'collection_translations' => 'collection'];
+
+    public function __construct(private readonly HtmlSanitizer $html, private readonly SlugRedirects $redirects) {}
 
     /**
      * @param  class-string<Model>  $translationModel
@@ -61,7 +65,17 @@ final class TranslationWriter
                 $values['short_description'] = $input->shortDescription === null ? null : BanglaText::input($input->shortDescription);
             }
 
+            $type = self::REDIRECT_TYPES[$table] ?? null;
+            $previous = $type === null ? null : DB::table($table)->where($foreignKey, $entity->getKey())->where('locale', $locale)->value('slug');
+
             $translationModel::query()->updateOrCreate([$foreignKey => $entity->getKey(), 'locale' => $locale], $values);
+
+            if ($type !== null) {
+                $this->redirects->forget($type, $locale, $slug); // a slug in use again must not also redirect
+                if ($previous !== null && $previous !== $slug) {
+                    $this->redirects->record($type, (int) $entity->getKey(), $locale, (string) $previous);
+                }
+            }
         }
 
         $entity->unsetRelation('translations');

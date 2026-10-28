@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace App\Modules\Catalog\Http\Controllers\Web;
 
 use App\Modules\Catalog\Services\Storefront\ProductPageBuilder;
+use App\Modules\Catalog\Services\Storefront\ProductStructuredData;
 use App\Modules\Catalog\Services\Storefront\RelatedProducts;
+use App\Modules\Platform\Support\PageSeo;
+use App\Modules\Platform\Support\StructuredData;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class ProductPageController
 {
-    public function show(Request $request, string $slug, ProductPageBuilder $builder, RelatedProducts $related): View|RedirectResponse
+    public function show(Request $request, string $slug, ProductPageBuilder $builder, RelatedProducts $related, PageSeo $seo, ProductStructuredData $structured): View|RedirectResponse
     {
         $locale = app()->getLocale();
         $found = $builder->find($slug, $locale) ?? abort(404);
@@ -30,6 +33,15 @@ class ProductPageController
         }
 
         $page = $builder->build($found['product'], $requested, $locale) ?? abort(404);
+
+        $url = url("/{$locale}/p/".rawurlencode($page->slug));
+        $seo->type = 'product';
+        $seo->canonical = $url; // the chosen variant (?opt[…]) is the same product page
+        $seo->image = $page->gallery === [] ? null : StructuredData::absolute($page->gallery[0]['src']);
+        $seo->describe($page->seoDescription ?: ($page->shortDescription ?: $page->descriptionHtml))
+            ->alternates($builder->alternates($found['product']))
+            ->jsonLd($structured->product($page, $url))
+            ->jsonLd(StructuredData::breadcrumbs($page->breadcrumb, $url));
 
         return view('catalog::storefront.product', [
             'page' => $page,

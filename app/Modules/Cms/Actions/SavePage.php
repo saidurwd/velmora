@@ -12,13 +12,14 @@ use App\Modules\Platform\Support\AuditLogger;
 use App\Modules\Platform\Support\BanglaText;
 use App\Modules\Platform\Support\HtmlSanitizer;
 use App\Modules\Platform\Support\Slugger;
+use App\Modules\Platform\Support\SlugRedirects;
 use App\Modules\Platform\Support\Transactions;
 use Illuminate\Support\Facades\DB;
 
 /** Static pages (about, delivery, FAQ, policies): bilingual, sanitised HTML, slug unique per language. */
 final class SavePage
 {
-    public function __construct(private readonly HtmlSanitizer $html, private readonly AuditLogger $audit) {}
+    public function __construct(private readonly HtmlSanitizer $html, private readonly AuditLogger $audit, private readonly SlugRedirects $redirects) {}
 
     /** @param  array<string, array{title?: string|null, slug?: string|null, body?: string|null, seo_title?: string|null, seo_description?: string|null}>  $translations */
     public function handle(Actor $actor, ?Page $page, array $translations): Page
@@ -41,13 +42,19 @@ final class SavePage
 
             foreach ($translations as $locale => $t) {
                 $title = BanglaText::input((string) ($t['title'] ?? ''));
+                $slug = $this->uniqueSlug((string) $locale, Slugger::make(trim((string) ($t['slug'] ?? '')) !== '' ? (string) ($t['slug'] ?? '') : $title), $page->id);
+                $previous = PageTranslation::query()->where('page_id', $page->id)->where('locale', $locale)->value('slug');
                 PageTranslation::query()->updateOrCreate(['page_id' => $page->id, 'locale' => $locale], [
                     'title' => $title,
-                    'slug' => $this->uniqueSlug((string) $locale, Slugger::make(trim((string) ($t['slug'] ?? '')) !== '' ? (string) ($t['slug'] ?? '') : $title), $page->id),
+                    'slug' => $slug,
                     'body' => ($t['body'] ?? '') === '' ? null : $this->html->clean((string) $t['body']),
                     'seo_title' => ($t['seo_title'] ?? '') === '' ? null : BanglaText::input((string) $t['seo_title']),
                     'seo_description' => ($t['seo_description'] ?? '') === '' ? null : BanglaText::input((string) $t['seo_description']),
                 ]);
+                $this->redirects->forget('page', (string) $locale, $slug);
+                if ($previous !== null && $previous !== $slug) {
+                    $this->redirects->record('page', $page->id, (string) $locale, (string) $previous);
+                }
             }
 
             $page->unsetRelation('translations');

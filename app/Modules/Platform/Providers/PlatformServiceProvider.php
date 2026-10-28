@@ -19,6 +19,7 @@ use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\Branding;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use App\Modules\Platform\Support\PageSeo;
 use App\Modules\Platform\Support\SystemClock;
 use Closure;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -50,6 +51,7 @@ class PlatformServiceProvider extends ModuleServiceProvider
         $this->app->singleton(OutboxRegistry::class);
         $this->app->singleton(AdminMenu::class);
         $this->app->singleton(Branding::class);
+        $this->app->scoped(PageSeo::class);
 
         // One RequestContext per request / queued job / console run.
         $this->app->scoped(RequestContext::class, fn () => new RequestContext(

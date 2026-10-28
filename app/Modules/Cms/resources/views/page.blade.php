@@ -2,10 +2,6 @@
 
 @section('title', $translation->seo_title ?: $translation->title)
 
-@push('head')
-    @if ($translation->seo_description)<meta name="description" content="{{ $translation->seo_description }}">@endif
-@endpush
-
 @section('content')
 <article class="mx-auto max-w-3xl space-y-4">
     <h1 class="text-3xl font-bold">{{ $translation->title }}</h1>
