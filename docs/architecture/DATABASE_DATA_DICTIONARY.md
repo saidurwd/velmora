@@ -51,6 +51,7 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 | tags, collections (+translations), collection_products | merchandising | collection: type (manual/rule), rule j NULL | SD |
 | product_media | images | product_id, variant_id NULL, disk, path, mime, width, height, sort_order; product_media_translations(alt text per locale) | SD |
 | tax_classes | | code UNIQUE, name; tax_rates(tax_class_id, rate_bp INT, jurisdiction s20, valid_from, valid_to NULL; no overlaps per class — rows never edited) | rate values 🔎 verify |
+| catalog_imports | CSV import jobs | public_id ULID UNIQUE, created_by, filename, stored_path (private disk), dry_run b, status (queued/running/done/failed; CHECK), total/created/updated/error counts, results JSON (per-row outcome + error keys), failure, started_at, finished_at; idx(created_at) | |
 | slug_redirects | 301 on slug change | locale, old_slug, entity_type, entity_id; UNIQUE(locale,old_slug) | |
 
 ## Pricing & Promotions

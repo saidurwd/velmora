@@ -142,5 +142,17 @@ Epics = phases; IDs `E<phase>-<n>`; estimate in person-days (AI-assisted); depen
 | E13-2 | Monitoring/alerts/backups verification | Platform | 2 | normal | E13-1 |
 | E13-3 | Cutover plan + hypercare | Platform | 2 | normal | E13-2 |
 
+## Deferred from Phase 3 (found while building; not yet scheduled)
+| Item | Module | Note |
+|---|---|---|
+| Stock filter and bulk actions on the product list | Catalog / Inventory | needs an Inventory contract for "in stock / out of stock" product sets |
+| Low-stock list and stock-count worksheet | Inventory | `StockLow` event already fires |
+| Inline edit of an existing variant (SKU, status, options, dimensions) | Catalog | add / generate / delete exist |
+| Variant-level images in the media manager | Catalog | `product_media.variant_id` column exists |
+| CSV import for option products / variants, and categories | Catalog | importer is simple-product only by design |
+| Translate business-rule messages shown in import errors | Catalog | currently English exception text |
+| Delete stale dry-run uploads from the private disk | Catalog | scheduled cleanup job |
+| Product type-specific fields (digital file, service duration) | Catalog | arrive with Phases 8 and 9 |
+
 ## Parking lot (not in MVP)
 Direct bKash adapter · Nagad · extra couriers · Meilisearch/Typesense (trigger-based) · purchasing/suppliers (Q9) · loyalty · push campaigns · subscriptions · gift cards · B2B price lists · pre-orders · marketplace/vendors (ADR-028).

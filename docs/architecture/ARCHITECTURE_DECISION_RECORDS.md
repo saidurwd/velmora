@@ -68,3 +68,10 @@ Adding a nullable column later is cheap on MariaDB; the hard part of a marketpla
 | SeaweedFS (container, dev only) | local S3-compatible storage; MinIO images unavailable | Apache-2.0; not a code dependency |
 | tailwindcss 4 / vite 8 / laravel-vite-plugin | asset pipeline (BD-03) | from skeleton |
 `composer audit` and `npm audit --audit-level=high` were clean on 2026-10-28.
+
+### ADR-001 addendum — dependencies added in Phase 3
+| Package | Why | Notes |
+|---|---|---|
+| intervention/image 4.x (GD driver) | re-encode uploads, resize, WebP/AVIF | MIT; actively maintained; GD is bundled with PHP so no ImageMagick needed |
+| ezyang/htmlpurifier | sanitise product / category HTML at write time | LGPL-2.1+; long-established, standards-based allow-list. Used directly instead of the `mews/purifier` wrapper (one less dependency; same engine) |
+Phase 3 also added `catalog_imports` (CSV import job status; not in the original data dictionary).
