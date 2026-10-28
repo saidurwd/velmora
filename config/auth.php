@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Models\User;
+use App\Modules\IdentityAccess\Models\User;
 
 return [
 
@@ -40,9 +40,16 @@ return [
     */
 
     'guards' => [
+        // Customers (storefront + account area)
         'web' => [
             'driver' => 'session',
-            'provider' => 'users',
+            'provider' => 'customers',
+        ],
+
+        // Staff (admin panel): separate session, separate provider, mandatory MFA
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'staff',
         ],
     ],
 
@@ -64,9 +71,17 @@ return [
     */
 
     'providers' => [
-        'users' => [
-            'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', User::class),
+        // One users table, two account types; each provider can only ever see its own type.
+        'customers' => [
+            'driver' => 'account_type',
+            'model' => User::class,
+            'account_type' => 'customer',
+        ],
+
+        'staff' => [
+            'driver' => 'account_type',
+            'model' => User::class,
+            'account_type' => 'staff',
         ],
 
         // 'users' => [
@@ -96,9 +111,16 @@ return [
 
     'passwords' => [
         'users' => [
-            'provider' => 'users',
+            'provider' => 'customers',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
             'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        'staff' => [
+            'provider' => 'staff',
+            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 30,
             'throttle' => 60,
         ],
     ],
