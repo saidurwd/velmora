@@ -18,9 +18,9 @@ final class ResetPassword
     public function __construct(private readonly AuditLogger $audit) {}
 
     /** @return bool true when the token was valid and the password changed */
-    public function handle(string $email, string $token, string $newPassword): bool
+    public function handle(string $email, string $token, string $newPassword, string $broker = 'users'): bool
     {
-        $status = Password::broker('users')->reset(
+        $status = Password::broker($broker)->reset(
             ['email' => mb_strtolower(trim($email)), 'password' => $newPassword, 'token' => $token],
             function (User $user, string $password): void {
                 $user->forceFill(['password' => $password, 'remember_token' => Str::random(60), 'failed_login_attempts' => 0, 'locked_until' => null])->save();

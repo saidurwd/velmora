@@ -19,24 +19,11 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Testing\TestResponse;
-
-const GOOD_PASSWORD = 'correct-horse-battery';
 
 beforeEach(function () {
     RateLimiter::clear('x');
     Notification::fake();
 });
-
-/** The test client does not keep cookies between requests; carry the session cookie like a browser would. */
-function carrySession(object $test, TestResponse $response): void
-{
-    $cookies = [];
-    foreach ($response->headers->getCookies() as $cookie) {
-        $cookies[$cookie->getName()] = $cookie->getValue();
-    }
-    $test->withUnencryptedCookies($cookies);
-}
 
 function registerPayload(array $over = []): array
 {

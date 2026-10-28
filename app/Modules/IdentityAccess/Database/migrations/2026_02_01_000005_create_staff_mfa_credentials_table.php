@@ -14,7 +14,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->unique()->constrained('users')->restrictOnDelete();
             $table->text('secret');                          // encrypted TOTP secret
-            $table->json('recovery_codes')->nullable();      // array of {hash, used_at}
+            $table->text('recovery_codes')->nullable();      // encrypted JSON array of {hash, used_at} (ciphertext is not valid JSON, so not a JSON column)
             $table->dateTime('confirmed_at', 6)->nullable(); // null until the first valid code is entered
             $table->unsignedBigInteger('last_used_step')->nullable(); // TOTP time-step replay protection
             $table->timestamps(6);

@@ -24,8 +24,10 @@ class ResetPasswordNotification extends Notification implements ShouldQueue
 
     public function toMail(User $notifiable): MailMessage
     {
-        $route = $notifiable->isStaff() ? 'admin.password.reset' : 'password.reset';
-        $url = route($route, ['locale' => $notifiable->locale, 'token' => $this->token]).'?email='.urlencode((string) $notifiable->email);
+        $url = ($notifiable->isStaff()
+            ? route('admin.password.reset', ['token' => $this->token])
+            : route('password.reset', ['locale' => $notifiable->locale, 'token' => $this->token])
+        ).'?email='.urlencode((string) $notifiable->email);
 
         return (new MailMessage)
             ->subject(__('identity-access::mail.reset.subject', ['app' => config('app.name')]))

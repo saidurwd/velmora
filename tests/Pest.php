@@ -6,6 +6,8 @@ use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+require_once __DIR__.'/Support/helpers.php';
+
 pest()->extend(TestCase::class)->in('Feature', 'Unit', 'Architecture', 'Database', '../app/Modules/*/tests');
 pest()->use(RefreshDatabase::class)->in('Feature', '../app/Modules/*/tests/Feature');
 

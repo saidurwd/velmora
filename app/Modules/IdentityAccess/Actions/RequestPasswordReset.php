@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\Password;
 /** Always silent: whether or not the address exists, the caller shows the same message. */
 final class RequestPasswordReset
 {
-    public function handle(string $email): void
+    public function handle(string $email, string $broker = 'users'): void
     {
-        Password::broker('users')->sendResetLink(['email' => mb_strtolower(trim($email))]);
+        Password::broker($broker)->sendResetLink(['email' => mb_strtolower(trim($email))]);
     }
 }
