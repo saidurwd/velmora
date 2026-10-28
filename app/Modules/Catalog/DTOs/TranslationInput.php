@@ -14,6 +14,7 @@ final readonly class TranslationInput
         public ?string $description = null,
         public ?string $seoTitle = null,
         public ?string $seoDescription = null,
+        public ?string $shortDescription = null,
     ) {}
 
     /**
@@ -38,6 +39,7 @@ final readonly class TranslationInput
                 ($data['description'] ?? '') === '' ? null : (string) $data['description'],
                 ($data['seo_title'] ?? '') === '' ? null : (string) $data['seo_title'],
                 ($data['seo_description'] ?? '') === '' ? null : (string) $data['seo_description'],
+                ($data['short_description'] ?? '') === '' ? null : (string) $data['short_description'],
             );
         }
 

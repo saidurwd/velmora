@@ -7,9 +7,11 @@ namespace App\Modules\Catalog\Services;
 use App\Modules\Catalog\DTOs\TranslationInput;
 use App\Modules\Catalog\Exceptions\CatalogException;
 use App\Modules\Platform\Support\BanglaText;
+use App\Modules\Platform\Support\HtmlSanitizer;
 use App\Modules\Platform\Support\Slugger;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Writes `<entity>_translations` rows (BD-30): English is mandatory, other languages optional; slugs are generated from
@@ -17,6 +19,8 @@ use Illuminate\Support\Facades\DB;
  */
 final class TranslationWriter
 {
+    public function __construct(private readonly HtmlSanitizer $html) {}
+
     /**
      * @param  class-string<Model>  $translationModel
      * @param  list<TranslationInput>  $inputs
@@ -45,16 +49,19 @@ final class TranslationWriter
         foreach ($byLocale as $locale => $input) {
             $slug = $this->uniqueSlug($table, $locale, Slugger::make($input->slug ?? $input->name), $foreignKey, (int) $entity->getKey(), $input->name);
 
-            $translationModel::query()->updateOrCreate(
-                [$foreignKey => $entity->getKey(), 'locale' => $locale],
-                [
-                    'name' => BanglaText::input($input->name),
-                    'slug' => $slug,
-                    'description' => $input->description === null ? null : BanglaText::input($input->description),
-                    'seo_title' => $input->seoTitle === null ? null : BanglaText::input($input->seoTitle),
-                    'seo_description' => $input->seoDescription === null ? null : BanglaText::input($input->seoDescription),
-                ],
-            );
+            $values = [
+                'name' => BanglaText::input($input->name),
+                'slug' => $slug,
+                'description' => $input->description === null ? null : $this->html->clean($input->description), // stored XSS stopped at write time
+                'seo_title' => $input->seoTitle === null ? null : BanglaText::input($input->seoTitle),
+                'seo_description' => $input->seoDescription === null ? null : BanglaText::input($input->seoDescription),
+            ];
+
+            if (Schema::hasColumn($table, 'short_description')) {
+                $values['short_description'] = $input->shortDescription === null ? null : BanglaText::input($input->shortDescription);
+            }
+
+            $translationModel::query()->updateOrCreate([$foreignKey => $entity->getKey(), 'locale' => $locale], $values);
         }
 
         $entity->unsetRelation('translations');
