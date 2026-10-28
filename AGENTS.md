@@ -21,7 +21,7 @@ Authoritative docs: `docs/architecture/*` (esp. `ARCHITECTURE_DECISION_RECORDS.m
 7. Update docs/ADRs/CHANGELOG/OpenAPI in the same change. Small commits, Conventional Commits (`feat(orders): …`).
 
 ## Architecture rules (enforced in CI)
-* Code lives in `app/Modules/<Module>/…`. Cross-module use is limited to **Contracts, DTOs, Enums, Events**. No cross-module Model/table access.
+* Code lives in `app/Modules/<Module>/…` (migrations/seeders in `Database/migrations` and `Database/Seeders` — capital D so PSR-4 works on Linux). Cross-module use is limited to **Contracts, DTOs, Enums, Events**. No cross-module Model/table access.
 * Controllers: FormRequest → Policy → **one Action** → Resource/View. No business logic in controllers, Blade, observers or routes.
 * Web, Admin and API call the **same Actions**.
 * No generic repositories, no service-locator, no static helpers holding state. Prefer constructor injection.

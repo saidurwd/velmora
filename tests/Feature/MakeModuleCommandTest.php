@@ -15,7 +15,7 @@ afterEach(fn () => (new Filesystem)->deleteDirectory($this->tmp));
 it('generates a module skeleton that passes the boundary rules', function () {
     $this->artisan('make:module', ['name' => 'Orders', '--path' => $this->tmp])->assertSuccessful();
 
-    foreach (['Actions', 'Contracts', 'Http/Controllers/Api', 'routes/web.php', 'resources/lang/bn', 'database/migrations', 'tests/Feature', 'Providers/OrdersServiceProvider.php'] as $path) {
+    foreach (['Actions', 'Contracts', 'Http/Controllers/Api', 'routes/web.php', 'resources/lang/bn', 'Database/migrations', 'tests/Feature', 'Providers/OrdersServiceProvider.php'] as $path) {
         expect(file_exists($this->tmp.'/Orders/'.$path))->toBeTrue("missing {$path}");
     }
 

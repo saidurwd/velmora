@@ -22,7 +22,7 @@ abstract class ModuleServiceProvider extends ServiceProvider
         $base = $this->basePath();
         $slug = Str::kebab($this->module());
 
-        $this->loadMigrationsFrom($base.'/database/migrations');
+        $this->loadMigrationsFrom($base.'/Database/migrations');
 
         if (is_dir($base.'/resources/views')) {
             $this->loadViewsFrom($base.'/resources/views', $slug);

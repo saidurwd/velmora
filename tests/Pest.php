@@ -2,8 +2,12 @@
 
 declare(strict_types=1);
 
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-pest()->extend(TestCase::class)->in('Feature', 'Unit', 'Architecture', '../app/Modules/*/tests');
+pest()->extend(TestCase::class)->in('Feature', 'Unit', 'Architecture', 'Database', '../app/Modules/*/tests');
 pest()->use(RefreshDatabase::class)->in('Feature', '../app/Modules/*/tests/Feature');
+
+// Real top-level transactions / DDL (deadlock retry, triggers, concurrency): data is committed, tables truncated between tests.
+pest()->use(DatabaseTruncation::class)->in('Database');

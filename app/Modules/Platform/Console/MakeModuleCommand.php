@@ -19,7 +19,7 @@ class MakeModuleCommand extends Command
         'Actions', 'Contracts', 'DTOs', 'Enums', 'Events', 'Listeners', 'Jobs', 'Policies', 'Exceptions', 'Models',
         'Http/Controllers/Web', 'Http/Controllers/Admin', 'Http/Controllers/Api', 'Http/Requests', 'Http/Resources',
         'Providers', 'routes', 'resources/views', 'resources/lang/en', 'resources/lang/bn',
-        'database/migrations', 'tests/Unit', 'tests/Feature',
+        'Database/migrations', 'Database/Seeders', 'tests/Unit', 'tests/Feature',
     ];
 
     public function handle(Filesystem $files): int
