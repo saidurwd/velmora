@@ -8,6 +8,7 @@ use App\Modules\Catalog\DTOs\ListingFilters;
 use App\Modules\Catalog\DTOs\ListingScope;
 use App\Modules\Catalog\DTOs\ProductCard;
 use App\Modules\Platform\DTOs\Money;
+use App\Modules\Platform\Support\StorefrontCache;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\Storage;
 /** Reads the `catalog_listing` read model: filters, sorts and pages storefront product cards with a fixed number of queries. */
 final class ListingQuery
 {
+    public function __construct(private readonly StorefrontCache $cache) {}
+
     public const PER_PAGE = 24;
 
     /** @return LengthAwarePaginator<int, ProductCard> */
@@ -45,6 +48,22 @@ final class ListingQuery
         }
 
         return new LengthAwarePaginator($rows->map(fn ($r) => $this->card($r))->all(), $total, $perPage, $filters->page, ['path' => request()->url(), 'query' => request()->query()]);
+    }
+
+    /**
+     * The same page, served from the short-lived storefront cache (instantly invalidated by catalog, price and stock changes).
+     *
+     * @return LengthAwarePaginator<int, ProductCard>
+     */
+    public function paginateCached(ListingScope $scope, ListingFilters $filters, string $locale, int $perPage = self::PER_PAGE): LengthAwarePaginator
+    {
+        $page = $this->cache->remember('list:'.md5(json_encode([$scope, $filters, $perPage], JSON_THROW_ON_ERROR)), function () use ($scope, $filters, $locale, $perPage): array {
+            $p = $this->paginate($scope, $filters, $locale, $perPage);
+
+            return ['items' => $p->items(), 'total' => $p->total()];
+        });
+
+        return new LengthAwarePaginator($page['items'], $page['total'], $perPage, $filters->page, ['path' => request()->url(), 'query' => request()->query()]);
     }
 
     /**

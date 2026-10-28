@@ -8,6 +8,7 @@ use App\Modules\Catalog\Services\Storefront\ListingProjection;
 use App\Modules\Inventory\Contracts\Availability;
 use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\Support\Settings;
+use App\Modules\Platform\Support\StorefrontCache;
 use App\Modules\Pricing\Contracts\PriceCatalog;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -30,7 +31,7 @@ class ReconcileListing implements ShouldQueue
         $this->onQueue('default');
     }
 
-    public function handle(ListingProjection $projection, PriceCatalog $prices, Availability $availability, Settings $settings, Clock $clock): void
+    public function handle(ListingProjection $projection, PriceCatalog $prices, Availability $availability, Settings $settings, Clock $clock, StorefrontCache $cache): void
     {
         $until = $clock->now();
         $stored = $settings->string(self::KEY);
@@ -41,6 +42,7 @@ class ReconcileListing implements ShouldQueue
         if ($variantIds !== []) {
             $productIds = array_values(array_map('intval', DB::table('product_variants')->whereIn('id', $variantIds)->distinct()->pluck('product_id')->all()));
             $projection->refreshMany($productIds);
+            $cache->bump(); // listings and home show the new prices / availability on the next request
         }
 
         $settings->set(self::KEY, $until->utc()->format('Y-m-d H:i:s.u'));

@@ -10,6 +10,7 @@ use App\Modules\Platform\Support\BanglaText;
 use App\Modules\Platform\Support\HtmlSanitizer;
 use App\Modules\Platform\Support\Slugger;
 use App\Modules\Platform\Support\SlugRedirects;
+use App\Modules\Platform\Support\StorefrontCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -23,7 +24,7 @@ final class TranslationWriter
     /** Translation table => the entity type used by slug redirects (tags have no public page). */
     private const REDIRECT_TYPES = ['product_translations' => 'product', 'category_translations' => 'category', 'brand_translations' => 'brand', 'collection_translations' => 'collection'];
 
-    public function __construct(private readonly HtmlSanitizer $html, private readonly SlugRedirects $redirects) {}
+    public function __construct(private readonly HtmlSanitizer $html, private readonly SlugRedirects $redirects, private readonly StorefrontCache $cache) {}
 
     /**
      * @param  class-string<Model>  $translationModel
@@ -79,6 +80,7 @@ final class TranslationWriter
         }
 
         $entity->unsetRelation('translations');
+        $this->cache->bump();
     }
 
     private function uniqueSlug(string $table, string $locale, string $base, string $foreignKey, int $ownerId, string $fallbackName): string

@@ -26,6 +26,15 @@ final class PageSeo
     /** @var list<array<string, mixed>> JSON-LD objects */
     public array $jsonLd = [];
 
+    /** Called when a route is matched: a long-lived worker (Octane, tests) must never carry one page's metadata into the next. */
+    public function reset(): void
+    {
+        $this->description = $this->canonical = $this->image = null;
+        $this->alternates = $this->jsonLd = [];
+        $this->noindex = false;
+        $this->type = 'website';
+    }
+
     public function describe(?string $text, int $limit = 160): self
     {
         $clean = trim((string) preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags((string) $text), ENT_QUOTES | ENT_HTML5, 'UTF-8')));

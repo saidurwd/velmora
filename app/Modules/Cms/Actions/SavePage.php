@@ -13,13 +13,14 @@ use App\Modules\Platform\Support\BanglaText;
 use App\Modules\Platform\Support\HtmlSanitizer;
 use App\Modules\Platform\Support\Slugger;
 use App\Modules\Platform\Support\SlugRedirects;
+use App\Modules\Platform\Support\StorefrontCache;
 use App\Modules\Platform\Support\Transactions;
 use Illuminate\Support\Facades\DB;
 
 /** Static pages (about, delivery, FAQ, policies): bilingual, sanitised HTML, slug unique per language. */
 final class SavePage
 {
-    public function __construct(private readonly HtmlSanitizer $html, private readonly AuditLogger $audit, private readonly SlugRedirects $redirects) {}
+    public function __construct(private readonly HtmlSanitizer $html, private readonly AuditLogger $audit, private readonly SlugRedirects $redirects, private readonly StorefrontCache $cache) {}
 
     /** @param  array<string, array{title?: string|null, slug?: string|null, body?: string|null, seo_title?: string|null, seo_description?: string|null}>  $translations */
     public function handle(Actor $actor, ?Page $page, array $translations): Page
@@ -59,6 +60,8 @@ final class SavePage
 
             $page->unsetRelation('translations');
             $this->audit->record($isNew ? 'cms.page_created' : 'cms.page_updated', $page, [], ['locales' => array_keys($translations)], $actor);
+
+            $this->cache->bump();
 
             return $page;
         });

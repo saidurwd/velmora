@@ -12,6 +12,7 @@ use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\Support\AuditLogger;
 use App\Modules\Platform\Support\BanglaText;
 use App\Modules\Platform\Support\ImageReencoder;
+use App\Modules\Platform\Support\StorefrontCache;
 use App\Modules\Platform\Support\Transactions;
 use Carbon\CarbonImmutable;
 use DomainException;
@@ -24,7 +25,7 @@ final class SaveBanner
 {
     public const PLACEMENTS = ['home_hero', 'home_strip'];
 
-    public function __construct(private readonly ImageReencoder $images, private readonly AuditLogger $audit) {}
+    public function __construct(private readonly ImageReencoder $images, private readonly AuditLogger $audit, private readonly StorefrontCache $cache) {}
 
     /**
      * @param  array{placement: string, link_url: string|null, sort_order: int, is_active: bool, starts_local: string|null, ends_local: string|null}  $data  times are Asia/Dhaka wall-clock
@@ -99,6 +100,8 @@ final class SaveBanner
 
                 $this->audit->record($isNew ? 'cms.banner_created' : 'cms.banner_updated', $banner, [], ['placement' => $data['placement'], 'active' => $data['is_active']], $actor);
                 $banner->unsetRelation('translations');
+
+                $this->cache->bump();
 
                 return $banner;
             });

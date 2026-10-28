@@ -9,6 +9,7 @@ use App\Modules\Cms\Exceptions\CmsException;
 use App\Modules\Cms\Models\Banner;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\Enums\ActorType;
+use App\Modules\Platform\Support\StorefrontCache;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,6 +45,7 @@ class BannerController
     public function destroy(Banner $banner): RedirectResponse
     {
         $banner->delete();
+        app(StorefrontCache::class)->bump();
 
         return redirect()->route('admin.cms.banners.index')->with('status', __('cms::admin.saved'));
     }

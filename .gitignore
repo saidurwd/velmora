@@ -48,3 +48,4 @@ auth.json
 /vendor
 _ide_helper.php
 Thumbs.db
+.lighthouseci/

@@ -17,6 +17,7 @@ use App\Modules\Catalog\Services\Storefront\DatabaseSitemapSource;
 use App\Modules\Catalog\Services\Storefront\ListingProjection;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use App\Modules\Platform\Support\StorefrontCache;
 use Illuminate\Support\Facades\Event;
 
 class CatalogServiceProvider extends ModuleServiceProvider
@@ -30,7 +31,10 @@ class CatalogServiceProvider extends ModuleServiceProvider
     {
         parent::boot();
 
-        Event::listen(ProductListingChanged::class, fn (ProductListingChanged $e) => $this->app->make(ListingProjection::class)->refresh($e->productId));
+        Event::listen(ProductListingChanged::class, function (ProductListingChanged $e): void {
+            $this->app->make(ListingProjection::class)->refresh($e->productId);
+            $this->app->make(StorefrontCache::class)->bump();
+        });
         $this->commands([ReindexListingCommand::class]);
 
         $menu = $this->app->make(AdminMenu::class);

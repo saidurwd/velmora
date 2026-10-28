@@ -8,6 +8,7 @@ use App\Modules\Platform\Support\AuditLogger;
 use App\Modules\Platform\Support\Branding;
 use App\Modules\Platform\Support\LogoProcessor;
 use App\Modules\Platform\Support\Settings;
+use App\Modules\Platform\Support\StorefrontCache;
 use DomainException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -23,7 +24,7 @@ class BrandingController
         return view('platform::admin.branding', ['branding' => $branding, 'locales' => (array) config('app.supported_locales')]);
     }
 
-    public function update(Request $request, Settings $settings, Branding $branding, LogoProcessor $logos, AuditLogger $audit): RedirectResponse
+    public function update(Request $request, Settings $settings, Branding $branding, LogoProcessor $logos, AuditLogger $audit, StorefrontCache $cache): RedirectResponse
     {
         $rules = [
             'name' => ['required', 'string', 'max:60'],
@@ -66,6 +67,7 @@ class BrandingController
             }
         }
 
+        $cache->bump();
         $audit->record('settings.branding_updated', 'settings', $before, ['name' => $data['name'], 'color' => $data['color'], 'logo_changed' => $newLogo !== null || $request->boolean('remove_logo')]);
 
         return redirect()->route('admin.settings.branding')->with('status', __('platform::branding.saved'));

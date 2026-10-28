@@ -10,6 +10,7 @@ use App\Modules\Cms\Exceptions\CmsException;
 use App\Modules\Cms\Models\Page;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\Enums\ActorType;
+use App\Modules\Platform\Support\StorefrontCache;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -64,6 +65,7 @@ class PageController
     {
         abort_if($page->status === 'published', 422, __('cms::admin.unpublish_first'));
         $page->delete();
+        app(StorefrontCache::class)->bump();
 
         return redirect()->route('admin.cms.pages.index')->with('status', __('cms::admin.saved'));
     }

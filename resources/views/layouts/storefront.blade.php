@@ -23,7 +23,7 @@
     </main>
 
     <footer class="mt-12 border-t border-line bg-surface-alt">
-        @php($pageLinks = app(\App\Modules\Cms\Contracts\PageDirectory::class)->published(app()->getLocale()))
+        @php($pageLinks = app(\App\Modules\Platform\Support\StorefrontCache::class)->remember('footer-links', fn () => app(\App\Modules\Cms\Contracts\PageDirectory::class)->published(app()->getLocale())))
         @if ($pageLinks !== [])
             <nav aria-label="{{ __('platform::ui.info_links') }}" class="mx-auto max-w-6xl px-4 pt-6">
                 <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm">

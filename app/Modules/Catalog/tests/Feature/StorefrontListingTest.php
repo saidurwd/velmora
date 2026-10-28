@@ -7,19 +7,14 @@ use App\Modules\Catalog\Database\Seeders\DemoCatalogSeeder;
 use App\Modules\Catalog\DTOs\ListingFilters;
 use App\Modules\Catalog\Jobs\ReconcileListing;
 use App\Modules\Catalog\Models\Product;
-use App\Modules\Catalog\Services\Storefront\ListingProjection;
 use App\Modules\Cms\Database\Seeders\DemoCmsSeeder;
 use App\Modules\Inventory\Actions\AdjustStock;
-use App\Modules\Inventory\Contracts\Availability;
 use App\Modules\Inventory\Database\Seeders\StockLocationSeeder;
-use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\Database\Seeders\LanguageSeeder;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\DTOs\Money;
-use App\Modules\Platform\Support\Settings;
 use App\Modules\Pricing\Actions\ScheduleSale;
 use App\Modules\Pricing\Actions\SetRegularPrice;
-use App\Modules\Pricing\Contracts\PriceCatalog;
 use App\Modules\Pricing\Database\Seeders\PriceListSeeder;
 use App\Modules\Pricing\Database\Seeders\TaxClassSeeder;
 use Illuminate\Support\Facades\DB;
@@ -128,12 +123,12 @@ it('shows a changed price, a sale and a stock-out within one reconcile run', fun
     $productId = (int) DB::table('product_variants')->where('id', $variantId)->value('product_id');
     $listing = fn () => DB::table('catalog_listing')->where('product_id', $productId)->first();
 
-    app(ReconcileListing::class)->handle(app(ListingProjection::class), app(PriceCatalog::class), app(Availability::class), app(Settings::class), app(Clock::class)); // sets the watermark
+    app()->call([app(ReconcileListing::class), 'handle']); // sets the watermark
 
     app(SetRegularPrice::class)->handle($actor, $variantId, Money::of(150000));
     expect((int) $listing()->min_price_minor)->toBe(185000); // not yet: read model catches up on the next run
 
-    $run = fn () => app(ReconcileListing::class)->handle(app(ListingProjection::class), app(PriceCatalog::class), app(Availability::class), app(Settings::class), app(Clock::class));
+    $run = fn () => app()->call([app(ReconcileListing::class), 'handle']);
     $run();
     expect((int) $listing()->min_price_minor)->toBe(150000);
 

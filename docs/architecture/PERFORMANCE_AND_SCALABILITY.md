@@ -41,3 +41,15 @@ Queue retry with backoff + dead-letter view; graceful degradation table (SYSTEM_
 
 ## 6. Performance test plan
 k6 scenarios: browse, search, add-to-cart, checkout (COD + prepaid sandbox), webhook burst, admin reports, last-unit contention. Lighthouse CI in PR on seeded data (throttled mobile). Dataset: 50 k products, 1 M orders, 5 M stock movements synthetic. Tools: slow query log, `performance_schema`, EXPLAIN review per new query (Phase gate), APM. Pass/fail against §1; waivers need written rationale.
+
+
+## Storefront caching and budgets (implemented in Phase 4)
+
+**What is cached.** Anonymous storefront reads — home page data, listing pages (per filter/sort/page), filter choices, footer page links — go through `StorefrontCache`: Redis/database cache entries keyed by a *storefront version* and the language. TTL ≤ 120 s as a backstop.
+**Invalidation.** Anything that changes what the public sees bumps the version, so the next request rebuilds: catalog edits (`ProductListingChanged`), taxonomy and attribute saves, CMS pages and banners, and the once-a-minute `ReconcileListing` job whenever it finds a price (including sales starting/ending) or stock change.
+**Documented staleness window.** Listing and home prices/availability: **≤ ~60 s** (the reconcile cadence). Catalog and CMS edits: immediate. Product pages, cart and checkout never use this cache: they read live price and stock. A banner's own start/end time is honoured within the 120 s TTL.
+**HTTP.** Public pages send `Cache-Control: private, max-age=0, must-revalidate` with an ETag; unchanged pages answer `304` with no body. Fingerprinted build assets (`/build/assets/*`) must be served `Cache-Control: public, max-age=31536000, immutable` by the web server (see DEPLOYMENT_AND_DEVOPS).
+**Fonts.** The Latin variable font is preloaded on every page and the Bangla regular weight on `/bn`; fonts use `font-display: swap`.
+**Critical CSS.** Not extracted: the whole stylesheet is ≈ 9 kB gzipped, so inlining would not beat one cached request. Revisit if it passes ≈ 30 kB gzipped.
+**Budgets.** `lighthouserc.json` + `.github/workflows/lighthouse.yml` run Lighthouse (mobile profile, simulated throttling, 3 runs) on home (en, bn), shop, a category and a product page against seeded demo data. Budgets: LCP ≤ 2.5 s, CLS ≤ 0.1, TBT ≤ 300 ms, page weight ≤ 1 MB, performance ≥ 85, accessibility ≥ 95, SEO ≥ 95. **Advisory** (warnings, non-blocking) until a few baseline runs are green; then switch to `error` and drop `continue-on-error`.
+**Scale check.** `RUN_SCALE_TESTS=1 vendor/bin/pest tests/Database/ScaleTest.php` seeds 12,000 bilingual products and checks every listing/search query plan (no full scan of a table over 500 rows) and timings. Measured on a developer laptop (MariaDB 12.1, busy machine): listing pages 3–45 ms, search 11–110 ms, cold home page 339 ms.

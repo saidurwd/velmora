@@ -12,6 +12,7 @@ use App\Modules\Catalog\Models\Collection;
 use App\Modules\Catalog\Models\Tag;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\Enums\ActorType;
+use App\Modules\Platform\Support\StorefrontCache;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 
@@ -57,6 +58,7 @@ class TaxonomyController
     {
         $model = $this->model($type);
         $model::query()->where('public_id', $item)->firstOrFail()->delete(); // soft delete
+        app(StorefrontCache::class)->bump();
 
         return redirect()->route('admin.catalog.taxonomy.index', $type)->with('status', __('catalog::admin.saved'));
     }

@@ -7,7 +7,7 @@ use App\Modules\Cms\Http\Controllers\Web\SeoFilesController;
 use Illuminate\Support\Facades\Route;
 
 Route::localized(function (): void {
-    Route::get('/pages/{slug}', [PageController::class, 'show'])->name('cms.page');
+    Route::get('/pages/{slug}', [PageController::class, 'show'])->middleware('cache.headers:private;max_age=0;must_revalidate;etag')->name('cms.page');
 });
 
 Route::middleware('web')->group(function (): void {

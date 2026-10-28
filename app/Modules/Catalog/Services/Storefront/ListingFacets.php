@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Catalog\Services\Storefront;
 
 use App\Modules\Catalog\DTOs\ListingScope;
+use App\Modules\Platform\Support\StorefrontCache;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\DB;
  */
 final class ListingFacets
 {
+    public function __construct(private readonly StorefrontCache $cache) {}
+
     /**
      * @return array{
      *     brands: list<array{slug: string, name: string, count: int}>,
@@ -23,6 +26,19 @@ final class ListingFacets
      * }
      */
     public function for(ListingScope $scope, string $locale): array
+    {
+        return $this->cache->remember('facets:'.md5(json_encode($scope, JSON_THROW_ON_ERROR)), fn () => $this->compute($scope, $locale));
+    }
+
+    /**
+     * @return array{
+     *     brands: list<array{slug: string, name: string, count: int}>,
+     *     types: array<string, int>,
+     *     attributes: list<array{code: string, name: string, values: list<array{code: string, label: string, count: int}>}>,
+     *     price: array{min: int, max: int}|null
+     * }
+     */
+    private function compute(ListingScope $scope, string $locale): array
     {
         $default = (string) config('app.default_locale');
         $base = fn (): Builder => $this->scoped($scope);

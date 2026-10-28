@@ -20,11 +20,13 @@ use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\Branding;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use App\Modules\Platform\Support\PageSeo;
+use App\Modules\Platform\Support\StorefrontCache;
 use App\Modules\Platform\Support\SystemClock;
 use Closure;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
@@ -52,6 +54,7 @@ class PlatformServiceProvider extends ModuleServiceProvider
         $this->app->singleton(AdminMenu::class);
         $this->app->singleton(Branding::class);
         $this->app->scoped(PageSeo::class);
+        $this->app->singleton(StorefrontCache::class);
 
         // One RequestContext per request / queued job / console run.
         $this->app->scoped(RequestContext::class, fn () => new RequestContext(
@@ -65,6 +68,7 @@ class PlatformServiceProvider extends ModuleServiceProvider
     {
         parent::boot();
 
+        Event::listen(RouteMatched::class, fn () => $this->app->make(PageSeo::class)->reset());
         Paginator::defaultView('platform::pagination');
         Paginator::defaultSimpleView('platform::pagination');
 

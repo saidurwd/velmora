@@ -102,7 +102,7 @@ class ListingController
     {
         $locale = app()->getLocale();
         $filters = ListingFilters::fromQuery($queryOverride ?? $request->query());
-        $products = $this->query->paginate($scope, $filters, $locale);
+        $products = $search ? $this->query->paginate($scope, $filters, $locale) : $this->query->paginateCached($scope, $filters, $locale);
 
         // one canonical address per listing: filters and sorting never make new indexable pages
         $this->seo->canonical = $request->url().($filters->page > 1 ? '?page='.$filters->page : '');

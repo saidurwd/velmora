@@ -10,13 +10,14 @@ use App\Modules\Catalog\Models\AttributeValue;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\Support\AuditLogger;
 use App\Modules\Platform\Support\BanglaText;
+use App\Modules\Platform\Support\StorefrontCache;
 use App\Modules\Platform\Support\Transactions;
 use Illuminate\Support\Facades\DB;
 
 /** Defines an attribute (variant option or spec) with its bilingual name and its allowed values. */
 final class SaveAttribute
 {
-    public function __construct(private readonly AuditLogger $audit) {}
+    public function __construct(private readonly AuditLogger $audit, private readonly StorefrontCache $cache) {}
 
     /**
      * @param  array<string, string>  $names  locale => name (default language required)
@@ -58,6 +59,8 @@ final class SaveAttribute
             }
 
             $this->audit->record($isNew ? 'attribute.created' : 'attribute.updated', 'attribute', after: ['code' => $code, 'kind' => $kind, 'values' => count($values)], actor: $actor, subjectId: $attribute->id);
+
+            $this->cache->bump(); // filter choices on listing pages
 
             return $attribute->load(['translations', 'values.translations']);
         });
