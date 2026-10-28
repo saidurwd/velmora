@@ -79,7 +79,7 @@ class ProductController
 
     public function edit(Product $product, TaxRates $tax): View
     {
-        $product->load(['translations', 'categories', 'tags', 'brand', 'variants.optionValues.translations', 'variants.optionValues.attribute.translations']);
+        $product->load(['translations', 'categories', 'tags', 'brand', 'variants.optionValues.translations', 'variants.optionValues.attribute.translations', 'media.translations']);
 
         return view('catalog::admin.products.form', $this->formData($product, $tax) + [
             'optionAttributes' => Attribute::query()->where('kind', 'option')->with(['translations', 'values.translations'])->orderBy('code')->get(),

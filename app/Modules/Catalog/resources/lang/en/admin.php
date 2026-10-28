@@ -32,6 +32,7 @@ return [
         'sku' => 'SKU', 'sku_help' => '3–64 letters, digits or dashes.', 'barcode' => 'Barcode', 'weight' => 'Weight (grams)', 'track' => 'Track stock', 'options' => 'Options', 'default' => 'Default',
         'statuses' => ['active' => 'Active', 'inactive' => 'Inactive'], 'add' => 'Add a variant', 'generate' => 'Generate variants', 'generate_help' => 'Pick values for each option; one variant is created for every combination.', 'sku_base' => 'SKU prefix',
     ],
+    'media' => ['title' => 'Images', 'file' => 'Image file (JPEG, PNG or WebP)', 'alt' => 'Alt text', 'decorative' => 'Decorative image (no alt text)', 'upload' => 'Upload', 'primary' => 'Main image', 'make_primary' => 'Make main', 'up' => 'Move earlier', 'down' => 'Move later', 'none' => 'No images yet.'],
     'fields' => [
         'name' => 'Name',
         'slug' => 'URL slug (optional)',

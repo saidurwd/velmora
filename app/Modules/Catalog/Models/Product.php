@@ -58,6 +58,12 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    /** @return HasMany<ProductMedia, $this> */
+    public function media(): HasMany
+    {
+        return $this->hasMany(ProductMedia::class)->orderBy('sort_order')->orderBy('id');
+    }
+
     /** @return BelongsTo<Brand, $this> */
     public function brand(): BelongsTo
     {

@@ -8,7 +8,9 @@ use App\Modules\IdentityAccess\Database\Seeders\RolesAndPermissionsSeeder;
 use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
 use App\Modules\Platform\Database\Seeders\LanguageSeeder;
 use App\Modules\Pricing\Database\Seeders\TaxClassSeeder;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
@@ -123,4 +125,43 @@ it('forbids product screens without permission', function () {
     $nobody = catalogStaff([]);
     $this->actingAs($nobody, 'admin')->get('/admin/catalog/products')->assertForbidden();
     $this->actingAs(catalogStaff(['catalog.view']), 'admin')->get('/admin/catalog/products/create')->assertForbidden();
+});
+
+it('uploads, reorders, promotes and deletes product images', function () {
+    Storage::fake('media');
+    config(['catalog.media.disk' => 'media']);
+    $staff = catalogStaff(['catalog.view', 'catalog.create', 'catalog.update']);
+    $this->actingAs($staff, 'admin')->post('/admin/catalog/products', productForm());
+    $product = Product::firstOrFail();
+    $url = "/admin/catalog/products/{$product->public_id}/media";
+
+    $this->actingAs($staff, 'admin')->post($url, ['image' => UploadedFile::fake()->image('a.jpg', 800, 600)])->assertSessionHasErrors('alts.en'); // alt text is required
+    $this->actingAs($staff, 'admin')->post($url, ['image' => UploadedFile::fake()->create('x.jpg', 5, 'image/jpeg'), 'alts' => ['en' => 'x']])->assertSessionHasErrors('image');
+    $this->actingAs($staff, 'admin')->post($url, ['image' => UploadedFile::fake()->image('a.jpg', 800, 600), 'alts' => ['en' => 'Front', 'bn' => 'সামনে']])->assertRedirect();
+    $this->actingAs($staff, 'admin')->post($url, ['image' => UploadedFile::fake()->image('b.jpg', 800, 600), 'alts' => ['en' => 'Back']])->assertRedirect();
+
+    [$first, $second] = $product->media()->get()->all();
+    expect($first->is_primary)->toBeTrue();
+
+    $this->actingAs($staff, 'admin')->post("{$url}/{$second->public_id}/primary")->assertRedirect();
+    $this->actingAs($staff, 'admin')->post("{$url}/{$second->public_id}/move", ['direction' => 'up'])->assertRedirect();
+    expect($product->media()->first()?->id)->toBe($second->id)
+        ->and($second->fresh()->is_primary)->toBeTrue();
+
+    $this->actingAs($staff, 'admin')->get("/admin/catalog/products/{$product->public_id}/edit")->assertOk()->assertSee('Front');
+    $this->actingAs($staff, 'admin')->delete("{$url}/{$second->public_id}")->assertRedirect();
+    expect($product->media()->count())->toBe(1)->and($first->fresh()->is_primary)->toBeTrue();
+});
+
+it('does not let one product manage another product\'s image', function () {
+    Storage::fake('media');
+    config(['catalog.media.disk' => 'media']);
+    $staff = catalogStaff(['catalog.view', 'catalog.create', 'catalog.update']);
+    $this->actingAs($staff, 'admin')->post('/admin/catalog/products', productForm());
+    $this->actingAs($staff, 'admin')->post('/admin/catalog/products', productForm(['sku' => 'other-1']));
+    [$a, $b] = Product::orderBy('id')->get()->all();
+    $this->actingAs($staff, 'admin')->post("/admin/catalog/products/{$a->public_id}/media", ['image' => UploadedFile::fake()->image('a.jpg', 800, 600), 'alts' => ['en' => 'A']]);
+    $media = $a->media()->firstOrFail();
+
+    $this->actingAs($staff, 'admin')->delete("/admin/catalog/products/{$b->public_id}/media/{$media->public_id}")->assertNotFound();
 });

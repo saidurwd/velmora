@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Catalog\Http\Controllers\Admin\AttributeController;
 use App\Modules\Catalog\Http\Controllers\Admin\CategoryController;
+use App\Modules\Catalog\Http\Controllers\Admin\MediaController;
 use App\Modules\Catalog\Http\Controllers\Admin\ProductController;
 use App\Modules\Catalog\Http\Controllers\Admin\TaxonomyController;
 use App\Modules\Catalog\Http\Controllers\Admin\VariantController;
@@ -28,6 +29,11 @@ Route::middleware(['auth:admin', 'session.policy:admin'])->prefix('catalog')->na
         Route::put('/{product}', [ProductController::class, 'update'])->middleware('permission:catalog.update')->name('update');
         Route::post('/{product}/transition', [ProductController::class, 'transition'])->middleware('permission:catalog.publish')->name('transition');
         Route::delete('/{product}', [ProductController::class, 'destroy'])->middleware('permission:catalog.delete')->name('destroy');
+
+        Route::post('/{product}/media', [MediaController::class, 'store'])->middleware('permission:catalog.update')->name('media.store');
+        Route::post('/{product}/media/{media}/primary', [MediaController::class, 'primary'])->middleware('permission:catalog.update')->name('media.primary');
+        Route::post('/{product}/media/{media}/move', [MediaController::class, 'move'])->middleware('permission:catalog.update')->name('media.move');
+        Route::delete('/{product}/media/{media}', [MediaController::class, 'destroy'])->middleware('permission:catalog.update')->name('media.destroy');
 
         Route::post('/{product}/variants', [VariantController::class, 'store'])->middleware('permission:catalog.update')->name('variants.store');
         Route::post('/{product}/variants/generate', [VariantController::class, 'generate'])->middleware('permission:catalog.update')->name('variants.generate');

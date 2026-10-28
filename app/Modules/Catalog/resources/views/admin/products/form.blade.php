@@ -100,6 +100,7 @@
 
     @if ($product)
         @include('catalog::admin.products.variants')
+        @include('catalog::admin.products.media')
     @endif
 </div>
 @endsection
