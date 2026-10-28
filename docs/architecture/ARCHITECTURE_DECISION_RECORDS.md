@@ -52,3 +52,17 @@ Evidence in `docs/spikes/S1_S2_MARIADB_SPIKES.md`. ADR-019 locks production to M
 
 ### ADR-028 No vendor_id
 Adding a nullable column later is cheap on MariaDB; the hard part of a marketplace (commissions, settlements, vendor payouts) is a design problem a column now would not solve.
+
+### ADR-001 addendum — dependencies added in Phase 1 (reason, maintenance, licence)
+| Package | Why | Notes |
+|---|---|---|
+| laravel/framework 13.39 | the framework (owner-approved) | MIT, first-party |
+| pestphp/pest 4.7 + pest-plugin-laravel | test runner with architecture expectations | MIT; replaces plain PHPUnit syntax; PHPUnit 12 underneath |
+| larastan/larastan 3.13 | static analysis level 8 | MIT; widely used |
+| laravel/pint 1.32 | code style | MIT, first-party |
+| laravel/horizon 5.50 | queue monitoring for Redis queues (BD-04) | MIT, first-party; dashboard locked to local until Phase 2 |
+| laravel/pao (from skeleton) | compact test/tool output for AI agents | shipped with the Laravel 13 skeleton; removable |
+| alpinejs | light interactivity (BD-03) | MIT |
+| @fontsource-variable/inter, @fontsource/noto-sans-bengali | self-hosted fonts (BD-36), no CDN | OFL-licensed fonts |
+| tailwindcss 4 / vite 8 / laravel-vite-plugin | asset pipeline (BD-03) | from skeleton |
+`composer audit` and `npm audit --audit-level=high` were clean on 2026-10-28.
