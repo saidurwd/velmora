@@ -1,0 +1,16 @@
+# Velmora secret-scan configuration. Extends the default ruleset.
+title = "velmora gitleaks"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Test fixtures and documentation examples contain throwaway values, never real credentials."
+paths = [
+  '''^app/Modules/[^/]+/tests/''',
+  '''^tests/''',
+  '''^database/factories/''',
+  '''^docs/''',
+  '''^\.env\.example$''',
+  '''^compose\.yaml$''',
+]
