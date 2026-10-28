@@ -20,6 +20,9 @@ interface PriceCatalog
      */
     public function regularPrices(array $variantIds, string $listCode = 'retail'): array;
 
+    /** @return list<int> variants whose displayed price changed in (since, until]: price edits plus sales that started or ended */
+    public function changedVariantIds(CarbonInterface $since, CarbonInterface $until): array;
+
     /** @param  list<int>  $variantIds */
     public function allHaveRegularPrice(array $variantIds, string $listCode = 'retail'): bool;
 }

@@ -9,11 +9,13 @@ use App\Modules\Catalog\Actions\TransitionProduct;
 use App\Modules\Catalog\DTOs\ProductData;
 use App\Modules\Catalog\Enums\ProductStatus;
 use App\Modules\Catalog\Enums\ProductType;
+use App\Modules\Catalog\Events\ProductListingChanged;
 use App\Modules\Catalog\Exceptions\CatalogException;
 use App\Modules\Catalog\Http\Requests\ProductRequest;
 use App\Modules\Catalog\Models\Attribute;
 use App\Modules\Catalog\Models\Brand;
 use App\Modules\Catalog\Models\Category;
+use App\Modules\Catalog\Models\Collection;
 use App\Modules\Catalog\Models\Product;
 use App\Modules\Catalog\Models\Tag;
 use App\Modules\Platform\Contracts\Clock;
@@ -79,7 +81,7 @@ class ProductController
 
     public function edit(Product $product, TaxRates $tax): View
     {
-        $product->load(['translations', 'categories', 'tags', 'brand', 'variants.optionValues.translations', 'variants.optionValues.attribute.translations', 'media.translations']);
+        $product->load(['translations', 'categories', 'tags', 'collections', 'brand', 'variants.optionValues.translations', 'variants.optionValues.attribute.translations', 'media.translations']);
 
         return view('catalog::admin.products.form', $this->formData($product, $tax) + [
             'optionAttributes' => Attribute::query()->where('kind', 'option')->with(['translations', 'values.translations'])->orderBy('code')->get(),
@@ -121,6 +123,7 @@ class ProductController
     {
         abort_if($product->status === ProductStatus::Published, 422, __('catalog::admin.products.unpublish_first'));
         $product->delete(); // soft delete
+        ProductListingChanged::dispatch($product->id);
 
         return redirect()->route('admin.catalog.products.index')->with('status', __('catalog::admin.saved'));
     }
@@ -140,6 +143,7 @@ class ProductController
             array_values(Tag::query()->whereIn('public_id', (array) $request->validated('tags', []))->pluck('id')->map(fn ($v) => (int) $v)->all()),
             $withVariant ? $request->variant() : null,
             $actor->id,
+            array_values(Collection::query()->whereIn('public_id', (array) $request->validated('collections', []))->pluck('id')->map(fn ($v) => (int) $v)->all()),
         );
     }
 
@@ -153,6 +157,7 @@ class ProductController
             'brands' => Brand::query()->with('translations')->orderBy('id')->get(),
             'categories' => Category::query()->with('translations')->orderBy('id')->get(),
             'tags' => Tag::query()->with('translations')->orderBy('id')->get(),
+            'collections' => Collection::query()->with('translations')->orderBy('id')->get(),
         ];
     }
 

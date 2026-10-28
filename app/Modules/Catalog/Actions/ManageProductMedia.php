@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Catalog\Actions;
 
+use App\Modules\Catalog\Events\ProductListingChanged;
 use App\Modules\Catalog\Models\ProductMedia;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\Support\AuditLogger;
@@ -21,6 +22,7 @@ final class ManageProductMedia
             ProductMedia::query()->where('product_id', $media->product_id)->where('is_primary', true)->whereKeyNot($media->id)->update(['is_primary' => false]);
             $media->forceFill(['is_primary' => true])->save();
             $this->audit->record('media.primary_changed', $media, actor: $actor);
+            ProductListingChanged::dispatch($media->product_id);
         });
     }
 
@@ -47,6 +49,7 @@ final class ManageProductMedia
             }
 
             $this->audit->record('media.deleted', $media, actor: $actor);
+            ProductListingChanged::dispatch($media->product_id);
         });
 
         Storage::disk($media->disk)->deleteDirectory($media->base_path);

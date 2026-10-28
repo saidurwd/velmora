@@ -13,8 +13,6 @@ Route::get('/readyz', [HealthController::class, 'ready'])->name('health.ready');
 Route::get('/', [LocaleController::class, 'root'])->name('root');
 
 Route::localized(function (): void {
-    Route::view('/', 'platform::home')->name('home');
-
     if (! app()->isProduction()) {
         Route::view('/dev/components', 'platform::dev.components')->name('dev.components'); // component library, never served in production
     }

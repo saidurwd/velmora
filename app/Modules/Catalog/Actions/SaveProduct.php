@@ -7,6 +7,7 @@ namespace App\Modules\Catalog\Actions;
 use App\Modules\Catalog\DTOs\ProductData;
 use App\Modules\Catalog\DTOs\VariantData;
 use App\Modules\Catalog\Enums\ProductStatus;
+use App\Modules\Catalog\Events\ProductListingChanged;
 use App\Modules\Catalog\Exceptions\CatalogException;
 use App\Modules\Catalog\Models\Product;
 use App\Modules\Catalog\Models\ProductTranslation;
@@ -57,6 +58,8 @@ final class SaveProduct
 
             $this->audit->record($isNew ? 'product.created' : 'product.updated', $product, $before, ['type' => $data->type->value, 'brand_id' => $data->brandId, 'categories' => $data->categoryIds], $actor);
 
+            ProductListingChanged::dispatch($product->id);
+
             return $product->refresh();
         });
     }
@@ -68,6 +71,14 @@ final class SaveProduct
         DB::table('product_categories')->where('product_id', $product->id)->delete();
         foreach (array_unique($data->categoryIds) as $categoryId) {
             DB::table('product_categories')->insert(['product_id' => $product->id, 'category_id' => $categoryId, 'is_primary' => $categoryId === $primary]);
+        }
+
+        if ($data->collectionIds !== null) {
+            $order = DB::table('collection_products')->where('product_id', $product->id)->pluck('sort_order', 'collection_id');
+            DB::table('collection_products')->where('product_id', $product->id)->delete();
+            foreach (array_unique($data->collectionIds) as $collectionId) {
+                DB::table('collection_products')->insert(['collection_id' => $collectionId, 'product_id' => $product->id, 'sort_order' => (int) ($order[$collectionId] ?? 0)]);
+            }
         }
 
         DB::table('product_tags')->where('product_id', $product->id)->delete();

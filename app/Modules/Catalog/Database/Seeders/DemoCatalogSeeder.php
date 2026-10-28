@@ -17,9 +17,11 @@ use App\Modules\Catalog\Enums\ProductType;
 use App\Modules\Catalog\Models\Attribute;
 use App\Modules\Catalog\Models\Brand;
 use App\Modules\Catalog\Models\Category;
+use App\Modules\Catalog\Models\Collection;
 use App\Modules\Catalog\Models\Product;
 use App\Modules\Catalog\Models\ProductVariant;
 use App\Modules\Catalog\Models\Tag;
+use App\Modules\Catalog\Services\Storefront\ListingProjection;
 use App\Modules\Inventory\Contracts\StockInitialiser;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Pricing\Contracts\PriceWriter;
@@ -29,13 +31,16 @@ use RuntimeException;
 
 /**
  * Demo storefront data for local development and screenshots: 5 bilingual categories, 3 brands, 4 tags, size/colour
- * attributes and 46 published products (simple, with variants, one digital, one service). Re-runnable: every product is
+ * attributes and 45 published products (simple, with variants, one digital, one service). Re-runnable: every product is
  * keyed by SKU and skipped when it already exists. Never runs in production.
  *
  * Run: php artisan db:seed --class='App\Modules\Catalog\Database\Seeders\DemoCatalogSeeder'
  */
 class DemoCatalogSeeder extends Seeder
 {
+    /** @var array<string, int> */
+    private array $collections = [];
+
     /** @var array<string, array{0: string, 1: string}> slug => [English, Bangla] */
     private const CATEGORIES = [
         'clothing' => ['Clothing', 'পোশাক'],
@@ -47,6 +52,12 @@ class DemoCatalogSeeder extends Seeder
 
     /** @var array<string, array{0: string, 1: string}> */
     private const BRANDS = ['velmora-basics' => ['Velmora Basics', 'ভেলমোরা বেসিকস'], 'dhaka-craft' => ['Dhaka Craft', 'ঢাকা ক্র্যাফট'], 'padma-home' => ['Padma Home', 'পদ্মা হোম']];
+
+    /** @var array<string, array{0: string, 1: string}> */
+    private const COLLECTIONS = ['eid-specials' => ['Eid specials', 'ঈদ স্পেশাল'], 'handmade-picks' => ['Handmade picks', 'হাতে তৈরি বাছাই']];
+
+    /** Tag slug => collection slug: tagged products also join the matching collection. */
+    private const TAG_COLLECTION = ['eid' => 'eid-specials', 'handmade' => 'handmade-picks'];
 
     /** @var array<string, array{0: string, 1: string}> */
     private const TAGS = ['new' => ['New arrival', 'নতুন'], 'eid' => ['Eid special', 'ঈদ বিশেষ'], 'handmade' => ['Handmade', 'হাতে তৈরি'], 'bestseller' => ['Bestseller', 'সেরা বিক্রি']];
@@ -120,13 +131,14 @@ class DemoCatalogSeeder extends Seeder
         $categories = $this->categories($actor);
         $brands = $this->taxonomy($actor, Brand::class, self::BRANDS);
         $tags = $this->taxonomy($actor, Tag::class, self::TAGS);
+        $this->collections = $this->taxonomy($actor, Collection::class, self::COLLECTIONS);
         $attributes = $this->attributes($actor);
 
         foreach (self::SIMPLE as $sku => [$en, $bn, $category, $brand, $price, $compare, $stock, $tag]) {
             if (ProductVariant::withTrashed()->where('sku', $sku)->exists()) {
                 continue;
             }
-            $product = $this->product($actor, ProductType::Physical, $en, $bn, $categories[$category], $brands[$brand], $tag === null ? [] : [$tags[$tag]], new VariantData($sku, trackInventory: true, weightG: 300));
+            $product = $this->product($actor, ProductType::Physical, $en, $bn, $categories[$category], $brands[$brand], $tag === null ? [] : [$tags[$tag]], new VariantData($sku, trackInventory: true, weightG: 300), isset(self::TAG_COLLECTION[$tag ?? '']) ? [$this->collections[self::TAG_COLLECTION[$tag]]] : []);
             $variantId = (int) $product->variants()->value('id');
             $this->price($actor, $variantId, $price, $compare);
             app(StockInitialiser::class)->openingStock($actor, $variantId, $stock);
@@ -150,6 +162,7 @@ class DemoCatalogSeeder extends Seeder
         }
 
         $this->nonPhysical($actor, $categories['digital-services'], $brands['velmora-basics']);
+        app(ListingProjection::class)->rebuild();
     }
 
     private function nonPhysical(Actor $actor, int $category, int $brand): void
@@ -167,8 +180,11 @@ class DemoCatalogSeeder extends Seeder
         }
     }
 
-    /** @param  list<int>  $tagIds */
-    private function product(Actor $actor, ProductType $type, string $en, string $bn, int $categoryId, int $brandId, array $tagIds, ?VariantData $variant): Product
+    /**
+     * @param  list<int>  $tagIds
+     * @param  list<int>  $collectionIds
+     */
+    private function product(Actor $actor, ProductType $type, string $en, string $bn, int $categoryId, int $brandId, array $tagIds, ?VariantData $variant, array $collectionIds = []): Product
     {
         return app(SaveProduct::class)->handle($actor, null, new ProductData(
             $type,
@@ -177,7 +193,7 @@ class DemoCatalogSeeder extends Seeder
                 new TranslationInput('bn', $bn, null, "<p>{$bn}: দৈনন্দিন ব্যবহারের জন্য নির্ভরযোগ্য মান।</p>", null, null, "মানসম্পন্ন {$bn}।"),
             ],
             $brandId, 'standard', [$categoryId], $categoryId,
-            $tagIds, $variant,
+            $tagIds, $variant, null, $collectionIds,
         ));
     }
 
@@ -201,7 +217,7 @@ class DemoCatalogSeeder extends Seeder
     }
 
     /**
-     * @param  class-string<Brand|Tag>  $model
+     * @param  class-string<Brand|Tag|Collection>  $model
      * @param  array<string, array{0: string, 1: string}>  $items
      * @return array<string, int> slug => id
      */

@@ -49,6 +49,19 @@ final class PriceResolver implements PriceCatalog
         );
     }
 
+    public function changedVariantIds(CarbonInterface $since, CarbonInterface $until): array
+    {
+        $from = $since->utc()->format('Y-m-d H:i:s.u');
+        $to = $until->utc()->format('Y-m-d H:i:s.u');
+
+        $edited = DB::table('prices')->where('updated_at', '>', $from)->where('updated_at', '<=', $to)->pluck('variant_id');
+        $started = DB::table('price_sales')->where('starts_at', '>', $from)->where('starts_at', '<=', $to)->pluck('variant_id');
+        $ended = DB::table('price_sales')->where('ends_at', '>', $from)->where('ends_at', '<=', $to)->pluck('variant_id');
+        $touched = DB::table('price_sales')->where('updated_at', '>', $from)->where('updated_at', '<=', $to)->pluck('variant_id'); // sale created or edited
+
+        return array_values(array_unique(array_map('intval', [...$edited->all(), ...$started->all(), ...$ended->all(), ...$touched->all()])));
+    }
+
     public function regularPrices(array $variantIds, string $listCode = 'retail'): array
     {
         $out = [];

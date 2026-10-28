@@ -5,6 +5,7 @@
 @php
     $selectedCategories = old('categories', $product?->categories->pluck('public_id')->all() ?? []);
     $selectedTags = old('tags', $product?->tags->pluck('public_id')->all() ?? []);
+    $selectedCollections = old('collections', $product?->collections->pluck('public_id')->all() ?? []);
     $primaryCategory = old('primary_category', $product?->categories->firstWhere('pivot.is_primary', true)?->public_id);
     $usedAttributes = $product ? $product->variants->flatMap(fn ($v) => $v->optionValues)->map(fn ($ov) => $ov->attribute)->unique('id')->values() : collect();
 @endphp
@@ -73,6 +74,13 @@
             <div class="grid gap-2 sm:grid-cols-3">
                 @foreach ($categories as $c)
                     <label class="flex items-center gap-2"><input type="checkbox" name="categories[]" value="{{ $c->public_id }}" @checked(in_array($c->public_id, $selectedCategories, true)) class="size-4"> {{ $c->translate('name') }}</label>
+                @endforeach
+            </div>
+        </fieldset>
+        <fieldset class="space-y-2"><legend class="text-sm font-medium">{{ __('catalog::admin.menu.collections') }}</legend>
+            <div class="grid gap-2 sm:grid-cols-3">
+                @foreach ($collections as $col)
+                    <label class="flex items-center gap-2"><input type="checkbox" name="collections[]" value="{{ $col->public_id }}" @checked(in_array($col->public_id, $selectedCollections, true)) class="size-4"> {{ $col->translate('name') }}</label>
                 @endforeach
             </div>
         </fieldset>

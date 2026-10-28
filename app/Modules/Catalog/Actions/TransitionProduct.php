@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Catalog\Actions;
 
 use App\Modules\Catalog\Enums\ProductStatus;
+use App\Modules\Catalog\Events\ProductListingChanged;
 use App\Modules\Catalog\Exceptions\CatalogException;
 use App\Modules\Catalog\Models\Product;
 use App\Modules\Platform\Contracts\Clock;
@@ -58,6 +59,7 @@ final class TransitionProduct
             $from = $locked->status->value;
 
             $change($locked);
+            ProductListingChanged::dispatch($locked->id);
             $this->audit->record($action, $locked, ['status' => $from], ['status' => $locked->status->value, 'publish_at' => $locked->publish_at?->toIso8601String()], $actor);
 
             return $locked;

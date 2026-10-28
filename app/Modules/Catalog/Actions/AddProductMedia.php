@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Catalog\Actions;
 
 use App\Modules\Catalog\Contracts\MalwareScanner;
+use App\Modules\Catalog\Events\ProductListingChanged;
 use App\Modules\Catalog\Exceptions\MediaRejected;
 use App\Modules\Catalog\Models\Product;
 use App\Modules\Catalog\Models\ProductMedia;
@@ -80,6 +81,8 @@ final class AddProductMedia
                 }
 
                 $this->audit->record('media.added', $media, after: ['product_id' => $product->id, 'width' => $processed['width'], 'height' => $processed['height'], 'renditions' => array_map('count', $paths)], actor: $actor);
+
+                ProductListingChanged::dispatch($product->id);
 
                 return $media->load('translations');
             });

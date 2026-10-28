@@ -76,6 +76,12 @@ class Product extends Model
         return $this->belongsToMany(Category::class, 'product_categories')->withPivot('is_primary');
     }
 
+    /** @return BelongsToMany<Collection, $this> */
+    public function collections(): BelongsToMany
+    {
+        return $this->belongsToMany(Collection::class, 'collection_products');
+    }
+
     /** @return BelongsToMany<Tag, $this> */
     public function tags(): BelongsToMany
     {

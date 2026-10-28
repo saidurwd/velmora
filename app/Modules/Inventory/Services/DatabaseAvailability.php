@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Inventory\Services;
 
 use App\Modules\Inventory\Contracts\Availability;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 
 final class DatabaseAvailability implements Availability
@@ -12,6 +13,11 @@ final class DatabaseAvailability implements Availability
     public function forVariant(int $variantId): int
     {
         return $this->forVariants([$variantId])[$variantId] ?? 0;
+    }
+
+    public function changedVariantIds(CarbonInterface $since, CarbonInterface $until): array
+    {
+        return array_values(array_map('intval', DB::table('stock_levels')->where('updated_at', '>', $since->utc()->format('Y-m-d H:i:s.u'))->where('updated_at', '<=', $until->utc()->format('Y-m-d H:i:s.u'))->distinct()->pluck('variant_id')->all()));
     }
 
     public function forVariants(array $variantIds): array

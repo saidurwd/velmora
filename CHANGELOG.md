@@ -3,6 +3,12 @@
 All notable changes. Format: [Keep a Changelog](https://keepachangelog.com), versioning to be decided before launch.
 
 ## [Unreleased]
+### Added — Phase 4 (storefront & search) — in progress
+- Design system: admin-editable branding (name, taglines per language, logo, primary colour with a contrast guard), Blade component library, `/{locale}/dev/components`, accessible pagination.
+- Cms module: bilingual pages (sanitised, schedulable), banners with per-language responsive WebP and Dhaka-time windows, safe-link validation, `BannerSource` / `PageDirectory` contracts, demo content seeder.
+- Storefront browsing: home (CMS banners, categories, curated collections, new, popular), shop / category / brand / collection pages with URL-driven filters (brand, price, type, availability, attributes), sorting and numbered pagination that work without JavaScript. Backed by the `catalog_listing` read model (refreshed on catalog edits and once a minute for price / stock changes; `catalog:reindex` rebuilds it).
+- Product editor can assign collections.
+
 ### Added — Phase 3 (catalog, pricing, inventory core, admin UI)
 - Catalog: closure-table categories, brands, tags, collections; bilingual translations with Unicode slugs; products (physical / digital / service) with SKU rules, attributes and options, variant generator (max 250), publish / schedule / unpublish / archive workflow, HTML sanitiser.
 - Pricing: regular prices, DB-enforced non-overlapping scheduled sales (Dhaka-time windows), `PriceQuote` (tax-inclusive / exclusive), bulk change with preview and stale-preview guard; tax classes and dated, non-overlapping tax rates (tax stays off until VAT registration).
@@ -10,7 +16,7 @@ All notable changes. Format: [Keep a Changelog](https://keepachangelog.com), ver
 - Media: content-sniffed uploads, decompression-bomb guard, re-encode (strips EXIF and hidden payloads), responsive WebP (+AVIF when supported), per-language alt text, gallery management, malware-scanner hook.
 - Admin UI (en / bn): categories, brands, tags, collections, attributes; product list with filters and search, bilingual editor with missing-translation badges, variants (add / generate / delete), image manager, publish controls; price editor, sale scheduling, bulk price change with preview; stock levels, guarded manual adjustments, movement history.
 - CSV import / export: bilingual columns, SKU-keyed idempotent upsert, dry run on the real code path, background job, per-row errors in en / bn, chunk-atomic apply, formula-safe export.
-- Demo data: `DemoCatalogSeeder` (5 categories, 46 bilingual products, variants, one digital, one service; development only).
+- Demo data: `DemoCatalogSeeder` (5 categories, 45 bilingual products, variants, one digital, one service; development only).
 - New contracts for cross-module use: `VariantDirectory`, `PriceWriter`, `StockInitialiser`, `TaxRates::classCodes()`, `PriceCatalog::regularPrices()`.
 ### Changed during Phase 3
 - `Money::toMajorString()` added (exact decimal for form fields).

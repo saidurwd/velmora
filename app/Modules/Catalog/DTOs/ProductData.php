@@ -12,6 +12,7 @@ final readonly class ProductData
      * @param  list<TranslationInput>  $translations
      * @param  list<int>  $categoryIds
      * @param  list<int>  $tagIds
+     * @param  list<int>|null  $collectionIds  null = leave the product's collections as they are
      */
     public function __construct(
         public ProductType $type,
@@ -23,5 +24,6 @@ final readonly class ProductData
         public array $tagIds = [],
         public ?VariantData $defaultVariant = null,
         public ?int $createdBy = null,
+        public ?array $collectionIds = null,
     ) {}
 }

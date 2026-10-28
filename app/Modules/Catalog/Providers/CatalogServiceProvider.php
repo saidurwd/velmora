@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace App\Modules\Catalog\Providers;
 
+use App\Modules\Catalog\Console\ReindexListingCommand;
 use App\Modules\Catalog\Contracts\MalwareScanner;
 use App\Modules\Catalog\Contracts\VariantDirectory;
+use App\Modules\Catalog\Events\ProductListingChanged;
 use App\Modules\Catalog\Services\DatabaseVariantDirectory;
 use App\Modules\Catalog\Services\Media\NullMalwareScanner;
+use App\Modules\Catalog\Services\Storefront\ListingProjection;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use Illuminate\Support\Facades\Event;
 
 class CatalogServiceProvider extends ModuleServiceProvider
 {
@@ -21,6 +25,9 @@ class CatalogServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+
+        Event::listen(ProductListingChanged::class, fn (ProductListingChanged $e) => $this->app->make(ListingProjection::class)->refresh($e->productId));
+        $this->commands([ReindexListingCommand::class]);
 
         $menu = $this->app->make(AdminMenu::class);
         $menu->add('catalog::admin.menu.products', 'admin.catalog.products.index', 'catalog.view', 29);

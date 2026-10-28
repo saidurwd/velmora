@@ -13,8 +13,8 @@ it('redirects / to the best locale: default English, Accept-Language, then cooki
 });
 
 it('serves every localized route under /en and /bn with the right lang attribute', function () {
-    $this->get('/en')->assertOk()->assertSee('<html lang="en"', false)->assertSee('Welcome to');
-    $this->get('/bn')->assertOk()->assertSee('<html lang="bn"', false)->assertSee('স্বাগতম')->assertHeader('Content-Language', 'bn');
+    $this->get('/en')->assertOk()->assertSee('<html lang="en"', false)->assertSee('The store is being stocked');
+    $this->get('/bn')->assertOk()->assertSee('<html lang="bn"', false)->assertSee('দোকানে পণ্য সাজানো হচ্ছে')->assertHeader('Content-Language', 'bn');
 });
 
 it('404s for unsupported locale prefixes', function () {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Catalog\Actions;
 
 use App\Modules\Catalog\Enums\ProductStatus;
+use App\Modules\Catalog\Events\ProductListingChanged;
 use App\Modules\Catalog\Exceptions\CatalogException;
 use App\Modules\Catalog\Models\Product;
 use App\Modules\Catalog\Models\ProductVariant;
@@ -36,6 +37,7 @@ final class DeleteVariant
             }
 
             $this->audit->record('variant.deleted', $variant, ['sku' => $variant->sku], actor: $actor);
+            ProductListingChanged::dispatch($product->id);
         });
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Catalog\Actions;
 
 use App\Modules\Catalog\DTOs\VariantData;
+use App\Modules\Catalog\Events\ProductListingChanged;
 use App\Modules\Catalog\Exceptions\CatalogException;
 use App\Modules\Catalog\Models\AttributeValue;
 use App\Modules\Catalog\Models\Product;
@@ -80,6 +81,7 @@ final class SaveVariant
             }
 
             $this->audit->record($isNew ? 'variant.created' : 'variant.updated', $variant, $before, ['sku' => $sku, 'status' => $data->status, 'is_default' => $data->isDefault, 'options' => $signature], $actor);
+            ProductListingChanged::dispatch($product->id);
 
             return $variant;
         });

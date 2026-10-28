@@ -30,6 +30,8 @@ class ProductRequest extends FormRequest
             'categories' => ['nullable', 'array', 'max:20'],
             'categories.*' => ['string', 'size:26'],
             'primary_category' => ['nullable', 'string', 'size:26'],
+            'collections' => ['nullable', 'array', 'max:20'],
+            'collections.*' => ['string', 'size:26'],
             'tags' => ['nullable', 'array', 'max:50'],
             'tags.*' => ['string', 'size:26'],
             "translations.{$default}.name" => ['required', 'string', 'max:200'],
