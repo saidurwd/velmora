@@ -88,6 +88,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # gitleaks scans the commit range, so it needs full history
       - uses: shivammathur/setup-php@v2
         with:
           php-version: "8.4"
