@@ -1,9 +1,81 @@
 @import 'tailwindcss';
 
+/* Self-hosted fonts (BD-36): Latin = Inter variable, Bangla = Noto Sans Bengali subset. unicode-range keeps downloads minimal. */
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource/noto-sans-bengali/bengali-400.css';
+@import '@fontsource/noto-sans-bengali/bengali-500.css';
+@import '@fontsource/noto-sans-bengali/bengali-700.css';
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source '../../app/Modules/**/resources/views/**/*.blade.php';
 
+/* Design tokens (WEB_UI_UX_GUIDELINES §1). Brand colours are placeholders until the brand is final. */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter Variable', 'Noto Sans Bengali', ui-sans-serif, system-ui, sans-serif;
+
+    --color-brand-50: #eef6ff;
+    --color-brand-500: #2563eb;
+    --color-brand-600: #1d4ed8;
+    --color-brand-700: #1e40af;
+    --color-ink: #0f172a;
+    --color-muted: #475569;
+    --color-surface: #ffffff;
+    --color-surface-alt: #f8fafc;
+    --color-line: #e2e8f0;
+    --color-danger: #b91c1c;
+    --color-success: #15803d;
+    --color-warning: #b45309;
+
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 16px;
+
+    --breakpoint-xs: 22.5rem; /* 360px design floor */
+}
+
+@layer base {
+    html {
+        font-size: 16px;
+        line-height: 1.5;
+        color: var(--color-ink);
+        background: var(--color-surface);
+        -webkit-text-size-adjust: 100%;
+    }
+
+    /* Bangla needs more leading (BD-36) */
+    html[lang='bn'] {
+        line-height: 1.7;
+    }
+
+    :focus-visible {
+        outline: 3px solid var(--color-brand-500);
+        outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+}
+
+@layer components {
+    .skip-link {
+        position: absolute;
+        inset-inline-start: 0.5rem;
+        top: -4rem;
+        z-index: 100;
+        padding: 0.5rem 1rem;
+        background: var(--color-ink);
+        color: #fff;
+        border-radius: var(--radius-md);
+    }
+
+    .skip-link:focus {
+        top: 0.5rem;
+    }
 }

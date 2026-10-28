@@ -13,6 +13,8 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
+        $this->withoutVite(); // views are tested without needing a built manifest; CI also runs `npm run build`
+
         // The suite wipes its database. Refuse to run against anything that is not a *_test schema.
         $database = (string) config('database.connections.'.config('database.default').'.database');
 

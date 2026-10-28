@@ -54,6 +54,6 @@ final class Redactor
         }, $text);
 
         // card-like 13–19 digit runs
-        return (string) preg_replace('/(?<![\d*])(?:\d[ -]?){13,19}(?![\d*])/', '[card]', $text);
+        return (string) preg_replace('/(?<![\d*])\d(?:[ -]?\d){12,18}(?![\d*])/', '[card]', $text);
     }
 }

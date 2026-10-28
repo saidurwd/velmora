@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Platform\Jobs\DispatchOutboxMessages;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
@@ -12,3 +13,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::job(new DispatchOutboxMessages)->everyMinute()->name('outbox:dispatch')->withoutOverlapping();
+Schedule::call(fn () => Cache::put('scheduler:heartbeat', now()->toIso8601String(), 600))->everyMinute()->name('scheduler:heartbeat');
