@@ -3,6 +3,10 @@
 declare(strict_types=1);
 
 return [
+    'gallery' => 'Product images', 'gallery_hint' => ':count images. Scroll sideways to see them all.', 'no_image' => 'No image available',
+    'sale_ends' => 'Sale ends :when', 'tax_incl' => 'Price includes VAT', 'tax_excl' => 'VAT is added at checkout', 'sku' => 'SKU', 'update_choice' => 'Update choice',
+    'note_physical' => 'Delivered to your address across Bangladesh.', 'note_digital' => 'Digital product: available to download after payment.', 'note_service' => 'Service: the time is arranged after you order.',
+    'add_to_cart' => 'Add to cart', 'ordering_soon' => 'Online ordering opens soon.', 'description' => 'Description', 'related' => 'You may also like', 'recently_viewed' => 'Recently viewed',
     'shop' => 'Shop', 'subcategories' => 'Subcategories', 'filters' => 'Filters', 'price' => 'Price', 'price_min' => 'Minimum price', 'price_max' => 'Maximum price',
     'type' => 'Type', 'types' => ['physical' => 'Products', 'digital' => 'Digital', 'service' => 'Services'], 'brand' => 'Brand', 'in_stock_only' => 'In stock only',
     'apply' => 'Apply', 'clear' => 'Clear filters',

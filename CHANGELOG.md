@@ -8,6 +8,7 @@ All notable changes. Format: [Keep a Changelog](https://keepachangelog.com), ver
 - Cms module: bilingual pages (sanitised, schedulable), banners with per-language responsive WebP and Dhaka-time windows, safe-link validation, `BannerSource` / `PageDirectory` contracts, demo content seeder.
 - Storefront browsing: home (CMS banners, categories, curated collections, new, popular), shop / category / brand / collection pages with URL-driven filters (brand, price, type, availability, attributes), sorting and numbered pagination that work without JavaScript. Backed by the `catalog_listing` read model (refreshed on catalog edits and once a minute for price / stock changes; `catalog:reindex` rebuilds it).
 - Product editor can assign collections.
+- Product page (`/{locale}/p/{slug}`): live price, sale and stock; server-side variant picker that works without JavaScript; swipeable gallery with per-language alt text; type-specific notes for physical, digital and service products; related products; recently viewed (stored on the device only); 301 from another language's slug. The add-to-cart control is visible but disabled until Phase 5.
 
 ### Added — Phase 3 (catalog, pricing, inventory core, admin UI)
 - Catalog: closure-table categories, brands, tags, collections; bilingual translations with Unicode slugs; products (physical / digital / service) with SKU rules, attributes and options, variant generator (max 250), publish / schedule / unpublish / archive workflow, HTML sanitiser.

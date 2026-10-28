@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 const PUBLIC_WEB = [
     '/' => 'locale redirect',
     '{locale}' => 'storefront home',
+    '{locale}/p/{slug}' => 'storefront: product page (live products only)',
     '{locale}/shop' => 'storefront: all products', '{locale}/c/{slug}' => 'storefront: category', '{locale}/brands/{slug}' => 'storefront: brand', '{locale}/collections/{slug}' => 'storefront: collection',
     '{locale}/pages/{slug}' => 'published CMS pages (drafts and scheduled pages return 404)',
     '{locale}/dev/components' => 'component library (not registered in production)',
