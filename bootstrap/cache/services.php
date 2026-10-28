@@ -33,6 +33,7 @@
     29 => 'Termwind\\Laravel\\TermwindServiceProvider',
     30 => 'Pest\\Laravel\\PestServiceProvider',
     31 => 'App\\Providers\\AppServiceProvider',
+    32 => 'App\\Providers\\ModulesServiceProvider',
   ),
   'eager' => 
   array (
@@ -53,6 +54,7 @@
     14 => 'Termwind\\Laravel\\TermwindServiceProvider',
     15 => 'Pest\\Laravel\\PestServiceProvider',
     16 => 'App\\Providers\\AppServiceProvider',
+    17 => 'App\\Providers\\ModulesServiceProvider',
   ),
   'deferred' => 
   array (
