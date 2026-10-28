@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use App\Modules\IdentityAccess\Database\Seeders\RolesAndPermissionsSeeder;
 use App\Modules\Platform\Database\Seeders\LanguageSeeder;
+use App\Modules\Pricing\Database\Seeders\TaxClassSeeder;
 use Illuminate\Database\Seeder;
 
 /**
@@ -19,6 +20,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             LanguageSeeder::class,
             RolesAndPermissionsSeeder::class,
+            TaxClassSeeder::class,
         ]);
     }
 }

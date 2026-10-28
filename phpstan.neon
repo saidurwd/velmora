@@ -12,10 +12,6 @@ parameters:
     excludePaths:
         - app/Modules/*/tests/*
     ignoreErrors:
-        # Platform traits are consumed by models arriving in later phases (only tests use them today).
-        -
-            identifier: trait.unused
-            path: app/Modules/Platform/Concerns/*
         # TRUSTED_PROXIES is read before the config repository exists when the HTTP kernel is configured.
         -
             identifier: larastan.noEnvCallsOutsideOfConfig
