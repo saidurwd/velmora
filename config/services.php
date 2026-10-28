@@ -37,4 +37,8 @@ return [
         ],
     ],
 
+    'sms' => [
+        'driver' => env('SMS_DRIVER', 'log'), // log | fake | sslwireless (adapter pending official docs)
+    ],
+
 ];
