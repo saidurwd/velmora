@@ -7,7 +7,7 @@ Epics = phases; IDs `E<phase>-<n>`; estimate in person-days (AI-assisted); depen
 
 | ID | Story / task | Module | Est (d) | Risk | Depends |
 |---|---|---|---|---|---|
-| E1-1 | Docker Compose (php-fpm, nginx, MariaDB, Redis, MinIO, Mailpit) + .env.example | Platform | 2 | normal | — |
+| E1-1 | Docker Compose (Redis, S3/SeaweedFS, Mailpit; app on host) + .env.example — DONE | Platform | 2 | normal | — |
 | E1-2 | Module skeleton generator + arch tests (BD-11) | Platform | 3 | normal | E1-1 |
 | E1-3 | Platform kernel: Money, Clock, RequestContext, Settings, Audit, Idempotency, Outbox, PublicId, PhoneNumber, BanglaText | Platform | 6 | normal | E1-2 |
 | E1-4 | Error handling (web bn/en pages, problem+json), JSON logging + redaction | Platform | 2 | normal | E1-3 |

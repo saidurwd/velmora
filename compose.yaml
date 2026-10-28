@@ -1,10 +1,7 @@
 # Local development services for Velmora. Host ports are in a private range (6390/1035/8035/3317/9010) because
 # other local projects commonly occupy 6379/1025/8025/3307/9000.
 # The app itself runs on the host (php artisan serve / npm run dev) against the local MariaDB `velmora`.
-#   docker compose up -d                       -> redis, mailpit
-#   docker compose --profile storage up -d     -> adds MinIO (S3-compatible). NOTE: image pull failed in the Phase 1 sandbox
-#                                                  (docker.io and quay.io refused); revisit in Phase 3 (media) — until then
-#                                                  FILESYSTEM_DISK=local is used.
+#   docker compose up -d                       -> redis, s3 (SeaweedFS + buckets), mailpit
 #   docker compose --profile ci-parity up -d   -> adds a throwaway MariaDB 11.4 on :3317 (CI parity, never your data)
 services:
   redis:
@@ -17,35 +14,35 @@ services:
       interval: 5s
       retries: 10
 
-  minio:
-    profiles: ["storage"]
-    image: minio/minio:latest
-    command: server /data --console-address ":9001"
+  # S3-compatible object storage for dev (BD-05). MinIO no longer publishes public images, so SeaweedFS (Apache-2.0) is used.
+  # Buckets: velmora-media (public catalog media) and velmora-private (digital goods; signed URLs only).
+  s3:
+    image: chrislusf/seaweedfs:latest
+    command: ["mini", "-dir=/data"]
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-velmora}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-velmora-dev-secret}
-    ports: ["127.0.0.1:9010:9000", "127.0.0.1:9011:9001"]
-    volumes: ["minio-data:/data"]
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 10s
-      retries: 10
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-velmora}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-velmora-dev-secret}
+    ports: ["127.0.0.1:9010:8333"]
+    volumes: ["s3-data:/data"]
 
-  minio-setup:
-    profiles: ["storage"]
-    image: minio/mc:latest
-    depends_on:
-      minio: { condition: service_healthy }
+  s3-setup:
+    image: amazon/aws-cli:latest
+    depends_on: [s3]
+    restart: "no"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-velmora}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-velmora-dev-secret}
-    entrypoint: >
-      /bin/sh -c "
-      mc alias set local http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD &&
-      mc mb --ignore-existing local/velmora-media local/velmora-private &&
-      mc anonymous set download local/velmora-media &&
-      mc anonymous set none local/velmora-private &&
-      echo buckets ready"
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-velmora}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-velmora-dev-secret}
+      AWS_DEFAULT_REGION: us-east-1
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        for i in $$(seq 1 30); do
+          aws --endpoint-url http://s3:8333 s3 ls >/dev/null 2>&1 && break
+          sleep 2
+        done
+        aws --endpoint-url http://s3:8333 s3 mb s3://velmora-media 2>/dev/null || true
+        aws --endpoint-url http://s3:8333 s3 mb s3://velmora-private 2>/dev/null || true
+        echo "buckets ready"
 
   mailpit:
     image: axllent/mailpit:latest
@@ -63,4 +60,4 @@ services:
 
 volumes:
   redis-data:
-  minio-data:
+  s3-data:

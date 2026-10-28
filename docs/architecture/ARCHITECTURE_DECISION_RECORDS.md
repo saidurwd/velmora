@@ -31,7 +31,7 @@ Format: Context → Options → Decision → Consequences → Reversal. Status: 
 | 021 | Auth: sessions for web, Sanctum tokens for mobile; admin guard with mandatory TOTP; RBAC via spatie/laravel-permission [UNVERIFIED: evaluate] | Proposed |
 | 022 | Admin = custom Blade, not Filament (BD-08) | Proposed |
 | 023 | Redis for cache/queue/session; Horizon (BD-04) | Proposed |
-| 024 | Object storage: public media bucket + private digital bucket; MinIO in dev (BD-05) | Proposed |
+| 024 | Object storage: public media bucket + private digital bucket (BD-05). Dev uses SeaweedFS because MinIO no longer publishes public images; verified: private objects 403 anonymously, signed URLs work and expire | Proposed |
 | 025 | API: `/api/v1`, problem+json, Idempotency-Key, OpenAPI 3.1 in CI (BD §12) | Proposed |
 | 026 | Hierarchies (categories, geography) via closure table (no ltree on MariaDB) | Proposed (new) |
 | 027 | Migrations: small single-purpose, forward-only, expand→migrate→contract (DDL not transactional) | Proposed (new) |
@@ -64,5 +64,7 @@ Adding a nullable column later is cheap on MariaDB; the hard part of a marketpla
 | laravel/pao (from skeleton) | compact test/tool output for AI agents | shipped with the Laravel 13 skeleton; removable |
 | alpinejs | light interactivity (BD-03) | MIT |
 | @fontsource-variable/inter, @fontsource/noto-sans-bengali | self-hosted fonts (BD-36), no CDN | OFL-licensed fonts |
+| league/flysystem-aws-s3-v3 3.x | S3 disks (media + private) | MIT, first-party Laravel integration |
+| SeaweedFS (container, dev only) | local S3-compatible storage; MinIO images unavailable | Apache-2.0; not a code dependency |
 | tailwindcss 4 / vite 8 / laravel-vite-plugin | asset pipeline (BD-03) | from skeleton |
 `composer audit` and `npm audit --audit-level=high` were clean on 2026-10-28.

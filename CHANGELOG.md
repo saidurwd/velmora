@@ -12,5 +12,6 @@ All notable changes. Format: [Keep a Changelog](https://keepachangelog.com), ver
 - Error handling (RFC 9457 problem+json with stable codes; bilingual web error pages), JSON log redaction, secure headers
   (CSP report-only), rate-limit tiers, `/healthz` + `/readyz`, production-config guard.
 - Layouts, Tailwind tokens, self-hosted Noto Sans Bengali + Inter, Alpine.
-- Docker Compose (Redis, Mailpit; optional MariaDB-CI, MinIO), Horizon, GitHub Actions CI, PR template.
+- Docker Compose (Redis, S3 via SeaweedFS with `velmora-media` + `velmora-private` buckets, Mailpit; optional MariaDB-CI), Horizon, GitHub Actions CI, PR template.
+- `media` (public) and `private` (signed-URL only) S3 disks; storage tests prove anonymous access to private objects is denied and signed URLs expire.
 - Architecture package (`docs/`), AGENTS.md, backlog.

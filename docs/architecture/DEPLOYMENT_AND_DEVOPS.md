@@ -5,7 +5,7 @@ SMS (Q5): **SSL Wireless ISMS Plus** (requires registered Sender ID and a whitel
 ## 1. Environments
 | Env | Purpose | Data | Providers |
 |---|---|---|---|
-| local | dev (Docker Compose: php-fpm, nginx, MariaDB, Redis, MinIO, Mailpit) | seeded demo; current dev DB `velmora`, tests `velmora_test` | fakes/log |
+| local | dev (Docker Compose: php-fpm, nginx, MariaDB, Redis, SeaweedFS (S3-compatible), Mailpit) | seeded demo; current dev DB `velmora`, tests `velmora_test` | fakes/log |
 | CI | ephemeral | factories | fakes |
 | staging | prod mirror | anonymised/synthetic | provider sandboxes |
 | production | live | real | live (human cutover) |

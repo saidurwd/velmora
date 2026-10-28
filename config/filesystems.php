@@ -49,17 +49,33 @@ return [
             'report' => false,
         ],
 
-        's3' => [
+        // Public catalog media (BD-05). Objects here may be served via CDN/public URL.
+        'media' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('AWS_BUCKET'),
-            'url' => env('AWS_URL'),
+            'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+            'bucket' => env('MEDIA_PUBLIC_BUCKET', 'velmora-media'),
+            'url' => env('MEDIA_PUBLIC_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
-            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
-            'throw' => false,
-            'report' => false,
+            'use_path_style_endpoint' => (bool) env('AWS_USE_PATH_STYLE_ENDPOINT', true),
+            'visibility' => 'public',
+            'throw' => true,
+            'report' => true,
+        ],
+
+        // PRIVATE: digital goods and attachments. Never public; delivered only via short-lived signed URLs (BD §9).
+        'private' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+            'bucket' => env('MEDIA_PRIVATE_BUCKET', 'velmora-private'),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => (bool) env('AWS_USE_PATH_STYLE_ENDPOINT', true),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => true,
         ],
 
     ],

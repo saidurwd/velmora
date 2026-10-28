@@ -12,7 +12,7 @@ PHP 8.3+ (8.4 used), Composer 2, Node 22, Docker (for Redis/Mailpit), MariaDB �
 ## Quick start
 ```bash
 git clone <repo> && cd velmora
-docker compose up -d                 # redis :6390, mailpit :1035 (UI :8035)
+docker compose up -d                 # redis :6390, S3 (SeaweedFS) :9010 + buckets, mailpit :1035 (UI :8035)
 composer install && npm ci
 cp .env.example .env && php artisan key:generate
 #  edit .env: DB_USERNAME / DB_PASSWORD for your MariaDB; the database `velmora` must exist
@@ -51,4 +51,5 @@ tests/Architecture      module-boundary + localisation rules      tests/Database
 Modules talk to each other only through **Contracts, DTOs, Enums and Events** — enforced by `tests/Architecture`.
 
 ## Ports (private range to avoid clashes with other local projects)
-Redis 6390 · Mailpit SMTP 1035 / UI 8035 · optional MariaDB-CI 3317 · optional MinIO 9010/9011 (`--profile storage`).
+Redis 6390 · S3 (SeaweedFS) 9010 · Mailpit SMTP 1035 / UI 8035 · optional MariaDB-CI 3317 (`--profile ci-parity`).
+MinIO is not used: it no longer publishes public container images. Dev S3 credentials in `.env.example` are throwaway.
