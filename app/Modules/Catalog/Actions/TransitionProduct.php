@@ -11,13 +11,14 @@ use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\Support\AuditLogger;
 use App\Modules\Platform\Support\Transactions;
+use App\Modules\Pricing\Contracts\PriceCatalog;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 
 /** draft → published (now or scheduled) → draft / archived. Publishing is validated; nothing half-built goes live. */
 final class TransitionProduct
 {
-    public function __construct(private readonly AuditLogger $audit, private readonly Clock $clock) {}
+    public function __construct(private readonly AuditLogger $audit, private readonly Clock $clock, private readonly PriceCatalog $prices) {}
 
     public function publish(Actor $actor, Product $product): Product
     {
@@ -73,6 +74,11 @@ final class TransitionProduct
 
         if (! DB::table('product_variants')->where('product_id', $product->id)->whereNull('deleted_at')->where('status', 'active')->exists()) {
             throw CatalogException::notPublishable('it needs at least one active variant');
+        }
+
+        $variantIds = array_values(array_map('intval', DB::table('product_variants')->where('product_id', $product->id)->whereNull('deleted_at')->where('status', 'active')->pluck('id')->all()));
+        if (! $this->prices->allHaveRegularPrice($variantIds)) {
+            throw CatalogException::notPublishable('every active variant needs a price');
         }
 
         if (! DB::table('product_categories')->where('product_id', $product->id)->exists()) {

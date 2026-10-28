@@ -21,18 +21,23 @@ use App\Modules\Catalog\Models\Attribute;
 use App\Modules\Catalog\Models\Brand;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Catalog\Models\Product;
+use App\Modules\Catalog\Models\ProductVariant;
 use App\Modules\Catalog\Models\Tag;
 use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\Database\Seeders\LanguageSeeder;
 use App\Modules\Platform\DTOs\Actor;
+use App\Modules\Platform\DTOs\Money;
 use App\Modules\Platform\Support\AuditLogger;
 use App\Modules\Platform\Support\FrozenClock;
+use App\Modules\Pricing\Actions\SetRegularPrice;
+use App\Modules\Pricing\Database\Seeders\PriceListSeeder;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 beforeEach(function () {
     $this->seed(LanguageSeeder::class);
+    $this->seed(PriceListSeeder::class);
     $this->actor = Actor::system('test');
     $this->category = app(SaveCategory::class)->handle($this->actor, null, null, [new TranslationInput('en', 'Clothing')]);
 });
@@ -44,12 +49,24 @@ function simpleVariant(string $sku = 'TEE-001', bool $track = true): VariantData
 
 function makeProduct(ProductType $type = ProductType::Physical, ?VariantData $variant = null, array $translations = [], ?Category $category = null, bool $withVariant = true): Product
 {
-    return app(SaveProduct::class)->handle(Actor::system('test'), null, new ProductData(
+    $product = app(SaveProduct::class)->handle(Actor::system('test'), null, new ProductData(
         $type,
         $translations ?: [new TranslationInput('en', 'Cotton T-Shirt'), new TranslationInput('bn', 'সুতির টি-শার্ট')],
         categoryIds: [($category ?? test()->category)->id],
         defaultVariant: $withVariant ? ($variant ?? simpleVariant(track: $type === ProductType::Physical)) : null,
     ));
+
+    priceAll($product);
+
+    return $product;
+}
+
+/** Gives every live variant of the product a price (publishing requires one). */
+function priceAll(Product $product, int $minor = 100000): void
+{
+    foreach (ProductVariant::query()->where('product_id', $product->id)->get() as $variant) {
+        app(SetRegularPrice::class)->handle(Actor::system('test'), $variant->id, Money::of($minor));
+    }
 }
 
 function option(string $code, array $values): Attribute
@@ -230,6 +247,7 @@ describe('variants', function () {
         $product = makeProduct(withVariant: false);
         $default = app(SaveVariant::class)->handle($this->actor, $product, null, new VariantData('TEE-001', trackInventory: true, isDefault: true, optionValueIds: [$s]));
         $second = app(SaveVariant::class)->handle($this->actor, $product, null, new VariantData('TEE-002', trackInventory: true, optionValueIds: [$m]));
+        priceAll($product);
 
         app(DeleteVariant::class)->handle($this->actor, $default);
         expect($second->fresh()->is_default)->toBeTrue();
@@ -280,11 +298,15 @@ describe('publishing', function () {
 
     it('refuses to publish an incomplete product', function () {
         $noVariant = makeProduct();
+        DB::table('prices')->whereIn('variant_id', $noVariant->variants()->pluck('id'))->delete();
         DB::table('product_variants')->where('product_id', $noVariant->id)->delete();
         $noCategory = makeProduct(variant: simpleVariant('TEE-002'));
         DB::table('product_categories')->where('product_id', $noCategory->id)->delete();
+        $noPrice = makeProduct(variant: simpleVariant('TEE-003'));
+        DB::table('prices')->where('variant_id', $noPrice->variants()->value('id'))->delete();
 
         expect(fn () => app(TransitionProduct::class)->publish($this->actor, $noVariant))->toThrow(CatalogException::class, 'active variant')
+            ->and(fn () => app(TransitionProduct::class)->publish($this->actor, $noPrice))->toThrow(CatalogException::class, 'needs a price')
             ->and(fn () => app(TransitionProduct::class)->publish($this->actor, $noCategory))->toThrow(CatalogException::class, 'category')
             ->and($noVariant->fresh()->status)->toBe(ProductStatus::Draft);
     });
