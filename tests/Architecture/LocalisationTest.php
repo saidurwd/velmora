@@ -91,11 +91,12 @@ it('has no hard-coded user-visible text in Blade views', function () {
         }
 
         $html = (string) file_get_contents($view);
+        $html = preg_replace('/@php\b.*?@endphp/s', '', $html);
         $html = preg_replace('/\{\{--.*?--\}\}/s', '', $html);
         $html = preg_replace('/\{!!.*?!!\}|\{\{.*?\}\}/s', ' ', $html);
         $html = preg_replace('/<(script|style)\b.*?<\/\1>/is', '', $html);
         $html = preg_replace('/<!--.*?-->/s', '', $html);
-        $html = preg_replace('/@(extends|section|yield|stack|push|include|vite|endsection|endpush|if|elseif|else|endif|foreach|endforeach|php|endphp|can|endcan|auth|endauth|guest|endguest)\b(\([^\n]*\))?/', ' ', $html);
+        $html = preg_replace('/@\w+\b\s*(\([^\n]*\))?/', ' ', $html); // any Blade directive
         $text = trim((string) preg_replace('/<[^>]*>/s', ' ', $html));
         $text = trim((string) preg_replace('/&[a-z]+;|&copy;|[\s\d\W]+/u', ' ', $text));
 

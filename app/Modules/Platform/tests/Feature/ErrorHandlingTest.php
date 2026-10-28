@@ -35,16 +35,13 @@ it('hides internals on unexpected API errors', function () {
 });
 
 it('localises problem titles by locale', function () {
-    app()->setLocale('bn');
-
-    $this->getJson('/api/v1/nothing-here')->assertStatus(404)->assertJson(['title' => 'অনুরোধকৃত তথ্য পাওয়া যায়নি।']);
+    $this->getJson('/api/v1/nothing-here', ['Accept-Language' => 'bn'])->assertStatus(404)->assertJson(['title' => 'অনুরোধকৃত তথ্য পাওয়া যায়নি।']);
 });
 
 it('renders friendly web error pages in English and Bangla', function () {
     $this->get('/definitely-missing')->assertStatus(404)->assertSee('Page not found')->assertSee('lang="en"', false);
 
-    app()->setLocale('bn');
-    $this->get('/definitely-missing')->assertStatus(404)->assertSee('পেজ পাওয়া যায়নি')->assertSee('lang="bn"', false);
+    $this->get('/definitely-missing', ['Accept-Language' => 'bn'])->assertStatus(404)->assertSee('পেজ পাওয়া যায়নি')->assertSee('lang="bn"', false);
 });
 
 it('has a stable status and unique code for every ErrorCode', function () {

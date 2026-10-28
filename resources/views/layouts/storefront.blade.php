@@ -3,7 +3,8 @@
 @section('body')
     <header class="border-b border-line">
         <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-            <a href="/" class="text-lg font-bold text-brand-700">{{ config('app.name') }}</a>
+            <a href="{{ url('/'.app()->getLocale()) }}" class="text-lg font-bold text-brand-700">{{ config('app.name') }}</a>
+            <x-platform::language-switcher />
         </div>
     </header>
 

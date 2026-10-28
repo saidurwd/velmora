@@ -15,6 +15,9 @@ return [
         'business.currency' => env('VELMORA_CURRENCY', 'BDT'),
     ],
 
+    // Native names shown in the language switcher (each in its own script).
+    'locale_labels' => ['en' => 'English', 'bn' => 'বাংলা'],
+
     'outbox' => [
         'batch_size' => 50,
         'max_attempts' => 10,

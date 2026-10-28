@@ -13,15 +13,18 @@ use App\Modules\Platform\Events\OutboxProbe;
 use App\Modules\Platform\Http\Middleware\AssignRequestContext;
 use App\Modules\Platform\Http\Middleware\EnsureIdempotency;
 use App\Modules\Platform\Http\Middleware\SecureHeaders;
+use App\Modules\Platform\Http\Middleware\SetLocale;
 use App\Modules\Platform\Listeners\AcknowledgeOutboxProbe;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use App\Modules\Platform\Support\SystemClock;
+use Closure;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
 class PlatformServiceProvider extends ModuleServiceProvider
@@ -34,6 +37,11 @@ class PlatformServiceProvider extends ModuleServiceProvider
     public function register(): void
     {
         $this->commands([MakeModuleCommand::class, DispatchOutboxCommand::class]);
+
+        // Route::localized(fn) -> /{locale}/... for every supported language (BD-33).
+        Route::macro('localized', function (Closure $routes): void {
+            Route::prefix('{locale}')->whereIn('locale', config('app.supported_locales'))->group($routes);
+        });
 
         $this->app->singleton(Clock::class, SystemClock::class);
         $this->app->singleton(OutboxRegistry::class);
@@ -55,6 +63,7 @@ class PlatformServiceProvider extends ModuleServiceProvider
         $router->aliasMiddleware('idempotent', EnsureIdempotency::class);
         $router->aliasMiddleware('request.context', AssignRequestContext::class);
         $router->aliasMiddleware('secure.headers', SecureHeaders::class);
+        $router->aliasMiddleware('locale', SetLocale::class);
 
         $this->app->make(OutboxRegistry::class)->register(OutboxProbe::class);
         Event::listen(OutboxProbe::class, [AcknowledgeOutboxProbe::class, 'handle']);

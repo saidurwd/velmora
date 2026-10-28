@@ -1,7 +1,27 @@
 <?php $__env->startSection('body'); ?>
     <header class="border-b border-line">
         <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-            <a href="/" class="text-lg font-bold text-brand-700"><?php echo e(config('app.name')); ?></a>
+            <a href="<?php echo e(url('/'.app()->getLocale())); ?>" class="text-lg font-bold text-brand-700"><?php echo e(config('app.name')); ?></a>
+            <?php if (isset($component)) { $__componentOriginal39cc230a9e1f8a283e6a74b331d667dc = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal39cc230a9e1f8a283e6a74b331d667dc = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'platform::components.language-switcher','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('platform::language-switcher'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal39cc230a9e1f8a283e6a74b331d667dc)): ?>
+<?php $attributes = $__attributesOriginal39cc230a9e1f8a283e6a74b331d667dc; ?>
+<?php unset($__attributesOriginal39cc230a9e1f8a283e6a74b331d667dc); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal39cc230a9e1f8a283e6a74b331d667dc)): ?>
+<?php $component = $__componentOriginal39cc230a9e1f8a283e6a74b331d667dc; ?>
+<?php unset($__componentOriginal39cc230a9e1f8a283e6a74b331d667dc); ?>
+<?php endif; ?>
         </div>
     </header>
 

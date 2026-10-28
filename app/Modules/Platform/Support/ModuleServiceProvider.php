@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Platform\Support;
 
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -26,6 +27,7 @@ abstract class ModuleServiceProvider extends ServiceProvider
 
         if (is_dir($base.'/resources/views')) {
             $this->loadViewsFrom($base.'/resources/views', $slug);
+            Blade::anonymousComponentPath($base.'/resources/views/components', $slug); // <x-slug::name />
         }
 
         if (is_dir($base.'/resources/lang')) {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Platform\DTOs;
 
 use App\Modules\Platform\Exceptions\MoneyException;
+use App\Modules\Platform\Support\Grouping;
 use JsonSerializable;
 
 /**
@@ -190,7 +191,7 @@ final readonly class Money implements JsonSerializable
         $integer = $exponent > 0 ? substr($abs, 0, -$exponent) : $abs;
         $fraction = $exponent > 0 ? substr($abs, -$exponent) : '';
 
-        $grouped = $locale === 'bn' ? self::groupLakhCrore($integer) : self::groupWestern($integer);
+        $grouped = Grouping::forLocale($integer, $locale);
         $text = ($this->amountMinor < 0 ? '-' : '').self::SYMBOLS[$this->currency].' '.$grouped.($fraction !== '' ? '.'.$fraction : '');
 
         return $banglaDigits ? strtr($text, ['0' => '০', '1' => '১', '2' => '২', '3' => '৩', '4' => '৪', '5' => '৫', '6' => '৬', '7' => '৭', '8' => '৮', '9' => '৯']) : $text;
@@ -216,22 +217,5 @@ final readonly class Money implements JsonSerializable
         }
 
         return $value;
-    }
-
-    private static function groupWestern(string $digits): string
-    {
-        return strrev(implode(',', str_split(strrev($digits), 3)));
-    }
-
-    private static function groupLakhCrore(string $digits): string
-    {
-        if (strlen($digits) <= 3) {
-            return $digits;
-        }
-
-        $last3 = substr($digits, -3);
-        $rest = substr($digits, 0, -3);
-
-        return strrev(implode(',', str_split(strrev($rest), 2))).','.$last3;
     }
 }
