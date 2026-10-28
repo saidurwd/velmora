@@ -235,3 +235,11 @@ describe('sitemaps and robots', function () {
         $this->get('/robots.txt')->assertSee('Disallow: /admin')->assertSee('Disallow: /*/search')->assertSee('Sitemap: '.url('/sitemap.xml'))->assertSee('Allow: /');
     });
 });
+
+it('gives every public page a meta description, even when staff wrote none', function () {
+    foreach (['/en', '/bn', '/en/shop', '/en/c/clothing', '/en/brands/dhaka-craft', '/en/collections/eid-specials', '/en/p/cotton-panjabi', '/en/pages/about'] as $path) {
+        $descriptions = seoMatches($this->get($path)->assertOk()->getContent(), '#<meta name="description" content="([^"]+)"#');
+
+        expect($descriptions)->toHaveCount(1, $path)->and(mb_strlen($descriptions[0]))->toBeGreaterThan(20)->toBeLessThanOrEqual(160);
+    }
+});

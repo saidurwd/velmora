@@ -21,7 +21,7 @@ class HomeController
     {
         $locale = app()->getLocale();
         $home = url("/{$locale}");
-        $seo->describe($brand->tagline())
+        $seo->describe($brand->tagline() !== '' ? $brand->tagline() : __('catalog::storefront.meta_home', ['name' => $brand->name()]))
             ->jsonLd(StructuredData::organization($brand, $home))
             ->jsonLd(StructuredData::website($brand, $home, url("/{$locale}/search")));
 

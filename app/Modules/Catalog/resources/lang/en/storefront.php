@@ -8,6 +8,7 @@ return [
     'note_physical' => 'Delivered to your address across Bangladesh.', 'note_digital' => 'Digital product: available to download after payment.', 'note_service' => 'Service: the time is arranged after you order.',
     'add_to_cart' => 'Add to cart', 'ordering_soon' => 'Online ordering opens soon.', 'description' => 'Description', 'related' => 'You may also like', 'recently_viewed' => 'Recently viewed',
     'search' => 'Search', 'search_results_for' => 'Results for “:query”', 'showing_for' => 'Showing results for “:corrected”. Search instead for “:query”?', 'search_tips' => 'Check the spelling, try fewer or more general words, or search in English or Bangla.',
+    'meta_listing' => ':title — browse and buy online at :name. Delivered across Bangladesh.', 'meta_home' => ':name — everyday essentials, handmade crafts and services, delivered across Bangladesh.',
     'shop' => 'Shop', 'subcategories' => 'Subcategories', 'filters' => 'Filters', 'price' => 'Price', 'price_min' => 'Minimum price', 'price_max' => 'Maximum price',
     'type' => 'Type', 'types' => ['physical' => 'Products', 'digital' => 'Digital', 'service' => 'Services'], 'brand' => 'Brand', 'in_stock_only' => 'In stock only',
     'apply' => 'Apply', 'clear' => 'Clear filters',

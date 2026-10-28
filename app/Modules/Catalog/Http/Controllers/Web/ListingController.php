@@ -12,6 +12,7 @@ use App\Modules\Catalog\Models\Collection;
 use App\Modules\Catalog\Services\CategoryTree;
 use App\Modules\Catalog\Services\Storefront\ListingFacets;
 use App\Modules\Catalog\Services\Storefront\ListingQuery;
+use App\Modules\Platform\Support\Branding;
 use App\Modules\Platform\Support\PageSeo;
 use App\Modules\Platform\Support\SlugRedirects;
 use App\Modules\Platform\Support\StructuredData;
@@ -107,7 +108,7 @@ class ListingController
         // one canonical address per listing: filters and sorting never make new indexable pages
         $this->seo->canonical = $request->url().($filters->page > 1 ? '?page='.$filters->page : '');
         $this->seo->noindex = $search || $filters->isFiltered() || $filters->sort !== 'newest' || $products->isEmpty();
-        $this->seo->describe($metaDescription ?? $description);
+        $this->seo->describe($metaDescription ?? $description ?? __('catalog::storefront.meta_listing', ['title' => $title, 'name' => app(Branding::class)->name()]));
         if ($alternates !== []) {
             $this->seo->alternates($alternates);
         }
