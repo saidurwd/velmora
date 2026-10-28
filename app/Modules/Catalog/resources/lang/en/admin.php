@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 return [
-    'menu' => ['catalog' => 'Catalog', 'categories' => 'Categories', 'brands' => 'Brands', 'tags' => 'Tags', 'collections' => 'Collections', 'attributes' => 'Attributes', 'products' => 'Products'],
+    'menu' => ['catalog' => 'Catalog', 'categories' => 'Categories', 'brands' => 'Brands', 'tags' => 'Tags', 'collections' => 'Collections', 'attributes' => 'Attributes', 'import' => 'Import / export', 'products' => 'Products'],
     'languages' => 'Languages',
     'missing' => 'Missing',
     'add' => 'Add',
@@ -33,6 +33,22 @@ return [
         'statuses' => ['active' => 'Active', 'inactive' => 'Inactive'], 'add' => 'Add a variant', 'generate' => 'Generate variants', 'generate_help' => 'Pick values for each option; one variant is created for every combination.', 'sku_base' => 'SKU prefix',
     ],
     'media' => ['title' => 'Images', 'file' => 'Image file (JPEG, PNG or WebP)', 'alt' => 'Alt text', 'decorative' => 'Decorative image (no alt text)', 'upload' => 'Upload', 'primary' => 'Main image', 'make_primary' => 'Make main', 'up' => 'Move earlier', 'down' => 'Move later', 'none' => 'No images yet.'],
+    'import' => [
+        'title' => 'Import / export', 'export' => 'Export', 'export_help' => 'One row per variant. The file opens in Excel with Bangla text intact.', 'download_all' => 'Download all products', 'download_template' => 'Download a template',
+        'upload' => 'Import products', 'rules' => 'Simple products only (one variant each), matched by SKU: a known SKU is updated, a new one is created. Blank cells keep the current value. Max 5,000 rows.',
+        'file' => 'CSV file (UTF-8)', 'dry_run' => 'Check only — do not change anything', 'start' => 'Start', 'recent' => 'Recent imports', 'mode' => 'Mode', 'mode_check' => 'Check only', 'mode_apply' => 'Applied', 'when' => 'When',
+        'statuses' => ['queued' => 'Waiting', 'running' => 'Running', 'done' => 'Finished', 'failed' => 'Failed'], 'working' => 'The file is being processed.', 'refresh' => 'Refresh',
+        'rows' => 'Rows', 'would_create' => 'Would create', 'would_update' => 'Would update', 'created' => 'Created', 'updated' => 'Updated', 'errors' => 'Rows with problems', 'line' => 'Line', 'problem' => 'Problem',
+        'ignored_columns' => 'These columns were ignored: :columns.', 'apply' => 'Apply this file', 'apply_skips_errors' => ':count rows with problems will be skipped.',
+        'failures' => ['unreadable' => 'The file could not be read. Save it as CSV UTF-8 and try again.', 'missing_columns' => 'Required columns are missing: :columns.', 'unexpected' => 'Something went wrong. Nothing was lost; please try again or contact support.'],
+        'errs' => [
+            'sku_invalid' => 'The SKU must be 3–64 letters, digits or dashes.', 'type_invalid' => 'product_type must be physical, digital or service.', 'name_required' => 'A name in :locale is required.', 'name_too_long' => 'The name is longer than 200 characters.',
+            'tax_class_unknown' => 'Unknown tax class “:value”.', 'price_invalid' => 'The price is not a valid amount in taka.', 'compare_without_price' => 'A compare-at price needs a price.', 'compare_too_low' => 'The compare-at price must be higher than the price.',
+            'weight_invalid' => 'weight_g must be a whole number of grams.', 'track_invalid' => 'track_inventory must be yes or no.', 'track_not_allowed' => ':type products cannot track stock.', 'stock_invalid' => 'opening_stock must be a whole number.', 'stock_not_tracked' => 'opening_stock needs track_inventory = yes.',
+            'duplicate_in_file' => 'This SKU already appears on line :line.', 'sku_deleted' => 'This SKU belonged to a deleted product.', 'not_simple' => 'This SKU belongs to a product with several variants or options; edit it in the product editor.',
+            'unknown_category' => 'Unknown category “:value”.', 'unknown_tag' => 'Unknown tag “:value”.', 'unknown_brand' => 'Unknown brand “:value”.', 'chunk_failed' => 'This group of rows could not be saved and was rolled back. Nothing from it was changed.',
+        ],
+    ],
     'fields' => [
         'name' => 'Name',
         'slug' => 'URL slug (optional)',

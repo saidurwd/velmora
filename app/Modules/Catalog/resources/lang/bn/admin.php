@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 return [
-    'menu' => ['catalog' => 'ক্যাটালগ', 'categories' => 'ক্যাটাগরি', 'brands' => 'ব্র্যান্ড', 'tags' => 'ট্যাগ', 'collections' => 'কালেকশন', 'attributes' => 'অ্যাট্রিবিউট', 'products' => 'পণ্য'],
+    'menu' => ['catalog' => 'ক্যাটালগ', 'categories' => 'ক্যাটাগরি', 'brands' => 'ব্র্যান্ড', 'tags' => 'ট্যাগ', 'collections' => 'কালেকশন', 'attributes' => 'অ্যাট্রিবিউট', 'import' => 'ইমপোর্ট / এক্সপোর্ট', 'products' => 'পণ্য'],
     'languages' => 'ভাষা',
     'missing' => 'অনুপস্থিত',
     'add' => 'যোগ করুন',
@@ -33,6 +33,22 @@ return [
         'statuses' => ['active' => 'সক্রিয়', 'inactive' => 'নিষ্ক্রিয়'], 'add' => 'ভ্যারিয়েন্ট যোগ করুন', 'generate' => 'ভ্যারিয়েন্ট তৈরি করুন', 'generate_help' => 'প্রতিটি অপশনের মান বাছুন; প্রতিটি সমন্বয়ের জন্য একটি ভ্যারিয়েন্ট তৈরি হবে।', 'sku_base' => 'SKU প্রিফিক্স',
     ],
     'media' => ['title' => 'ছবি', 'file' => 'ছবির ফাইল (JPEG, PNG বা WebP)', 'alt' => 'অল্ট টেক্সট', 'decorative' => 'সাজসজ্জামূলক ছবি (অল্ট টেক্সট ছাড়া)', 'upload' => 'আপলোড', 'primary' => 'প্রধান ছবি', 'make_primary' => 'প্রধান করুন', 'up' => 'আগে নিন', 'down' => 'পরে নিন', 'none' => 'এখনও কোনো ছবি নেই।'],
+    'import' => [
+        'title' => 'ইমপোর্ট / এক্সপোর্ট', 'export' => 'এক্সপোর্ট', 'export_help' => 'প্রতি ভ্যারিয়েন্টে একটি সারি। ফাইলটি এক্সেলে বাংলা লেখাসহ ঠিকমতো খোলে।', 'download_all' => 'সব পণ্য ডাউনলোড', 'download_template' => 'টেমপ্লেট ডাউনলোড',
+        'upload' => 'পণ্য ইমপোর্ট', 'rules' => 'শুধু সাধারণ পণ্য (প্রতিটিতে একটি ভ্যারিয়েন্ট), SKU দিয়ে মেলানো হয়: চেনা SKU হালনাগাদ হয়, নতুন SKU তৈরি হয়। ফাঁকা ঘর বর্তমান মান অক্ষুণ্ন রাখে। সর্বোচ্চ ৫,০০০ সারি।',
+        'file' => 'CSV ফাইল (UTF-8)', 'dry_run' => 'শুধু যাচাই করুন — কিছু পরিবর্তন করবেন না', 'start' => 'শুরু করুন', 'recent' => 'সাম্প্রতিক ইমপোর্ট', 'mode' => 'ধরন', 'mode_check' => 'শুধু যাচাই', 'mode_apply' => 'প্রয়োগ করা হয়েছে', 'when' => 'কখন',
+        'statuses' => ['queued' => 'অপেক্ষমাণ', 'running' => 'চলছে', 'done' => 'সম্পন্ন', 'failed' => 'ব্যর্থ'], 'working' => 'ফাইলটি প্রক্রিয়া করা হচ্ছে।', 'refresh' => 'রিফ্রেশ',
+        'rows' => 'সারি', 'would_create' => 'তৈরি হতো', 'would_update' => 'হালনাগাদ হতো', 'created' => 'তৈরি হয়েছে', 'updated' => 'হালনাগাদ হয়েছে', 'errors' => 'সমস্যাযুক্ত সারি', 'line' => 'লাইন', 'problem' => 'সমস্যা',
+        'ignored_columns' => 'এই কলামগুলো উপেক্ষা করা হয়েছে: :columns।', 'apply' => 'এই ফাইল প্রয়োগ করুন', 'apply_skips_errors' => 'সমস্যাযুক্ত :count টি সারি বাদ যাবে।',
+        'failures' => ['unreadable' => 'ফাইলটি পড়া যায়নি। CSV UTF-8 হিসেবে সংরক্ষণ করে আবার চেষ্টা করুন।', 'missing_columns' => 'প্রয়োজনীয় কলাম নেই: :columns।', 'unexpected' => 'কিছু ভুল হয়েছে। কিছুই হারায়নি; আবার চেষ্টা করুন বা সহায়তার সাথে যোগাযোগ করুন।'],
+        'errs' => [
+            'sku_invalid' => 'SKU ৩–৬৪টি অক্ষর, সংখ্যা বা ড্যাশ হতে হবে।', 'type_invalid' => 'product_type হবে physical, digital বা service।', 'name_required' => ':locale ভাষায় নাম আবশ্যক।', 'name_too_long' => 'নাম ২০০ অক্ষরের বেশি।',
+            'tax_class_unknown' => 'অজানা কর শ্রেণি “:value”।', 'price_invalid' => 'মূল্য টাকায় সঠিক পরিমাণ নয়।', 'compare_without_price' => 'তুলনামূলক মূল্যের জন্য মূল্য দিতে হবে।', 'compare_too_low' => 'তুলনামূলক মূল্য মূল্যের চেয়ে বেশি হতে হবে।',
+            'weight_invalid' => 'weight_g গ্রামে পূর্ণসংখ্যা হতে হবে।', 'track_invalid' => 'track_inventory হবে yes বা no।', 'track_not_allowed' => ':type পণ্যের স্টক ট্র্যাক করা যায় না।', 'stock_invalid' => 'opening_stock পূর্ণসংখ্যা হতে হবে।', 'stock_not_tracked' => 'opening_stock এর জন্য track_inventory = yes দিতে হবে।',
+            'duplicate_in_file' => 'এই SKU আগে :line নম্বর লাইনে আছে।', 'sku_deleted' => 'এই SKU একটি মুছে ফেলা পণ্যের ছিল।', 'not_simple' => 'এই SKU একাধিক ভ্যারিয়েন্ট বা অপশনযুক্ত পণ্যের; পণ্য সম্পাদনা পাতায় পরিবর্তন করুন।',
+            'unknown_category' => 'অজানা ক্যাটাগরি “:value”।', 'unknown_tag' => 'অজানা ট্যাগ “:value”।', 'unknown_brand' => 'অজানা ব্র্যান্ড “:value”।', 'chunk_failed' => 'এই সারিগুলো সংরক্ষণ করা যায়নি এবং ফিরিয়ে নেওয়া হয়েছে। এর কিছুই পরিবর্তিত হয়নি।',
+        ],
+    ],
     'fields' => [
         'name' => 'নাম',
         'slug' => 'URL স্লাগ (ঐচ্ছিক)',

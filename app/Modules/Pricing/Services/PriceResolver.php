@@ -49,6 +49,19 @@ final class PriceResolver implements PriceCatalog
         );
     }
 
+    public function regularPrices(array $variantIds, string $listCode = 'retail'): array
+    {
+        $out = [];
+        $rows = DB::table('prices')->join('price_lists', 'price_lists.id', '=', 'prices.price_list_id')
+            ->where('price_lists.code', $listCode)->whereIn('prices.variant_id', $variantIds)->get(['prices.variant_id', 'prices.amount_minor', 'prices.compare_at_minor']);
+
+        foreach ($rows as $r) {
+            $out[(int) $r->variant_id] = ['amount_minor' => (int) $r->amount_minor, 'compare_at_minor' => $r->compare_at_minor === null ? null : (int) $r->compare_at_minor];
+        }
+
+        return $out;
+    }
+
     public function allHaveRegularPrice(array $variantIds, string $listCode = 'retail'): bool
     {
         if ($variantIds === []) {

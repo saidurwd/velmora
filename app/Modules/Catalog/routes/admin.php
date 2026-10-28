@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Catalog\Http\Controllers\Admin\AttributeController;
 use App\Modules\Catalog\Http\Controllers\Admin\CategoryController;
+use App\Modules\Catalog\Http\Controllers\Admin\ImportController;
 use App\Modules\Catalog\Http\Controllers\Admin\MediaController;
 use App\Modules\Catalog\Http\Controllers\Admin\ProductController;
 use App\Modules\Catalog\Http\Controllers\Admin\TaxonomyController;
@@ -19,6 +20,15 @@ Route::middleware(['auth:admin', 'session.policy:admin'])->prefix('catalog')->na
         Route::get('/{category}/edit', [CategoryController::class, 'edit'])->middleware('permission:catalog.update')->name('edit');
         Route::put('/{category}', [CategoryController::class, 'update'])->middleware('permission:catalog.update')->name('update');
         Route::delete('/{category}', [CategoryController::class, 'destroy'])->middleware('permission:catalog.delete')->name('destroy');
+    });
+
+    Route::prefix('import-export')->name('import.')->group(function (): void {
+        Route::get('/', [ImportController::class, 'index'])->middleware('permission:catalog.view')->name('index');
+        Route::get('/template', [ImportController::class, 'template'])->middleware('permission:catalog.view')->name('template');
+        Route::get('/export', [ImportController::class, 'export'])->middleware('permission:catalog.view')->name('export');
+        Route::post('/', [ImportController::class, 'store'])->middleware(['permission:catalog.create', 'throttle:10,1'])->name('store');
+        Route::get('/{import}', [ImportController::class, 'show'])->middleware('permission:catalog.view')->name('show');
+        Route::post('/{import}/apply', [ImportController::class, 'apply'])->middleware(['permission:catalog.create', 'throttle:10,1'])->name('apply');
     });
 
     Route::prefix('products')->name('products.')->group(function (): void {

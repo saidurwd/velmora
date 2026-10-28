@@ -19,6 +19,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property bool $track_inventory
  * @property string $option_signature
  * @property string $status
+ * @property string|null $barcode
+ * @property int|null $weight_g
+ * @property int|null $length_mm
+ * @property int|null $width_mm
+ * @property int|null $height_mm
+ * @property int $min_qty
+ * @property int|null $max_qty
+ * @property int $qty_step
  */
 class ProductVariant extends Model
 {
