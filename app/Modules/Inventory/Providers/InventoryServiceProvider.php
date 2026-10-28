@@ -9,6 +9,7 @@ use App\Modules\Inventory\Contracts\Availability;
 use App\Modules\Inventory\Events\StockLow;
 use App\Modules\Inventory\Services\DatabaseAvailability;
 use App\Modules\Platform\Outbox\OutboxRegistry;
+use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 
 class InventoryServiceProvider extends ModuleServiceProvider
@@ -29,5 +30,6 @@ class InventoryServiceProvider extends ModuleServiceProvider
         parent::boot();
 
         $this->app->make(OutboxRegistry::class)->register(StockLow::class);
+        $this->app->make(AdminMenu::class)->add('inventory::admin.menu.stock', 'admin.inventory.index', 'inventory.view', 50);
     }
 }
