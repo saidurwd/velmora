@@ -9,3 +9,10 @@ parameters:
         - config
         - database
         - routes
+    excludePaths:
+        - app/Modules/*/tests/*
+    ignoreErrors:
+        # Platform traits are consumed by models arriving in later phases (only tests use them today).
+        -
+            identifier: trait.unused
+            path: app/Modules/Platform/Concerns/*
