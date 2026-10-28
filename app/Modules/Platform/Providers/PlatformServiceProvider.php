@@ -16,6 +16,7 @@ use App\Modules\Platform\Http\Middleware\SecureHeaders;
 use App\Modules\Platform\Http\Middleware\SetLocale;
 use App\Modules\Platform\Listeners\AcknowledgeOutboxProbe;
 use App\Modules\Platform\Outbox\OutboxRegistry;
+use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use App\Modules\Platform\Support\SystemClock;
 use Closure;
@@ -45,6 +46,7 @@ class PlatformServiceProvider extends ModuleServiceProvider
 
         $this->app->singleton(Clock::class, SystemClock::class);
         $this->app->singleton(OutboxRegistry::class);
+        $this->app->singleton(AdminMenu::class);
 
         // One RequestContext per request / queued job / console run.
         $this->app->scoped(RequestContext::class, fn () => new RequestContext(
@@ -67,6 +69,8 @@ class PlatformServiceProvider extends ModuleServiceProvider
 
         $this->app->make(OutboxRegistry::class)->register(OutboxProbe::class);
         Event::listen(OutboxProbe::class, [AcknowledgeOutboxProbe::class, 'handle']);
+
+        $this->app->make(AdminMenu::class)->add('platform::admin.dashboard', 'admin.dashboard', 'dashboard.view', 10);
 
         $this->defineRateLimiters();
         $this->assertSafeConfiguration();

@@ -23,4 +23,11 @@ return [
         'login' => 'Sign in',
         'forgot' => 'Forgot your password? Reset it here: :url',
     ],
+    'invite' => [
+        'subject' => 'You have been invited to :app',
+        'intro' => ':by created a staff account for you on :app. Choose a password to get started.',
+        'action' => 'Choose your password',
+        'expiry' => 'This link expires in :minutes minutes.',
+        'mfa' => 'On your first sign-in you will also set up two-step verification with an authenticator app.',
+    ],
 ];

@@ -120,7 +120,7 @@ return [
         'staff' => [
             'provider' => 'staff',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
-            'expire' => 30,
+            'expire' => 60, // also the lifetime of a staff invite link
             'throttle' => 60,
         ],
     ],

@@ -1,0 +1,48 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'resources' => [
+        'dashboard' => 'ড্যাশবোর্ড',
+        'staff' => 'স্টাফ',
+        'roles' => 'রোল ও অনুমতি',
+        'audit' => 'অডিট লগ',
+        'settings' => 'সেটিংস',
+        'queues' => 'কিউ',
+        'catalog' => 'ক্যাটালগ',
+        'pricing' => 'মূল্য',
+        'inventory' => 'ইনভেন্টরি',
+        'orders' => 'অর্ডার',
+        'payments' => 'পেমেন্ট',
+        'shipping' => 'শিপিং',
+        'customers' => 'গ্রাহক',
+        'promotions' => 'প্রমোশন',
+        'cms' => 'কনটেন্ট (CMS)',
+        'reviews' => 'রিভিউ',
+        'support' => 'সাপোর্ট',
+        'reports' => 'রিপোর্ট',
+    ],
+    'actions' => [
+        'adjust' => 'স্টক সমন্বয়',
+        'cancel' => 'বাতিল',
+        'count' => 'স্টক গণনা',
+        'create' => 'তৈরি',
+        'create_shipment' => 'শিপমেন্ট তৈরি',
+        'delete' => 'মুছে ফেলা',
+        'disable' => 'নিষ্ক্রিয়',
+        'edit' => 'সম্পাদনা',
+        'export' => 'এক্সপোর্ট',
+        'finance_view' => 'আর্থিক তথ্য দেখা',
+        'manage' => 'পরিচালনা',
+        'moderate' => 'মডারেশন',
+        'publish' => 'প্রকাশ',
+        'reconcile' => 'মিলানো',
+        'refund' => 'রিফান্ড',
+        'reply' => 'উত্তর',
+        'transfer' => 'স্থানান্তর',
+        'update' => 'হালনাগাদ',
+        'view' => 'দেখা',
+        'view_pii' => 'ব্যক্তিগত তথ্য দেখা',
+    ],
+];

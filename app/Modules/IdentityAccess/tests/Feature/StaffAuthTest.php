@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\IdentityAccess\Database\Seeders\RolesAndPermissionsSeeder;
 use App\Modules\IdentityAccess\Mfa\PendingStaffLogin;
 use App\Modules\IdentityAccess\Models\StaffMfaCredential;
 use App\Modules\IdentityAccess\Models\User;
@@ -40,7 +41,9 @@ function enrolStaff(object $test, User $staff): array
 
 beforeEach(function () {
     Notification::fake();
+    $this->seed(RolesAndPermissionsSeeder::class);
     $this->staff = User::factory()->staff()->create(['email' => 'boss@example.com']);
+    $this->staff->assignRole('Admin'); // can reach the dashboard (dashboard.view)
 });
 
 describe('step 1: password', function () {

@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Modules\IdentityAccess\Http\Controllers\Admin\AdminAuthController;
 use App\Modules\IdentityAccess\Http\Controllers\Admin\AdminPasswordController;
 use App\Modules\IdentityAccess\Http\Controllers\Admin\MfaController;
+use App\Modules\IdentityAccess\Http\Controllers\Admin\RoleController;
+use App\Modules\IdentityAccess\Http\Controllers\Admin\StaffController;
 use App\Modules\IdentityAccess\Http\Controllers\Admin\StaffSessionController;
 use Illuminate\Support\Facades\Route;
 
@@ -33,4 +35,24 @@ Route::middleware(['auth:admin', 'session.policy:admin'])->group(function (): vo
     Route::get('/mfa/recovery-codes', [MfaController::class, 'showRecovery'])->name('mfa.recovery');
     Route::get('/account/sessions', [StaffSessionController::class, 'index'])->name('sessions');
     Route::post('/account/sessions/revoke-others', [StaffSessionController::class, 'revokeOthers'])->name('sessions.revoke-others');
+
+    // Staff administration (permission-gated; escalation rules are enforced again inside the Actions).
+    Route::prefix('staff')->name('staff.')->group(function (): void {
+        Route::get('/', [StaffController::class, 'index'])->middleware('permission:staff.view')->name('index');
+        Route::get('/create', [StaffController::class, 'create'])->middleware('permission:staff.create')->name('create');
+        Route::post('/', [StaffController::class, 'store'])->middleware('permission:staff.create')->name('store');
+        Route::get('/{staff}/edit', [StaffController::class, 'edit'])->middleware('permission:staff.update')->name('edit');
+        Route::put('/{staff}', [StaffController::class, 'update'])->middleware('permission:staff.update')->name('update');
+        Route::post('/{staff}/disable', [StaffController::class, 'disable'])->middleware('permission:staff.disable')->name('disable');
+        Route::post('/{staff}/enable', [StaffController::class, 'enable'])->middleware('permission:staff.disable')->name('enable');
+    });
+
+    Route::prefix('roles')->name('roles.')->group(function (): void {
+        Route::get('/', [RoleController::class, 'index'])->middleware('permission:roles.view')->name('index');
+        Route::get('/create', [RoleController::class, 'create'])->middleware('permission:roles.manage')->name('create');
+        Route::post('/', [RoleController::class, 'store'])->middleware('permission:roles.manage')->name('store');
+        Route::get('/{role}/edit', [RoleController::class, 'edit'])->middleware('permission:roles.view')->name('edit');
+        Route::put('/{role}', [RoleController::class, 'update'])->middleware('permission:roles.manage')->name('update');
+        Route::delete('/{role}', [RoleController::class, 'destroy'])->middleware('permission:roles.manage')->name('destroy');
+    });
 });

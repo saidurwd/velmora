@@ -14,6 +14,7 @@ Authoritative docs: `docs/architecture/*` (esp. `ARCHITECTURE_DECISION_RECORDS.m
 * **Never** run `migrate:fresh`, `db:wipe` or `--env=testing` against the dev database `velmora`; tests use `velmora_test` only.
 
 ## Workflow for every task
+0. **After every push, check CI** (`gh run list --limit 3`, then `gh run view <id> --log-failed`). A green local run is not proof: the local test DB persists between runs and hides isolation bugs. To reproduce CI, recreate `velmora_test` empty and run `php artisan test --testsuite=Architecture` then `php artisan test`. Unit tests must not touch the DB (put DB-dependent tests under Feature).
 1. **Read first.** Inspect the repo, the relevant ADRs, the module's docs and existing tests. Never overwrite or delete work you do not understand.
 2. **State the plan** (files to add/change, tables, events, tests) and the acceptance criteria *before* coding. For anything touching money, stock, auth, or schema: wait for approval of the plan.
 3. **Vertical slice:** migration + model + Action + policy + request validation + controller/resource/view + translations (en **and** bn) + tests — together.

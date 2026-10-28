@@ -1,0 +1,48 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'resources' => [
+        'dashboard' => 'Dashboard',
+        'staff' => 'Staff',
+        'roles' => 'Roles & permissions',
+        'audit' => 'Audit log',
+        'settings' => 'Settings',
+        'queues' => 'Queues',
+        'catalog' => 'Catalog',
+        'pricing' => 'Pricing',
+        'inventory' => 'Inventory',
+        'orders' => 'Orders',
+        'payments' => 'Payments',
+        'shipping' => 'Shipping',
+        'customers' => 'Customers',
+        'promotions' => 'Promotions',
+        'cms' => 'Content (CMS)',
+        'reviews' => 'Reviews',
+        'support' => 'Support',
+        'reports' => 'Reports',
+    ],
+    'actions' => [
+        'adjust' => 'Adjust stock',
+        'cancel' => 'Cancel',
+        'count' => 'Stock count',
+        'create' => 'Create',
+        'create_shipment' => 'Create shipment',
+        'delete' => 'Delete',
+        'disable' => 'Disable',
+        'edit' => 'Edit',
+        'export' => 'Export',
+        'finance_view' => 'View finance',
+        'manage' => 'Manage',
+        'moderate' => 'Moderate',
+        'publish' => 'Publish',
+        'reconcile' => 'Reconcile',
+        'refund' => 'Refund',
+        'reply' => 'Reply',
+        'transfer' => 'Transfer',
+        'update' => 'Update',
+        'view' => 'View',
+        'view_pii' => 'View personal data',
+    ],
+];

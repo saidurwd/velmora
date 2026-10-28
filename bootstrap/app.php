@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\IdentityAccess\Http\Middleware\RequirePermission;
 use App\Modules\Platform\Http\ExceptionRenderer;
 use App\Modules\Platform\Http\Middleware\AssignRequestContext;
 use App\Modules\Platform\Http\Middleware\SecureHeaders;
@@ -10,6 +11,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +31,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Resolve the locale right after the session starts, before `auth` runs, so guest redirects and error
         // pages already know the language and route('login') can fill in {locale}.
         $middleware->appendToPriorityList(after: StartSession::class, append: SetLocale::class);
+
+        // Authorize BEFORE route-model binding, so an unauthorised person cannot tell a valid id (403) from an invalid one (404).
+        $middleware->prependToPriorityList(before: SubstituteBindings::class, prepend: RequirePermission::class);
 
         $middleware->redirectGuestsTo(fn (Request $request) => $request->is('admin', 'admin/*') && Route::has('admin.login')
             ? route('admin.login')

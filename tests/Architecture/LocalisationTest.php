@@ -91,6 +91,7 @@ it('has no hard-coded user-visible text in Blade views', function () {
         }
 
         $html = (string) file_get_contents($view);
+        $html = str_replace(['?->', '->', '=>'], ' ', $html); // PHP arrows inside attributes must not close a tag early
         $html = preg_replace('/@php\b.*?@endphp/s', '', $html);
         $html = preg_replace('/@props\s*\(\[.*?\]\)/s', '', $html);
         $html = preg_replace('/\{\{--.*?--\}\}/s', '', $html);
