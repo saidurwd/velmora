@@ -23,6 +23,14 @@
     </main>
 
     <footer class="mt-12 border-t border-line bg-surface-alt">
+        @php($pageLinks = app(\App\Modules\Cms\Contracts\PageDirectory::class)->published(app()->getLocale()))
+        @if ($pageLinks !== [])
+            <nav aria-label="{{ __('platform::ui.info_links') }}" class="mx-auto max-w-6xl px-4 pt-6">
+                <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                    @foreach ($pageLinks as $link)<li><a class="hover:underline" href="{{ url('/'.app()->getLocale().'/pages/'.rawurlencode($link->slug)) }}">{{ $link->title }}</a></li>@endforeach
+                </ul>
+            </nav>
+        @endif
         <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-sm text-muted">
             <span>&copy; {{ now()->year }} {{ $brand->name() }}. {{ __('platform::ui.footer_rights') }}</span>
             @if ($brand->tagline() !== '')<span>{{ $brand->tagline() }}</span>@endif

@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 return [
+    'info_links' => 'Information',
+    'languages' => 'Languages', 'missing' => 'Missing',
     'was' => 'Was', 'service' => 'Service', 'close' => 'Close', 'breadcrumb' => 'Breadcrumb', 'pagination' => 'Pagination', 'previous' => 'Previous', 'next' => 'Next', 'page' => 'Page',
     'rating' => 'Rated :value out of 5 from :count reviews', 'in_stock' => 'In stock', 'out_of_stock' => 'Out of stock', 'low_stock' => 'Only a few left', 'sale' => 'Sale', 'new' => 'New',
     'skip_to_search' => 'Skip to search', 'menu' => 'Menu', 'search' => 'Search', 'footer_rights' => 'All rights reserved.',

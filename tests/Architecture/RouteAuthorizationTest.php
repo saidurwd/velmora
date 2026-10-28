@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 const PUBLIC_WEB = [
     '/' => 'locale redirect',
     '{locale}' => 'storefront home',
+    '{locale}/pages/{slug}' => 'published CMS pages (drafts and scheduled pages return 404)',
     '{locale}/dev/components' => 'component library (not registered in production)',
     'healthz' => 'liveness probe', 'readyz' => 'readiness probe',
     '{locale}/locale' => 'language switch (validated, throttled)',

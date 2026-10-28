@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 return [
+    'info_links' => 'তথ্য',
+    'languages' => 'ভাষা', 'missing' => 'অনুপস্থিত',
     'was' => 'আগে ছিল', 'service' => 'সেবা', 'close' => 'বন্ধ করুন', 'breadcrumb' => 'ব্রেডক্রাম্ব', 'pagination' => 'পৃষ্ঠা নেভিগেশন', 'previous' => 'আগের', 'next' => 'পরের', 'page' => 'পৃষ্ঠা',
     'rating' => ':count টি রিভিউ থেকে ৫-এর মধ্যে :value রেটিং', 'in_stock' => 'স্টকে আছে', 'out_of_stock' => 'স্টকে নেই', 'low_stock' => 'অল্প কয়েকটি বাকি', 'sale' => 'সেল', 'new' => 'নতুন',
     'skip_to_search' => 'সার্চে যান', 'menu' => 'মেনু', 'search' => 'খুঁজুন', 'footer_rights' => 'সর্বস্বত্ব সংরক্ষিত।',
