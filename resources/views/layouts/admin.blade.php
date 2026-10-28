@@ -8,8 +8,9 @@
             <ul class="space-y-1">
                 @foreach (app(\App\Modules\Platform\Support\AdminMenu::class)->visibleFor($user) as $item)
                     <li>
-                        <a href="{{ route($item['route']) }}" @if (request()->routeIs($item['route'].'*')) aria-current="page" @endif
-                           class="block rounded-md px-3 py-2 hover:bg-line {{ request()->routeIs($item['route'].'*') ? 'bg-line font-semibold' : '' }}">{{ __($item['label']) }}</a>
+                        @php $active = request()->routeIs($item['route'].'*') && collect($item['params'])->every(fn ($v, $k) => request()->route($k) === $v); @endphp
+                        <a href="{{ route($item['route'], $item['params']) }}" @if ($active) aria-current="page" @endif
+                           class="block rounded-md px-3 py-2 hover:bg-line {{ $active ? 'bg-line font-semibold' : '' }}">{{ __($item['label']) }}</a>
                     </li>
                 @endforeach
             </ul>

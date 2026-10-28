@@ -9,15 +9,16 @@ use Illuminate\Contracts\Auth\Authenticatable;
 /** Sidebar registry: modules add entries; each viewer only sees entries they hold the permission for. */
 final class AdminMenu
 {
-    /** @var list<array{label: string, route: string, permission: ?string, order: int}> */
+    /** @var list<array{label: string, route: string, permission: ?string, order: int, params: array<string, string>}> */
     private array $items = [];
 
-    public function add(string $labelKey, string $route, ?string $permission, int $order = 100): void
+    /** @param  array<string, string>  $params  route parameters (e.g. ['type' => 'brands']) */
+    public function add(string $labelKey, string $route, ?string $permission, int $order = 100, array $params = []): void
     {
-        $this->items[] = ['label' => $labelKey, 'route' => $route, 'permission' => $permission, 'order' => $order];
+        $this->items[] = ['label' => $labelKey, 'route' => $route, 'permission' => $permission, 'order' => $order, 'params' => $params];
     }
 
-    /** @return list<array{label: string, route: string, permission: ?string, order: int}> */
+    /** @return list<array{label: string, route: string, permission: ?string, order: int, params: array<string, string>}> */
     public function visibleFor(?Authenticatable $user): array
     {
         $items = array_values(array_filter(

@@ -140,7 +140,7 @@ it('enforces the decision at runtime: guests, customers and role-less staff are 
             continue;
         }
 
-        $uri = '/'.preg_replace('/\{[^}]+\}/', 'x', $route->uri());
+        $uri = '/'.preg_replace_callback('/\{([^}]+)\}/', fn (array $m) => explode('|', $route->wheres[$m[1]] ?? 'x')[0], $route->uri());
         $method = $route->methods()[0];
 
         auth()->forgetGuards();
