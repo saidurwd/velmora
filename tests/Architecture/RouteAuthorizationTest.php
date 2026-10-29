@@ -22,7 +22,7 @@ const PUBLIC_WEB = [
     'robots.txt' => 'crawler rules', 'sitemap.xml' => 'sitemap index', 'sitemaps/{file}' => 'sitemap files (generated names only)',
     '{locale}/search' => 'storefront: search results (throttled)', '{locale}/search/suggest' => 'storefront: autocomplete JSON (throttled)',
     '{locale}/analytics/events' => 'consent-gated first-party events (throttled, validated, DNT/GPC honoured)',
-    '{locale}/cart' => 'cart page (own cart only: signed-in user or guest cookie)', '{locale}/cart/items' => 'add to cart (throttled)', '{locale}/cart/items/{variant}' => 'change / remove a line of the own cart (throttled)', '{locale}/cart/acknowledge' => 'accept changed prices (own cart)',
+    '{locale}/cart' => 'cart page (own cart only: signed-in user or guest cookie)', '{locale}/cart/items' => 'add to cart (throttled)', '{locale}/cart/items/{variant}' => 'change / remove a line of the own cart (throttled)', '{locale}/cart/coupons' => 'apply a coupon code to the own cart (throttled)', '{locale}/cart/coupons/{code}' => 'remove a code from the own cart', '{locale}/cart/acknowledge' => 'accept changed prices (own cart)',
     '{locale}/p/{slug}' => 'storefront: product page (live products only)',
     '{locale}/shop' => 'storefront: all products', '{locale}/c/{slug}' => 'storefront: category', '{locale}/brands/{slug}' => 'storefront: brand', '{locale}/collections/{slug}' => 'storefront: collection',
     '{locale}/pages/{slug}' => 'published CMS pages (drafts and scheduled pages return 404)',

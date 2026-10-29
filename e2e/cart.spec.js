@@ -83,3 +83,24 @@ test('the cart does not overflow a 360 px screen', async ({ page }) => {
     await page.getByRole('button', { name: 'Add to cart' }).click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
 });
+
+test('apply a discount code in the cart, see the discount, remove it', async ({ page }) => {
+    await page.goto('/en/p/cotton-panjabi');
+    await page.getByRole('button', { name: 'Add to cart' }).click();
+    await expect(page).toHaveURL(/\/en\/cart$/);
+
+    await page.getByLabel('Discount code').fill('nosuchcode');
+    await page.getByRole('button', { name: 'Apply' }).click();
+    await expect(page.getByText(/We do not recognise the code/)).toBeVisible();
+
+    await page.getByLabel('Discount code').fill(' e2e10 ');
+    await page.getByRole('button', { name: 'Apply' }).click();
+    await expect(page.getByText('Code applied.')).toBeVisible();
+    await expect(page.getByText('Items after discount')).toBeVisible();
+    await expect(page.getByText('1,665', { exact: false }).first()).toBeVisible(); // ৳1,850 less 10%
+    await noViolations(page, 'cart with a code');
+
+    await page.getByRole('button', { name: 'Remove code E2E10' }).click();
+    await expect(page.getByText('Code removed.')).toBeVisible();
+    await expect(page.getByText('Items after discount')).toHaveCount(0);
+});

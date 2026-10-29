@@ -12,5 +12,12 @@ interface CartReader
 {
     public function view(CartOwner $owner, string $locale): CartView;
 
+    /**
+     * The cart as it would look with these codes instead of the ones saved (used to test a code before keeping it).
+     *
+     * @param  list<string>  $codes
+     */
+    public function viewWith(CartOwner $owner, string $locale, array $codes): CartView;
+
     public function itemCount(CartOwner $owner): int;
 }

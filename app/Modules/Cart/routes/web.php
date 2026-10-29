@@ -11,6 +11,8 @@ Route::localized(function (): void {
         Route::post('/cart/items', [CartController::class, 'add'])->name('cart.add');
         Route::patch('/cart/items/{variant}', [CartController::class, 'update'])->name('cart.update');
         Route::delete('/cart/items/{variant}', [CartController::class, 'destroy'])->name('cart.remove');
+        Route::post('/cart/coupons', [CartController::class, 'applyCoupon'])->name('cart.coupon.apply');
+        Route::delete('/cart/coupons/{code}', [CartController::class, 'removeCoupon'])->name('cart.coupon.remove');
         Route::post('/cart/acknowledge', [CartController::class, 'acknowledge'])->name('cart.acknowledge');
     });
 });

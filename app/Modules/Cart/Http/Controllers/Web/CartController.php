@@ -6,6 +6,8 @@ namespace App\Modules\Cart\Http\Controllers\Web;
 
 use App\Modules\Cart\Actions\AcknowledgePriceChanges;
 use App\Modules\Cart\Actions\AddToCart;
+use App\Modules\Cart\Actions\ApplyCoupon;
+use App\Modules\Cart\Actions\RemoveCoupon;
 use App\Modules\Cart\Actions\RemoveFromCart;
 use App\Modules\Cart\Actions\SetCartQuantity;
 use App\Modules\Cart\Contracts\CartReader;
@@ -76,6 +78,26 @@ class CartController
         $ack->handle($this->owners->fromRequest($request));
 
         return redirect()->route('cart.show', ['locale' => app()->getLocale()]);
+    }
+
+    public function applyCoupon(Request $request, ApplyCoupon $apply): RedirectResponse
+    {
+        $data = $request->validate(['code' => ['required', 'string', 'max:100']]);
+
+        try {
+            $apply->handle($this->owners->fromRequest($request), $data['code'], app()->getLocale());
+        } catch (CartException $e) {
+            return redirect()->route('cart.show', ['locale' => app()->getLocale()])->withErrors(['coupon' => __('cart::cart.errors.'.$e->reason, $e->params)])->withInput();
+        }
+
+        return redirect()->route('cart.show', ['locale' => app()->getLocale()])->with('status', __('cart::cart.coupon_added'));
+    }
+
+    public function removeCoupon(Request $request, string $code, RemoveCoupon $remove): RedirectResponse
+    {
+        $remove->handle($this->owners->fromRequest($request), $code);
+
+        return redirect()->route('cart.show', ['locale' => app()->getLocale()])->with('status', __('cart::cart.coupon_removed'));
     }
 
     /** Bangla digits welcome; whole numbers only. */

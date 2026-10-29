@@ -54,6 +54,29 @@
         <section aria-labelledby="sum-h" class="ms-auto max-w-sm space-y-2 rounded-lg border border-line p-4">
             <h2 id="sum-h" class="sr-only">{{ __('cart::cart.summary') }}</h2>
             <p class="flex justify-between text-lg font-semibold"><span>{{ __('cart::cart.subtotal') }}</span><span>{{ $fmt($cart->subtotal) }}</span></p>
+            @foreach ($cart->discounts?->applied ?? [] as $d)
+                @if ($d->amountMinor > 0)<p class="flex justify-between text-sm"><span>{{ $d->label }}@if ($d->code) <span class="text-muted">({{ $d->code }})</span>@endif</span><span>−{{ $fmt(\App\Modules\Platform\DTOs\Money::of($d->amountMinor)) }}</span></p>@endif
+                @if ($d->freeShipping)<p class="flex justify-between text-sm"><span>{{ __('cart::cart.free_delivery') }} <span class="text-muted">({{ $d->code }})</span></span></p>@endif
+            @endforeach
+            @if ($cart->discounts && $cart->discountTotal()->amountMinor > 0)
+                <p class="flex justify-between font-medium"><span>{{ __('cart::cart.goods_total') }}</span><span>{{ $fmt($cart->goodsTotal()) }}</span></p>
+            @endif
+            @foreach ($cart->discounts?->rejected ?? [] as $r)
+                <p class="text-sm text-danger" role="status">{{ __('cart::cart.code_not_valid') }} {{ __('pricing::coupons.reasons.'.$r['reason'], ['code' => $r['code'], 'min' => $fmt(\App\Modules\Platform\DTOs\Money::of($r['min'] ?? 0))]) }}
+                    <form method="POST" action="{{ route('cart.coupon.remove', ['locale' => app()->getLocale(), 'code' => $r['code']]) }}" class="inline">@csrf @method('DELETE')<button class="underline" aria-label="{{ __('cart::cart.coupon_remove', ['code' => $r['code']]) }}">{{ __('cart::cart.remove') }}</button></form></p>
+            @endforeach
+            <form method="POST" action="{{ route('cart.coupon.apply', ['locale' => app()->getLocale()]) }}" class="space-y-1">
+                @csrf
+                <label for="coupon-code" class="block text-sm font-medium">{{ __('cart::cart.coupon_label') }}</label>
+                <div class="flex gap-2">
+                    <input id="coupon-code" name="code" value="{{ old('code') }}" autocomplete="off" autocapitalize="characters" maxlength="100" class="min-w-0 flex-1 rounded-md border border-line px-3 py-2" @error('coupon') aria-invalid="true" aria-describedby="coupon-error" @enderror>
+                    <x-platform::btn type="submit" size="sm" variant="secondary">{{ __('cart::cart.coupon_apply') }}</x-platform::btn>
+                </div>
+                @error('coupon')<p id="coupon-error" class="text-sm text-danger">{{ $message }}</p>@enderror
+            </form>
+            @foreach (array_filter($cart->discounts?->applied ?? [], fn ($d) => $d->code) as $d)
+                <form method="POST" action="{{ route('cart.coupon.remove', ['locale' => app()->getLocale(), 'code' => $d->code]) }}" class="text-sm">@csrf @method('DELETE')<button class="underline" aria-label="{{ __('cart::cart.coupon_remove', ['code' => $d->code]) }}">{{ __('cart::cart.coupon_remove', ['code' => $d->code]) }}</button></form>
+            @endforeach
             <p class="text-sm text-muted">{{ __('cart::cart.shipping_later') }}</p>
             <x-platform::btn type="button" disabled aria-disabled="true" class="w-full cursor-not-allowed opacity-60">{{ __('cart::cart.checkout') }}</x-platform::btn>
             <p class="text-sm text-muted">{{ __('cart::cart.checkout_soon') }}</p>

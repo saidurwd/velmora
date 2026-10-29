@@ -59,9 +59,11 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 |---|---|---|
 | price_lists | STD; code UNIQUE, currency (B2B-ready, default list seeded) | |
 | prices | variant_id FK, price_list_id FK, M(amount), compare_at_minor NULL, starts_at NULL, ends_at NULL, tax_inclusive b; CHECK(ends_at IS NULL OR starts_at IS NULL OR ends_at>starts_at); idx(variant_id,price_list_id,starts_at) | audit |
-| coupons | STD; code s64 UNIQUE, type (percent/fixed/free_shipping), value, min_spend_minor, usage_limit NULL, used_count DEFAULT 0 CHECK(≥0 and (usage_limit IS NULL OR used_count≤usage_limit)), per_customer_limit NULL, starts_at, ends_at, is_stackable b, scope j, status | |
-| coupon_redemptions | coupon_id FK, order_id FK, customer_id NULL, amount_minor; UNIQUE(coupon_id,order_id) | AO |
-| promotions | automatic cart promos: rule j, priority, window | |
+| coupons | STD; code s64 UNIQUE (upper case), type (percent/fixed/free_shipping), value (basis points for percent, minor units for fixed), max_discount_minor NULL, min_spend_minor, scope (all/products/categories), starts_at NULL, ends_at NULL (exclusive), usage_limit NULL, used_count CHECK(≥0 and ≤usage_limit), per_customer_limit NULL, is_active; CHECKs on type, scope, value range, window | redemption by one conditional UPDATE |
+| coupon_products / coupon_categories | coupon_id FK, product_id / category_id; PK(both) — what a products/categories coupon applies to (categories include sub-categories at evaluation) | |
+| coupon_redemptions | coupon_id FK, order_id (FK to orders added with the orders table), redeemer (`u:<user id>` or `p:<sha256 of phone>`), amount_minor, redeemed_at; UNIQUE(coupon_id,order_id) makes redemption idempotent per order | AO |
+| promotions | STD; type (percent/fixed), value, max_discount_minor NULL, min_spend_minor, starts_at/ends_at, is_active; the best qualifying one applies automatically | |
+| promotion_translations | promotion_id FK, locale, label; PK(promotion_id,locale) | |
 
 ## Inventory
 | Table | Columns / constraints | Flags |
@@ -75,7 +77,8 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 ## Cart & Checkout
 | Table | Columns / constraints | Flags |
 |---|---|---|
-| carts | public_id, user_id NULL UNIQUE FK users (one cart per signed-in customer), guest_token_hash char(64) NULL UNIQUE (sha256 of the cookie token), currency, expires_at (refreshed on change; guests 30 d, customers 90 d), merged_into_id NULL; CHECK(user_id or guest_token_hash present); coupon link arrives with coupons (slice 5) | purge expired |
+| carts | public_id, user_id NULL UNIQUE FK users (one cart per signed-in customer), guest_token_hash char(64) NULL UNIQUE (sha256 of the cookie token), currency, expires_at (refreshed on change; guests 30 d, customers 90 d), merged_into_id NULL; CHECK(user_id or guest_token_hash present)| purge expired |
+| cart_coupons | cart_id FK cascade, code (normalised upper case); UNIQUE(cart_id,code); only the typed code is kept, validity is re-decided each time the cart is shown | |
 | cart_items | cart_id FK cascade, variant_id FK, quantity CHECK>0 (cap 100 per line, 50 lines per cart, in the Action), added_price_minor CHECK≥0 (unit price last accepted: drives the change notice); UNIQUE(cart_id,variant_id) | |
 
 ## Orders

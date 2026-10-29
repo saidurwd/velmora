@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Cart\Actions\AddToCart;
 use App\Modules\Cart\Contracts\CartReader;
 use App\Modules\Cart\DTOs\CartOwner;
 use App\Modules\Cart\Jobs\PurgeExpiredCarts;
@@ -28,6 +29,7 @@ use App\Modules\Pricing\Contracts\PriceCatalog;
 use App\Modules\Pricing\Database\Seeders\PriceListSeeder;
 use App\Modules\Pricing\Database\Seeders\TaxClassSeeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 beforeEach(function () {
     $this->seed([LanguageSeeder::class, TaxClassSeeder::class, PriceListSeeder::class, StockLocationSeeder::class]);
@@ -336,4 +338,124 @@ it('quotes many variants exactly like one at a time, including sales and tax', f
     foreach ($many as $id => $q) {
         expect($q)->toEqual($prices->quote($id, $map[$id]));
     }
+});
+
+describe('discount codes', function () {
+    beforeEach(function () {
+        $this->code = fn (string $code, array $over = []) => DB::table('coupons')->insertGetId($over + ['public_id' => strtolower((string) Str::ulid()), 'code' => $code, 'type' => 'percent', 'value' => 1000, 'scope' => 'all', 'is_active' => true, 'min_spend_minor' => 0, 'used_count' => 0, 'created_at' => now(), 'updated_at' => now()]);
+        $this->token = (string) ($this->add)($this->tee, '2')->getCookie(GuestCartToken::COOKIE)?->getValue();   // ৳1,300
+        $this->apply = fn (string $typed, string $locale = 'en') => $this->withCookie(GuestCartToken::COOKIE, $this->token)->post("/{$locale}/cart/coupons", ['code' => $typed]);
+        $this->cartPage = fn (string $locale = 'en') => $this->withCookie(GuestCartToken::COOKIE, $this->token)->get("/{$locale}/cart");
+    });
+
+    it('applies a code typed in any case and shows the discount and the goods total after it', function () {
+        ($this->code)('SAVE10');
+
+        ($this->apply)(' save10 ')->assertRedirect('/en/cart')->assertSessionHasNoErrors();
+
+        ($this->cartPage)()->assertOk()->assertSee('SAVE10')->assertSee('130')->assertSee('1,170')->assertSee('Items after discount');
+        expect(DB::table('cart_coupons')->pluck('code')->all())->toBe(['SAVE10']);
+    });
+
+    it('explains in the shopper\'s language why a code is refused, and keeps nothing', function () {
+        ($this->code)('OLD', ['ends_at' => '2020-01-01 00:00:00']);
+        ($this->code)('BIG', ['min_spend_minor' => 999999]);
+
+        ($this->apply)('NOSUCH')->assertSessionHasErrors(['coupon' => 'We do not recognise the code “NOSUCH”.']);
+        ($this->apply)('old')->assertSessionHasErrors(['coupon' => 'The code “OLD” has expired.']);
+        ($this->apply)('BIG')->assertSessionHasErrors('coupon');
+        ($this->apply)('!!', 'bn')->assertSessionHasErrors('coupon');
+        expect(DB::table('cart_coupons')->count())->toBe(0);
+    });
+
+    it('has Bangla wording for every refusal', function () {
+        foreach (['unknown', 'inactive', 'not_started', 'expired', 'exhausted', 'per_customer_limit', 'min_spend', 'not_applicable', 'not_combinable', 'too_many', 'no_discount'] as $reason) {
+            expect(trans("pricing::coupons.reasons.{$reason}", [], 'bn'))->not->toBe("pricing::coupons.reasons.{$reason}");
+        }
+    });
+
+    it('accepts one discount code and one free-delivery code, and no third', function () {
+        ($this->code)('SAVE10');
+        ($this->code)('FIVE', ['type' => 'fixed', 'value' => 500]);
+        ($this->code)('SHIP', ['type' => 'free_shipping', 'value' => 0]);
+
+        ($this->apply)('SAVE10')->assertSessionHasNoErrors();
+        ($this->apply)('FIVE')->assertSessionHasErrors('coupon');
+        ($this->apply)('SHIP')->assertSessionHasNoErrors();
+        expect(DB::table('cart_coupons')->pluck('code')->sort()->values()->all())->toBe(['SAVE10', 'SHIP']);
+
+        $view = app(CartReader::class)->view(CartOwner::guest($this->token), 'en');
+        expect($view->freeShipping())->toBeTrue()->and($view->discountTotal()->amountMinor)->toBe(13000)->and($view->goodsTotal()->amountMinor)->toBe(117000);
+        ($this->cartPage)()->assertSee('Free delivery');
+    });
+
+    it('typing the same code twice is one code', function () {
+        ($this->code)('SAVE10');
+        ($this->apply)('SAVE10');
+        ($this->apply)('save10')->assertSessionHasNoErrors();
+
+        expect(DB::table('cart_coupons')->count())->toBe(1);
+    });
+
+    it('removes a code', function () {
+        ($this->code)('SAVE10');
+        ($this->apply)('SAVE10');
+
+        $this->withCookie(GuestCartToken::COOKIE, $this->token)->delete('/en/cart/coupons/SAVE10')->assertRedirect('/en/cart');
+
+        expect(DB::table('cart_coupons')->count())->toBe(0);
+        ($this->cartPage)()->assertDontSee('SAVE10');
+    });
+
+    it('stops applying a code that stops working, says so, and does not charge less', function () {
+        $id = ($this->code)('SAVE10');
+        ($this->apply)('SAVE10');
+        DB::table('coupons')->where('id', $id)->update(['is_active' => false]);
+
+        $view = app(CartReader::class)->view(CartOwner::guest($this->token), 'en');
+        expect($view->discountTotal()->amountMinor)->toBe(0)->and($view->discounts?->rejected[0]['reason'])->toBe('inactive');
+        ($this->cartPage)()->assertSee('no longer works', false)->assertSee('not active');
+    });
+
+    it('re-checks the minimum spend when the cart shrinks', function () {
+        ($this->code)('BIGSPEND', ['min_spend_minor' => 100000]);
+        ($this->apply)('BIGSPEND')->assertSessionHasNoErrors();
+
+        $this->withCookie(GuestCartToken::COOKIE, $this->token)->patch("/en/cart/items/{$this->tee['publicId']}", ['quantity' => '1'])->assertRedirect();
+
+        expect(app(CartReader::class)->view(CartOwner::guest($this->token), 'en')->discounts?->rejected[0]['reason'])->toBe('min_spend');
+    });
+
+    it('needs a cart, and a code field with something in it', function () {
+        $this->flushSession();
+        $this->post('/en/cart/coupons', ['code' => 'SAVE10'])->assertSessionHasErrors('coupon');
+        ($this->apply)('')->assertSessionHasErrors('code');
+    });
+
+    it('keeps one shopper\'s codes out of another\'s cart', function () {
+        ($this->code)('SAVE10');
+        ($this->apply)('SAVE10');
+        $other = str_repeat('b', 40);
+        app(AddToCart::class)->handle(CartOwner::guest($other), $this->lamp['variantId'], 2);
+
+        expect(app(CartReader::class)->view(CartOwner::guest($other), 'en')->discountTotal()->amountMinor)->toBe(0);
+    });
+
+    it('counts the queries the same however many codes and lines there are', function () {
+        ($this->code)('SAVE10');
+        ($this->code)('SHIP', ['type' => 'free_shipping', 'value' => 0]);
+        ($this->apply)('SAVE10');
+        ($this->apply)('SHIP');
+        $count = function () {
+            DB::flushQueryLog();
+            DB::enableQueryLog();
+            app(CartReader::class)->view(CartOwner::guest($this->token), 'en');
+
+            return count(DB::getQueryLog());
+        };
+        $before = $count();
+        $this->withCookie(GuestCartToken::COOKIE, $this->token)->post('/en/cart/items', ['variant' => $this->lamp['publicId'], 'quantity' => '2']);
+
+        expect($count())->toBe($before);
+    });
 });

@@ -22,9 +22,21 @@ final class CartBuilder implements CartReader
         private readonly PurchasableVariants $variants,
         private readonly PriceCatalog $prices,
         private readonly Availability $availability,
+        private readonly CartDiscounts $discounts,
     ) {}
 
     public function view(CartOwner $owner, string $locale): CartView
+    {
+        return $this->build($owner, $locale, null);
+    }
+
+    public function viewWith(CartOwner $owner, string $locale, array $codes): CartView
+    {
+        return $this->build($owner, $locale, $codes);
+    }
+
+    /** @param  list<string>|null  $codes  null = the codes saved on the cart */
+    private function build(CartOwner $owner, string $locale, ?array $codes): CartView
     {
         $cart = $this->carts->find($owner);
         if ($cart === null) {
@@ -64,7 +76,9 @@ final class CartBuilder implements CartReader
             );
         }
 
-        return new CartView($cart->public_id, $lines, $subtotal, $count);
+        $outcome = $this->discounts->evaluate($owner, $lines, $codes ?? $this->discounts->codes($cart->id), $locale);
+
+        return new CartView($cart->public_id, $lines, $subtotal, $count, $outcome);
     }
 
     public function itemCount(CartOwner $owner): int

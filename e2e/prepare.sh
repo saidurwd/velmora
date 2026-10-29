@@ -32,6 +32,8 @@ php artisan migrate --force --quiet
 php artisan db:seed --force --quiet
 php artisan db:seed --class='App\Modules\Catalog\Database\Seeders\DemoCatalogSeeder' --force --quiet
 php artisan db:seed --class='App\Modules\Cms\Database\Seeders\DemoCmsSeeder' --force --quiet
+# a known discount code for the cart coupon test (10% off, any cart)
+mysql -h"${DB_HOST:-127.0.0.1}" -P"${DB_PORT:-3306}" -u"${DB_USERNAME:-root}" "$DB" -e "INSERT INTO coupons (public_id, code, type, value, scope, is_active, min_spend_minor, used_count, created_at, updated_at) VALUES ('01JE2E0000000000000000COUP', 'E2E10', 'percent', 1000, 'all', 1, 0, 0, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6));"
 php artisan catalog:reindex --quiet
 php artisan search:reindex --quiet
 php artisan cache:clear --quiet
