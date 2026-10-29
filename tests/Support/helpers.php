@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Modules\IdentityAccess\Models\User;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -35,4 +37,21 @@ function catalogStaff(array $permissions): User
 function enBn(string $en, ?string $bn = null): array
 {
     return ['en' => ['name' => $en], 'bn' => ['name' => $bn ?? '']];
+}
+
+/**
+ * Minimal real order rows with the given ids, for tests of things that point at an order (coupon redemptions, ...).
+ *
+ * @param  list<int>  $ids
+ */
+function fakeOrders(array $ids): void
+{
+    foreach ($ids as $id) {
+        DB::table('orders')->insertOrIgnore([
+            'id' => $id, 'public_id' => strtolower((string) Str::ulid()), 'order_number' => sprintf('VM-TEST-%06d', $id),
+            'contact_name' => 'Test', 'contact_phone' => '+8801712345678', 'locale' => 'en', 'subtotal_minor' => 0, 'discount_minor' => 0, 'shipping_minor' => 0,
+            'cod_fee_minor' => 0, 'tax_minor' => 0, 'grand_total_minor' => 0, 'tax_inclusive' => false, 'payment_method_code' => 'cod',
+            'placed_at' => now(), 'created_at' => now(), 'updated_at' => now(),
+        ]);
+    }
 }

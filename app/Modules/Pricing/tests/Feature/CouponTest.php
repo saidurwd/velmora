@@ -20,6 +20,7 @@ use Illuminate\Support\Str;
 
 beforeEach(function () {
     $this->seed(LanguageSeeder::class);
+    fakeOrders([1, 2, 3, 9]);
     $this->clock = new FrozenClock(CarbonImmutable::parse('2026-12-01 06:00:00', 'UTC'));
     $this->app->instance(Clock::class, $this->clock);
 

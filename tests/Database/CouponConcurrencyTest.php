@@ -14,6 +14,7 @@ use Symfony\Component\Process\Process;
 
 beforeEach(function () {
     $this->seed(LanguageSeeder::class);
+    fakeOrders([...range(1, 12), 77]);
     $this->makeCoupon = fn (string $code, array $over = []) => DB::table('coupons')->insertGetId($over + ['public_id' => strtolower((string) Str::ulid()), 'code' => $code, 'type' => 'fixed', 'value' => 100, 'scope' => 'all', 'is_active' => true, 'min_spend_minor' => 0, 'used_count' => 0, 'created_at' => now(), 'updated_at' => now()]);
 });
 
