@@ -14,6 +14,7 @@ final readonly class NewOrder
     /**
      * @param  list<NewOrderLine>  $lines  same order as `breakdown->lines`
      * @param  list<NewOrderAddress>  $addresses
+     * @param  list<array{rule: string, score: int, details: array<string, scalar|null>}>  $flags  why the order is held for review
      */
     public function __construct(
         public Actor $actor,
@@ -30,5 +31,6 @@ final readonly class NewOrder
         public array $addresses,
         public bool $needsReview = false,
         public ?string $placementKey = null,
+        public array $flags = [],
     ) {}
 }

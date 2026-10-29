@@ -18,6 +18,8 @@ final class CheckoutDraft
 {
     private const KEY = 'checkout';
 
+    private const CONFIRMATION_MINUTES = 30;
+
     public function __construct(private readonly Session $session) {}
 
     /** @return Draft|null */
@@ -74,9 +76,22 @@ final class CheckoutDraft
         return $token;
     }
 
+    /** Remember (for this shopper's session only) that a code was entered correctly for this phone. */
+    public function confirmPhone(string $phoneE164): void
+    {
+        $this->session->put(self::KEY.'.phone_confirmed', ['phone' => $phoneE164, 'at' => now()->getTimestamp()]);
+    }
+
+    public function isPhoneConfirmed(string $phoneE164): bool
+    {
+        $c = $this->session->get(self::KEY.'.phone_confirmed');
+
+        return is_array($c) && ($c['phone'] ?? null) === $phoneE164 && now()->getTimestamp() - (int) ($c['at'] ?? 0) <= self::CONFIRMATION_MINUTES * 60;
+    }
+
     public function placed(string $orderPublicId): void
     {
-        $this->session->forget([self::KEY.'.draft', self::KEY.'.token']);
+        $this->session->forget([self::KEY.'.draft', self::KEY.'.token', self::KEY.'.phone_confirmed']);
         $this->session->put(self::KEY.'.last_order', $orderPublicId);
     }
 

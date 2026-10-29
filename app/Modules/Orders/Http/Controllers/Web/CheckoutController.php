@@ -10,6 +10,8 @@ use App\Modules\Customers\Contracts\AddressBook;
 use App\Modules\Customers\Contracts\AddressChecker;
 use App\Modules\Customers\Contracts\Geography;
 use App\Modules\Customers\DTOs\AddressInput;
+use App\Modules\IdentityAccess\Enums\OtpIssueStatus;
+use App\Modules\Orders\Actions\ConfirmCheckoutPhone;
 use App\Modules\Orders\Actions\PlaceOrder;
 use App\Modules\Orders\Actions\ReviewCheckout;
 use App\Modules\Orders\DTOs\PlaceOrderCommand;
@@ -139,7 +141,10 @@ class CheckoutController
             return $this->backToStart($e);
         }
 
-        return view('orders::checkout.review', ['review' => $result, 'token' => $this->draft->token()]);
+        return view('orders::checkout.review', [
+            'review' => $result, 'token' => $this->draft->token(), 'phoneConfirmed' => $this->draft->isPhoneConfirmed($result->contactPhone),
+            'maskedPhone' => PhoneNumber::tryParse($result->contactPhone)?->masked() ?? '',
+        ]);
     }
 
     public function choose(CheckoutChoicesRequest $request): RedirectResponse
@@ -167,6 +172,7 @@ class CheckoutController
             $order = $place->handle(new PlaceOrderCommand(
                 $this->actor($request), $owner, $owner->userId, $result->contactName, $result->contactPhone, $result->contactEmail, $result->address,
                 $result->shippingCode, $result->paymentCode, (int) $request->validated('expected_total'), (string) $request->validated('place_token'), $locale,
+                phoneConfirmed: $this->draft->isPhoneConfirmed($result->contactPhone),
             ));
         } catch (CheckoutException $e) {
             if ($e->reason === 'cart_empty' && ($last = $this->draft->lastOrder()) !== null) {
@@ -179,6 +185,38 @@ class CheckoutController
         $this->draft->placed($order->public_id);
 
         return $this->thanks($order->public_id);
+    }
+
+    /** Sends the SMS code for a large cash order to the phone the shopper gave. */
+    public function sendPhoneCode(Request $request, ConfirmCheckoutPhone $confirm): RedirectResponse
+    {
+        $draft = $this->draft->get();
+        if ($draft === null || $draft['contact_phone'] === '') {
+            return redirect()->route('checkout.details', ['locale' => app()->getLocale()]);
+        }
+
+        $status = $confirm->send($draft['contact_phone'], $request->ip(), app()->getLocale());
+
+        return redirect()->route('checkout.review', ['locale' => app()->getLocale()])->with($status === OtpIssueStatus::Sent
+            ? 'code_status' : 'code_problem', __('orders::checkout.code.'.($status === OtpIssueStatus::Sent ? 'sent' : 'send_'.$status->value)));
+    }
+
+    /** Checks the code. Every failure reads the same, so the page never says which part was wrong. */
+    public function verifyPhoneCode(Request $request, ConfirmCheckoutPhone $confirm): RedirectResponse
+    {
+        $data = $request->validate(['code' => ['required', 'string', 'max:12']]);
+        $draft = $this->draft->get();
+        if ($draft === null || $draft['contact_phone'] === '') {
+            return redirect()->route('checkout.details', ['locale' => app()->getLocale()]);
+        }
+
+        if (! $confirm->verify($draft['contact_phone'], $data['code'])) {
+            return redirect()->route('checkout.review', ['locale' => app()->getLocale()])->withErrors(['code' => __('orders::checkout.code.invalid')]);
+        }
+
+        $this->draft->confirmPhone($draft['contact_phone']);
+
+        return redirect()->route('checkout.review', ['locale' => app()->getLocale()])->with('code_status', __('orders::checkout.code.confirmed'));
     }
 
     public function thanks(string $orderPublicId): RedirectResponse

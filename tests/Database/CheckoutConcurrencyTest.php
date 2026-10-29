@@ -138,3 +138,36 @@ it('lets a one-use coupon discount exactly one of five simultaneous orders and l
         ->and((int) DB::table('orders')->value('discount_minor'))->toBe(5000)
         ->and((int) DB::table('stock_levels')->where('variant_id', $this->tee)->value('reserved'))->toBe(1);   // only the winner holds stock
 });
+
+it('lets at most three of eight simultaneous cash orders from one phone through, and never four', function () {
+    DB::table('stock_levels')->where('variant_id', $this->tee)->update(['on_hand' => 50]);
+
+    $args = [];
+    foreach (range(1, 8) as $i) {
+        [$guest, $total] = ($this->shopper)(str_repeat(dechex($i + 9), 40));
+        $args[] = [$guest, "token-open-cod-{$i}", "--division={$this->division}", "--district={$this->dhaka}", "--upazila={$this->upazila}", "--expected={$total}", '--phone=01755500000'];
+    }
+
+    $results = runPlaceProbes($args);
+
+    $won = array_filter($results, fn ($r) => $r['ok']);
+    $lost = array_values(array_filter($results, fn ($r) => ! $r['ok']));
+    expect($won)->toHaveCount(3)->and(array_unique(array_column($lost, 'reason')))->each->toBeIn(['too_many_open_cod'])
+        ->and(DB::table('orders')->where('contact_phone', '+8801755500000')->count())->toBe(3)
+        ->and((int) DB::table('stock_levels')->where('variant_id', $this->tee)->value('reserved'))->toBe(3)
+        ->and(DB::table('cart_items')->count())->toBe(5);   // the five refused keep their carts
+});
+
+it('does not let one phone\'s lock slow or block other phones', function () {
+    DB::table('stock_levels')->where('variant_id', $this->tee)->update(['on_hand' => 50]);
+
+    $args = [];
+    foreach (range(1, 6) as $i) {
+        [$guest, $total] = ($this->shopper)(str_repeat(dechex($i + 9), 40));
+        $args[] = [$guest, "token-many-phones-{$i}", "--division={$this->division}", "--district={$this->dhaka}", "--upazila={$this->upazila}", "--expected={$total}", '--phone=0176660000'.$i];
+    }
+
+    $results = runPlaceProbes($args);
+
+    expect(array_column($results, 'ok'))->each->toBeTrue()->and(DB::table('orders')->count())->toBe(6);
+});

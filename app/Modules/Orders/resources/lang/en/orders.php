@@ -18,10 +18,15 @@ return [
     'change' => 'Change state', 'move_to' => 'Move to', 'reason' => 'Reason', 'reason_hint' => 'Required when cancelling', 'apply' => 'Apply', 'no_moves' => 'No further changes are possible.', 'cancel' => 'Cancel order',
     'notes' => 'Notes', 'note_body' => 'Add a note', 'note_internal' => 'Internal (staff only)', 'note_customer' => 'Visible to the customer', 'note_add' => 'Add note', 'no_notes' => 'No notes yet.',
     'cancelled_because' => 'Cancelled: :reason',
+    'review_title' => 'Needs review', 'review_help' => 'This order was placed but held for a person to look at before it can be confirmed.', 'review_flags' => 'Why', 'review_reason' => 'What you checked (required)', 'review_clear' => 'Mark as reviewed',
+    'review_cleared' => 'Marked as reviewed. You can confirm the order now.', 'review_cleared_note' => 'Review cleared: :reason', 'block_title' => 'Stop this customer ordering again', 'block_phone' => 'Block this phone number', 'block_address' => 'Block this address',
+    'block_reason' => 'Reason (optional)', 'block_apply' => 'Block', 'blocked' => 'Blocked. They will not be able to place new orders.', 'block_nothing' => 'Choose what to block.', 'flags_none' => 'No warning flags.',
+    'flag' => ['velocity_phone' => 'Many orders from one phone in a day (:orders_24h so far; limit :limit)', 'address_many_phones' => 'One address used by many phones (:phones_30d in 30 days; limit :limit)'],
     'errors' => [
         'illegal_transition' => 'That change is not allowed from “:from” to “:to”.', 'already_in_state' => 'The order is already in that state.', 'cancel_after_shipping' => 'An order that has been shipped cannot be cancelled. Record a return instead.',
         'cancel_needs_refund' => 'Money has been taken for this order. Refund it first, then cancel.', 'reason_required' => 'Please give a reason for cancelling.',
         'complete_needs_delivery_and_payment' => 'An order can be completed only when it is delivered and paid.', 'order_cancelled' => 'This order is cancelled.', 'confirm_before_shipping' => 'Confirm the order before shipping it.',
+        'review_pending' => 'This order is flagged for review. Look at it and mark it as reviewed before confirming.', 'not_under_review' => 'This order is not waiting for review.',
         'changed_meanwhile' => 'The order was changed by someone else. Reload and try again.', 'breakdown_mismatch' => 'The order totals do not add up.', 'lines_mismatch' => 'The order lines do not match the priced lines.', 'address_required' => 'A delivery address is required.',
     ],
 ];

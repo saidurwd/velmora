@@ -25,6 +25,27 @@
     </div>
     @if (session('status'))<x-platform::alert type="success">{{ session('status') }}</x-platform::alert>@endif
     @error('transition')<x-platform::alert type="error">{{ $message }}</x-platform::alert>@enderror
+    @error('review')<x-platform::alert type="error">{{ $message }}</x-platform::alert>@enderror
+
+    @if ($order->needs_review || $order->flags->isNotEmpty())
+    <section aria-labelledby="review-h" class="space-y-3 rounded-lg border {{ $order->needs_review ? 'border-danger' : 'border-line' }} p-4">
+        <h2 id="review-h" class="text-lg font-semibold">{{ $order->needs_review ? __('orders::orders.review_title') : __('orders::orders.review_flags') }}</h2>
+        @if ($order->needs_review)<p>{{ __('orders::orders.review_help') }}</p>@endif
+        <ul class="list-inside list-disc text-sm">
+            @forelse ($order->flags as $flag)<li>{{ __('orders::orders.flag.'.$flag->rule_code, $flag->details) }}</li>@empty<li>{{ __('orders::orders.flags_none') }}</li>@endforelse
+        </ul>
+        @if ($order->needs_review)
+            @can('orders.update')
+            <form method="POST" action="{{ route('admin.orders.review.clear', $order) }}" class="space-y-2">
+                @csrf
+                <label for="review-reason" class="block text-sm font-medium">{{ __('orders::orders.review_reason') }}</label>
+                <input id="review-reason" name="reason" maxlength="255" required class="block w-full rounded-md border border-line px-3 py-2">
+                <x-platform::btn type="submit" size="sm">{{ __('orders::orders.review_clear') }}</x-platform::btn>
+            </form>
+            @endcan
+        @endif
+    </section>
+    @endif
 
     <section aria-labelledby="items-h" class="space-y-2">
         <h2 id="items-h" class="text-lg font-semibold">{{ __('orders::orders.items') }}</h2>
@@ -102,6 +123,20 @@
         </div>
     </section>
     @endcan
+
+    @if ($canCancel)
+    <section aria-labelledby="block-h" class="space-y-2">
+        <h2 id="block-h" class="text-lg font-semibold">{{ __('orders::orders.block_title') }}</h2>
+        <form method="POST" action="{{ route('admin.orders.block', $order) }}" class="space-y-2">
+            @csrf
+            <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="phone" value="1"> {{ __('orders::orders.block_phone') }}</label>
+            <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="address" value="1"> {{ __('orders::orders.block_address') }}</label>
+            <label for="block-reason" class="block text-sm">{{ __('orders::orders.block_reason') }}</label>
+            <input id="block-reason" name="reason" maxlength="255" class="block w-full rounded-md border border-line px-3 py-2">
+            <x-platform::btn type="submit" size="sm" variant="secondary">{{ __('orders::orders.block_apply') }}</x-platform::btn>
+        </form>
+    </section>
+    @endif
 
     <section aria-labelledby="hist-h" class="space-y-2">
         <h2 id="hist-h" class="text-lg font-semibold">{{ __('orders::orders.history') }}</h2>

@@ -10,6 +10,7 @@ use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Enums\PaymentStatus;
 use App\Modules\Orders\Exceptions\OrderException;
 use App\Modules\Orders\Models\Order;
+use App\Modules\Orders\Services\AddressFingerprint;
 use App\Modules\Orders\Services\OrderNumbers;
 use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\Support\Transactions;
@@ -75,11 +76,16 @@ final class CreateOrder
                     'type' => $a->type, 'recipient_name' => $a->recipientName, 'phone' => $a->phone,
                     'division_id' => $a->divisionId, 'district_id' => $a->districtId, 'upazila_id' => $a->upazilaId, 'location_snapshot' => $a->location,
                     'postal_code' => $a->postalCode, 'area' => $a->area, 'address_line' => $a->addressLine, 'landmark' => $a->landmark, 'delivery_note' => $a->deliveryNote,
+                    'fingerprint' => $a->upazilaId === null ? null : AddressFingerprint::of($a->addressLine, $a->area, $a->upazilaId),
                 ]);
             }
 
             foreach ($b->extraTaxLines as $t) {
                 $order->taxLines()->create(['kind' => $t['kind'], 'rate_bp' => $t['rate_bp'], 'taxable_minor' => $t['taxable_minor'], 'tax_minor' => $t['tax_minor'], 'created_at' => $now]);
+            }
+
+            foreach ($new->flags as $flag) {
+                DB::table('order_fraud_flags')->insert(['order_id' => $order->id, 'rule_code' => $flag['rule'], 'score' => $flag['score'], 'details' => json_encode($flag['details'], JSON_THROW_ON_ERROR), 'created_at' => $now]);
             }
 
             foreach ([['status', $status->value], ['payment', PaymentStatus::Unpaid->value], ['fulfillment', FulfillmentStatus::Unfulfilled->value]] as [$axis, $state]) {

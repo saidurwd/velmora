@@ -12,4 +12,5 @@ enum OtpPurpose: string
     case Reset = 'reset';
     case GuestAccess = 'guest_access';
     case ChangePhone = 'change_phone';
+    case CheckoutCod = 'checkout_cod'; // confirming a large cash-on-delivery order
 }

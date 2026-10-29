@@ -29,5 +29,6 @@ final readonly class PlaceOrderCommand
         public string $placeToken,
         public string $locale,
         public OrderChannel $channel = OrderChannel::Web,
+        public bool $phoneConfirmed = false,   // the caller has verified an SMS code for this phone (see ConfirmCheckoutPhone)
     ) {}
 }

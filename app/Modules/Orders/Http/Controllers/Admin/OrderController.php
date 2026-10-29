@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Orders\Http\Controllers\Admin;
 
 use App\Modules\Orders\Actions\AddOrderNote;
+use App\Modules\Orders\Actions\BlockContact;
+use App\Modules\Orders\Actions\ClearOrderReview;
 use App\Modules\Orders\Actions\TransitionOrder;
 use App\Modules\Orders\Enums\FulfillmentStatus;
 use App\Modules\Orders\Enums\OrderStatus;
@@ -56,7 +58,7 @@ class OrderController
 
     public function show(Request $request, Order $order): View
     {
-        $order->load(['items', 'addresses', 'history', 'notes', 'taxLines']);
+        $order->load(['items', 'addresses', 'history', 'notes', 'taxLines', 'flags']);
 
         return view('orders::admin.show', [
             'order' => $order,
@@ -95,6 +97,27 @@ class OrderController
         $add->handle($this->actor($request), $order, (string) $request->validated('body'), (string) $request->validated('visibility'));
 
         return back()->with('status', __('orders::orders.note_added'));
+    }
+
+    public function clearReview(Request $request, Order $order, ClearOrderReview $clear): RedirectResponse
+    {
+        $data = $request->validate(['reason' => ['required', 'string', 'max:255']]);
+
+        try {
+            $clear->handle($this->actor($request), $order->id, $data['reason']);
+        } catch (OrderException $e) {
+            return back()->withErrors(['review' => __('orders::orders.errors.'.$e->reason, $e->params)]);
+        }
+
+        return back()->with('status', __('orders::orders.review_cleared'));
+    }
+
+    public function block(Request $request, Order $order, BlockContact $block): RedirectResponse
+    {
+        $data = $request->validate(['phone' => ['sometimes', 'boolean'], 'address' => ['sometimes', 'boolean'], 'reason' => ['nullable', 'string', 'max:255']]);
+        $count = $block->handle($this->actor($request), $order, $request->boolean('phone'), $request->boolean('address'), $data['reason'] ?? null);
+
+        return $count === 0 ? back()->withErrors(['review' => __('orders::orders.block_nothing')]) : back()->with('status', __('orders::orders.blocked'));
     }
 
     private function actor(Request $request): Actor

@@ -20,5 +20,6 @@ final readonly class CheckoutReview
         public string $contactPhone,
         public ?string $contactEmail,
         public bool $needsDelivery,
+        public bool $needsPhoneConfirmation = false,
     ) {}
 }

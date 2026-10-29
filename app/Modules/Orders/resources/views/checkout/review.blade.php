@@ -18,6 +18,7 @@
     @error('checkout')<x-platform::alert type="error">{{ $message }}</x-platform::alert>@enderror
 
     <div class="grid gap-8 lg:grid-cols-[1fr_22rem]">
+        <div class="space-y-6">
         <form method="POST" action="{{ route('checkout.place', ['locale' => $locale]) }}" class="space-y-6" id="place-form">
             @csrf
             <input type="hidden" name="place_token" value="{{ $token }}">
@@ -62,11 +63,33 @@
                 <button type="submit" formaction="{{ route('checkout.choose', ['locale' => $locale]) }}" class="min-h-11 rounded-md border border-line px-5 py-2">{{ __('orders::checkout.update_totals') }}</button>
             </div>
 
+        </form>
+
+        <div class="space-y-4">
+            @if ($review->needsPhoneConfirmation)
+                <section aria-labelledby="code-h" class="space-y-3 rounded-lg border border-line p-4">
+                    <h2 id="code-h" class="text-lg font-semibold">{{ __('orders::checkout.code.title') }}</h2>
+                    @if (session('code_status'))<x-platform::alert type="success">{{ session('code_status') }}</x-platform::alert>@endif
+                    @if (session('code_problem'))<x-platform::alert type="error">{{ session('code_problem') }}</x-platform::alert>@endif
+                    @if ($phoneConfirmed)
+                        <p class="font-medium">{{ __('orders::checkout.code.done', ['phone' => $maskedPhone]) }}</p>
+                    @else
+                        <p>{{ __('orders::checkout.code.text', ['phone' => $maskedPhone]) }}</p>
+                        <form method="POST" action="{{ route('checkout.phone.send', ['locale' => $locale]) }}">@csrf<button class="min-h-11 rounded-md border border-line px-5 py-2">{{ __('orders::checkout.code.send') }}</button></form>
+                        <form method="POST" action="{{ route('checkout.phone.verify', ['locale' => $locale]) }}" class="space-y-2">
+                            @csrf
+                            <x-platform::form.field name="code" inputmode="numeric" autocomplete="one-time-code" :label="__('orders::checkout.code.label')" required />
+                            <x-platform::form.button>{{ __('orders::checkout.code.verify') }}</x-platform::form.button>
+                        </form>
+                    @endif
+                </section>
+            @endif
             <div class="space-y-2 border-t border-line pt-4">
                 <p class="text-sm text-muted">{{ __('orders::checkout.place_note') }}</p>
-                <button type="submit" @disabled(! $canPlace) class="inline-flex min-h-11 items-center rounded-md bg-brand-600 px-6 py-2 font-medium text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60">{{ __('orders::checkout.place_order', ['total' => $fmt($b->grandTotalMinor)]) }}</button>
+                <button type="submit" form="place-form" @disabled(! $canPlace || ($review->needsPhoneConfirmation && ! $phoneConfirmed)) class="inline-flex min-h-11 items-center rounded-md bg-brand-600 px-6 py-2 font-medium text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60">{{ __('orders::checkout.place_order', ['total' => $fmt($b->grandTotalMinor)]) }}</button>
             </div>
-        </form>
+        </div>
+        </div>
 
         <aside aria-labelledby="sum-h" class="h-fit space-y-2 rounded-lg border border-line p-4">
             <h2 id="sum-h" class="text-lg font-semibold">{{ __('orders::checkout.your_order') }}</h2>

@@ -13,6 +13,12 @@ return [
         'tax.shipping_taxable' => false,
         'tax.cod_fee_taxable' => false,
         'business.currency' => env('VELMORA_CURRENCY', 'BDT'),
+        // Cash-on-delivery abuse rules (editable in the admin panel; Phase 5 slice 9). Money in minor units (paisa).
+        'fraud.enabled' => true,
+        'fraud.max_open_cod_per_phone' => 3,          // open = pending, confirmed or processing
+        'fraud.high_value_cod_minor' => 1_000_000,    // ৳10,000: a cash order ABOVE this needs an SMS code first (0 = never)
+        'fraud.velocity_orders_per_day' => 5,         // this many orders from one phone in 24 h: the next one goes to review (0 = off)
+        'fraud.address_max_phones' => 3,              // one address used by this many different phones in 30 days: review (0 = off)
     ],
 
     // Native names shown in the language switcher (each in its own script).

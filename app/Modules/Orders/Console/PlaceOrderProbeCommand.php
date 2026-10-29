@@ -17,7 +17,7 @@ use Throwable;
 /** Concurrency-test entry point: each OS process places ONE order for a guest cart and prints a JSON line. Never in production. */
 class PlaceOrderProbeCommand extends Command
 {
-    protected $signature = 'orders:place-probe {guest} {token} {--division=0} {--district=0} {--upazila=0} {--expected=0} {--start-at=}';
+    protected $signature = 'orders:place-probe {guest} {token} {--division=0} {--district=0} {--upazila=0} {--expected=0} {--phone=01712345678} {--start-at=}';
 
     protected $description = 'Place an order for a guest cart once and print the outcome as JSON (concurrency testing only)';
 
@@ -38,9 +38,9 @@ class PlaceOrderProbeCommand extends Command
         }
 
         try {
-            $address = $addresses->check(new AddressInput('Test Buyer', '01712345678', (int) $this->option('division'), (int) $this->option('district'), (int) $this->option('upazila'), 'House 1, Road 1'));
+            $address = $addresses->check(new AddressInput('Test Buyer', (string) $this->option('phone'), (int) $this->option('division'), (int) $this->option('district'), (int) $this->option('upazila'), 'House 1, Road 1'));
             $order = $place->handle(new PlaceOrderCommand(
-                Actor::guest('probe'), CartOwner::guest((string) $this->argument('guest')), null, 'Test Buyer', '01712345678', null, $address, 'standard', 'cod',
+                Actor::guest('probe'), CartOwner::guest((string) $this->argument('guest')), null, 'Test Buyer', (string) $this->option('phone'), null, $address, 'standard', 'cod',
                 (int) $this->option('expected'), (string) $this->argument('token'), 'en',
             ));
             $this->line(json_encode(['ok' => true, 'order' => $order->order_number, 'id' => $order->id], JSON_THROW_ON_ERROR));

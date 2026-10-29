@@ -75,3 +75,24 @@ test('a wrong phone number is explained beside the field and nothing is lost', a
     await expect(page.getByLabel(/Recipient|Full name/).first()).toHaveValue('Rahim Uddin');
     await noViolations(page, 'checkout details with an error');
 });
+
+test('a large cash order asks to confirm the phone first, and the order button waits (axe clean)', async ({ page }) => {
+    await page.goto('/en/p/embroidered-panjabi');   // ৳3,200 each: four are over the ৳10,000 limit for cash orders
+    await page.getByLabel('Quantity').fill('4');
+    await page.getByRole('button', { name: 'Add to cart' }).click();
+    await expect(page).toHaveURL(/\/en\/cart$/);
+    await page.getByRole('button', { name: 'No thanks' }).click(); // the consent banner would cover the page
+    await page.getByRole('link', { name: 'Checkout' }).click();
+    await fillAddress(page);
+    await page.getByRole('button', { name: 'Continue to review' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Confirm your phone number' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Send me the code' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Place order/ })).toBeDisabled();
+    await noViolations(page, 'review with the phone confirmation step');
+
+    await page.getByLabel('Code from the SMS').fill('000000');
+    await page.getByRole('button', { name: 'Confirm', exact: true }).click();
+    await expect(page.getByText('That code did not work')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Place order/ })).toBeDisabled();
+});

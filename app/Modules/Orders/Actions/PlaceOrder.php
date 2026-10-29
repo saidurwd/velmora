@@ -17,7 +17,10 @@ use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Events\OrderPlaced;
 use App\Modules\Orders\Exceptions\CheckoutException;
 use App\Modules\Orders\Models\Order;
+use App\Modules\Orders\Services\AddressFingerprint;
 use App\Modules\Orders\Services\CheckoutPricing;
+use App\Modules\Orders\Services\CodRiskAssessor;
+use App\Modules\Orders\Services\PhoneLock;
 use App\Modules\Platform\DTOs\PhoneNumber;
 use App\Modules\Platform\Exceptions\InvalidPhoneNumber;
 use App\Modules\Platform\Outbox\Outbox;
@@ -26,6 +29,7 @@ use App\Modules\Platform\Support\Transactions;
 use App\Modules\Pricing\Contracts\CouponRedeemer;
 use DomainException;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Turns a cart into an order, all or nothing, in ONE transaction:
@@ -46,6 +50,8 @@ final class PlaceOrder
         private readonly CouponRedeemer $coupons,
         private readonly PurchasableVariants $variants,
         private readonly Outbox $outbox,
+        private readonly CodRiskAssessor $risk,
+        private readonly PhoneLock $phoneLock,
     ) {}
 
     /** @throws CheckoutException */
@@ -59,11 +65,25 @@ final class PlaceOrder
         }
 
         try {
-            return Transactions::run(fn (): Order => $this->place($command, $key));
-        } catch (UniqueConstraintViolationException $e) {
-            // someone submitted the same checkout at the same instant and won: that is the order
-            return $this->find($key) ?? throw $e;
+            $phone = PhoneNumber::parse($command->contactPhone)->e164();
+        } catch (InvalidPhoneNumber) {
+            throw new CheckoutException('phone_invalid');
         }
+
+        // one checkout at a time per phone, so "at most N open cash orders" cannot be beaten by pressing the button twice at once
+        return $this->phoneLock->run($phone, function () use ($command, $key): Order {
+            $existing = $this->find($key); // the same submission may have finished while we waited for the lock
+            if ($existing !== null) {
+                return $existing;
+            }
+
+            try {
+                return Transactions::run(fn (): Order => $this->place($command, $key));
+            } catch (UniqueConstraintViolationException $e) {
+                // someone submitted the same checkout at the same instant and won: that is the order
+                return $this->find($key) ?? throw $e;
+            }
+        });
     }
 
     private function find(string $key): ?Order
@@ -106,6 +126,19 @@ final class PlaceOrder
             throw new CheckoutException('totals_changed', ['total' => $quote->breakdown->grandTotalMinor]); // prices, stock-driven sales or a code changed since the page was shown
         }
 
+        $risk = $this->risk->assess($phone, $c->address === null ? null : AddressFingerprint::of($c->address->addressLine, $c->address->area, $c->address->upazilaId), $quote->breakdown->grandTotalMinor, $c->paymentMethodCode, $c->phoneConfirmed);
+        if ($risk->blocked) {
+            Log::warning('orders.blocked_attempt', ['phone' => PhoneNumber::parse($phone)->masked()]);
+
+            throw new CheckoutException('not_accepted'); // deliberately says nothing about why
+        }
+        if ($risk->tooManyOpenCod) {
+            throw new CheckoutException('too_many_open_cod', ['max' => $risk->maxOpenCod]);
+        }
+        if ($risk->needsPhoneConfirmation) {
+            throw new CheckoutException('phone_confirmation_required');
+        }
+
         $buy = array_values(array_filter($cart->lines, fn (CartLineView $l) => $l->problem !== 'unavailable'));
         $names = $this->namesByLocale(array_map(fn (CartLineView $l) => $l->variantId, $buy));
 
@@ -118,8 +151,8 @@ final class PlaceOrder
                 ['division' => $c->address->division, 'district' => $c->address->district, 'upazila' => $c->address->upazila],
                 $c->address->addressLine, $c->address->postalCode, $c->address->area, $c->address->landmark, $c->address->deliveryNote,
             )],
-            false, $key,
-        ), (bool) config('orders.auto_confirm_cod') && $c->paymentMethodCode === 'cod' ? OrderStatus::Confirmed : OrderStatus::Pending);
+            $risk->needsReview(), $key, $risk->flags,
+        ), (bool) config('orders.auto_confirm_cod') && $c->paymentMethodCode === 'cod' && ! $risk->needsReview() ? OrderStatus::Confirmed : OrderStatus::Pending);
 
         // the stock: all lines or none, decided by one conditional UPDATE per line
         $tracked = [];

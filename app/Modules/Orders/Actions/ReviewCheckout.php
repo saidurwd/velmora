@@ -14,6 +14,7 @@ use App\Modules\Customers\DTOs\AddressView;
 use App\Modules\Orders\DTOs\CheckoutReview;
 use App\Modules\Orders\Exceptions\CheckoutException;
 use App\Modules\Orders\Services\CheckoutPricing;
+use App\Modules\Orders\Services\CodRiskAssessor;
 use DomainException;
 
 /**
@@ -27,6 +28,7 @@ final class ReviewCheckout
         private readonly AddressBook $book,
         private readonly AddressChecker $checker,
         private readonly CheckoutPricing $pricing,
+        private readonly CodRiskAssessor $risk,
     ) {}
 
     /**
@@ -57,7 +59,7 @@ final class ReviewCheckout
             $quote = $this->pricing->quote($cart, $address?->districtId, $shippingCode, $paymentCode, $locale);
         }
 
-        return new CheckoutReview($cart, $address, $quote, $shippingCode, $paymentCode, $draft['contact_name'], $draft['contact_phone'], $draft['contact_email'], $needsDelivery);
+        return new CheckoutReview($cart, $address, $quote, $shippingCode, $paymentCode, $draft['contact_name'], $draft['contact_phone'], $draft['contact_email'], $needsDelivery, $this->risk->requiresPhoneConfirmation($quote->breakdown->grandTotalMinor, $paymentCode));
     }
 
     /** @param  array{mode: string, id?: string, input?: array<string, mixed>}|null  $draftAddress */

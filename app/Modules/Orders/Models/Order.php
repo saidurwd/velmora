@@ -80,6 +80,12 @@ class Order extends Model
         return $this->hasMany(OrderNote::class)->orderBy('id');
     }
 
+    /** @return HasMany<OrderFraudFlag, $this> */
+    public function flags(): HasMany
+    {
+        return $this->hasMany(OrderFraudFlag::class)->orderBy('id');
+    }
+
     /** @return HasMany<OrderTaxLine, $this> */
     public function taxLines(): HasMany
     {

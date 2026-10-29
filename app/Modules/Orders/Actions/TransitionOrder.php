@@ -33,6 +33,10 @@ final class TransitionOrder
                 throw new OrderException($o->status === $to ? 'already_in_state' : 'illegal_transition', ['from' => $o->status->value, 'to' => $to->value]);
             }
 
+            if ($to === OrderStatus::Confirmed && $o->needs_review) {
+                throw new OrderException('review_pending'); // a person must look at a flagged order first
+            }
+
             if ($to === OrderStatus::Cancelled) {
                 if ($o->fulfillment_status->hasShipped()) {
                     throw new OrderException('cancel_after_shipping');
