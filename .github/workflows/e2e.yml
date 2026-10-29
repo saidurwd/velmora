@@ -30,6 +30,7 @@ jobs:
           --health-cmd="healthcheck.sh --connect --innodb_initialized"
           --health-interval=5s --health-timeout=5s --health-retries=20
     env:
+      APP_ENV: local # composer's package discovery boots the app before any .env exists; the production-config guard must not trip
       DB_HOST: 127.0.0.1
       DB_PORT: 3306
       DB_USERNAME: root
