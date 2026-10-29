@@ -1,0 +1,72 @@
+name: Browser tests
+
+# Real-browser checks of the storefront on a phone-sized screen against seeded demo data:
+#  - axe accessibility scan (WCAG 2.0/2.1/2.2 A + AA) of every key template, in English and Bangla
+#  - keyboard-only use (skip link, search combobox, variant picker, filters, consent banner)
+#  - browsing, searching, filtering and choosing a variant with JavaScript switched off
+#  - fonts (Latin / Bangla), no horizontal overflow, consent-gated first-party analytics
+# These are deterministic, so unlike the Lighthouse budgets they BLOCK the build.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: root
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_PASSWORD: root
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, intl, pdo_mysql, gd, zip, bcmath
+          coverage: none
+          tools: composer:v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
+      - run: npm ci && npm run build
+      - run: npx playwright install --with-deps chromium
+
+      - name: Prepare the e2e database (name must end in _e2e)
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+          bash e2e/prepare.sh
+
+      - name: Run browser tests
+        run: npx playwright test
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results

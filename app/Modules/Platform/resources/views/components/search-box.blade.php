@@ -3,7 +3,7 @@
 <form method="GET" action="{{ $action }}" role="search" class="relative w-full max-w-md" x-data="searchBox(@js($suggestUrl))" @keydown.escape="close()" @click.outside="close()">
     <label for="site-search" class="sr-only">{{ __('platform::ui.search') }}</label>
     <input id="site-search" name="q" type="search" value="{{ request()->routeIs('storefront.search') && is_string(request('q')) ? request('q') : '' }}" maxlength="100" autocomplete="off" placeholder="{{ __('platform::ui.search_placeholder') }}"
-           role="combobox" aria-autocomplete="list" aria-haspopup="listbox" :aria-expanded="open.toString()" aria-controls="search-suggestions" :aria-activedescendant="active !== -1 ? 'sg-' + active : null"
+           role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" :aria-expanded="open.toString()" aria-controls="search-suggestions" :aria-activedescendant="active !== -1 ? 'sg-' + active : null"
            x-model="query" @input.debounce.250ms="fetchSuggestions()" @keydown.arrow-down.prevent="move(1)" @keydown.arrow-up.prevent="move(-1)" @keydown.enter="choose($event)"
            class="block min-h-11 w-full rounded-md border border-line bg-surface px-3 py-2 pe-12">
     <button type="submit" class="absolute inset-y-0 end-0 flex min-w-11 items-center justify-center rounded-e-md text-muted hover:text-ink" aria-label="{{ __('platform::ui.search') }}">
@@ -11,9 +11,9 @@
     </button>
     <ul id="search-suggestions" role="listbox" aria-label="{{ __('platform::ui.suggestions') }}" x-show="open" x-cloak style="display:none" class="absolute inset-x-0 top-full z-30 mt-1 overflow-hidden rounded-md border border-line bg-surface shadow-lg">
         <template x-for="(item, i) in items" :key="item.url">
-            <li :id="'sg-' + i" role="option" :aria-selected="(i === active).toString()" :class="i === active ? 'bg-brand-50' : ''">
-                <a :href="item.url" class="block min-h-11 px-3 py-3 hover:bg-surface-alt" x-text="item.name"></a>
-            </li>
+            {{-- options hold plain text only (no nested link: screen readers cannot handle interactive content inside an option); click and Enter both open the product --}}
+            <li :id="'sg-' + i" role="option" :aria-selected="(i === active).toString()" :class="i === active ? 'bg-brand-50' : ''" @click="window.location.href = item.url" @mouseenter="active = i"
+                class="block min-h-11 cursor-pointer px-3 py-3 hover:bg-surface-alt" x-text="item.name"></li>
         </template>
     </ul>
     <p class="sr-only" role="status" aria-live="polite" x-text="announcement"></p>

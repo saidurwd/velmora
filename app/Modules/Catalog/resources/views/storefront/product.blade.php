@@ -2,6 +2,8 @@
 
 @section('title', $page->seoTitle ?: $page->name)
 
+@push('head')<meta name="velmora:item" content="{{ $page->publicId }}">@endpush
+
 @section('content')
 @php
     $stockTone = ['in_stock' => 'success', 'low_stock' => 'warning', 'out_of_stock' => 'danger'][$page->stockState] ?? null;

@@ -74,4 +74,12 @@ Adding a nullable column later is cheap on MariaDB; the hard part of a marketpla
 |---|---|---|
 | intervention/image 4.x (GD driver) | re-encode uploads, resize, WebP/AVIF | MIT; actively maintained; GD is bundled with PHP so no ImageMagick needed |
 | ezyang/htmlpurifier | sanitise product / category HTML at write time | LGPL-2.1+; long-established, standards-based allow-list. Used directly instead of the `mews/purifier` wrapper (one less dependency; same engine) |
+### ADR-001 addendum — dependencies added in Phase 4
+| Package | Why | Notes |
+|---|---|---|
+| @playwright/test 1.64 (dev only) | real-browser tests: keyboard-only, no-JavaScript, fonts, consent flow; the Phase 12 E2E suite builds on it | Apache-2.0, Microsoft, very actively maintained. An earlier pin (1.49) was flagged by `npm audit` (GHSA-7mvr-c777-76hp), so the current release is used. Browsers are downloaded by `playwright install`, only in dev/CI. |
+| @axe-core/playwright 4.14 (dev only) | automated WCAG 2.0/2.1/2.2 A+AA scan of every key template in both languages | MPL-2.0, Deque; the same engine Lighthouse uses |
+| (not added) Lighthouse CI via `npx @lhci/cli` | performance budgets | run on demand in CI, not installed in the project |
+Phase 4 also added tables `cms_pages`, `cms_page_translations`, `banners`, `banner_translations`, `slug_redirects`, `catalog_listing` (storefront read model), `search_index`, `search_skus`, `search_terms`, `search_synonyms`, `search_queries`, `analytics_events`.
+
 Phase 3 also added `catalog_imports` (CSV import job status; not in the original data dictionary).

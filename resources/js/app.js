@@ -1,7 +1,10 @@
 import Alpine from 'alpinejs';
+import { consentBanner } from './analytics';
 
 // Alpine is progressive enhancement only: browse, search, filter and checkout must work without JS.
 window.Alpine = Alpine;
+
+Alpine.data('consentBanner', consentBanner);
 
 // Search autocomplete (ARIA combobox). Enhancement only: the form submits normally without JavaScript.
 Alpine.data('searchBox', (suggestUrl) => ({

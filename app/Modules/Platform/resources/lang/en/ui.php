@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
     'info_links' => 'Information',
     'search_placeholder' => 'Search products', 'suggestions' => 'Suggestions',
+    'consent' => ['title' => 'Help us improve the store?', 'text' => 'With your permission we count which pages and products are viewed, to see what to improve. We do not track you across sites, use no advertising scripts and keep no personal identifiers.', 'accept' => 'Allow', 'decline' => 'No thanks', 'settings' => 'Privacy settings'],
     'languages' => 'Languages', 'missing' => 'Missing',
     'was' => 'Was', 'service' => 'Service', 'close' => 'Close', 'breadcrumb' => 'Breadcrumb', 'pagination' => 'Pagination', 'previous' => 'Previous', 'next' => 'Next', 'page' => 'Page',
     'rating' => 'Rated :value out of 5 from :count reviews', 'in_stock' => 'In stock', 'out_of_stock' => 'Out of stock', 'low_stock' => 'Only a few left', 'sale' => 'Sale', 'new' => 'New',

@@ -49,3 +49,7 @@ auth.json
 _ide_helper.php
 Thumbs.db
 .lighthouseci/
+
+/test-results/
+/playwright-report/
+.env.e2e

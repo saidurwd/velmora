@@ -4,6 +4,7 @@
 
 @section('content')
 <div class="space-y-12">
+    <h1 class="sr-only">{{ app(\App\Modules\Platform\Support\Branding::class)->name() }}@if (app(\App\Modules\Platform\Support\Branding::class)->tagline() !== '') — {{ app(\App\Modules\Platform\Support\Branding::class)->tagline() }}@endif</h1>
     @if ($hero !== [])
         <section aria-roledescription="carousel" aria-label="{{ __('catalog::storefront.promotions') }}" class="space-y-4">
             @foreach ($hero as $banner)

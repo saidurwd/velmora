@@ -33,6 +33,7 @@
         @endif
         <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-sm text-muted">
             <span>&copy; {{ now()->year }} {{ $brand->name() }}. {{ __('platform::ui.footer_rights') }}</span>
+            <x-platform::consent-banner />
             @if ($brand->tagline() !== '')<span>{{ $brand->tagline() }}</span>@endif
         </div>
     </footer>

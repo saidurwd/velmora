@@ -15,6 +15,10 @@
     $sortLabels = ($searching ? ['relevance' => __('catalog::storefront.sort.relevance')] : []) + ['newest' => __('catalog::storefront.sort.newest'), 'popular' => __('catalog::storefront.sort.popular'), 'price_asc' => __('catalog::storefront.sort.price_asc'), 'price_desc' => __('catalog::storefront.sort.price_desc')];
 @endphp
 
+@if (isset($searchQuery) && $searchQuery !== '' && $products->currentPage() === 1)
+    @push('head')<meta name="velmora:search" content="{{ $products->total() }}">@endpush
+@endif
+
 @section('content')
 <div class="space-y-6">
     <x-platform::breadcrumb :items="$breadcrumb" />
