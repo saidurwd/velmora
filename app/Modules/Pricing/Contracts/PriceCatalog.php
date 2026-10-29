@@ -20,6 +20,14 @@ interface PriceCatalog
      */
     public function regularPrices(array $variantIds, string $listCode = 'retail'): array;
 
+    /**
+     * Quotes many variants in a fixed number of queries (cart, checkout). Same result as quote() for each; variants without a price are simply absent.
+     *
+     * @param  array<int, string>  $taxClassByVariant  variant id => tax class code
+     * @return array<int, PriceQuote>
+     */
+    public function quoteMany(array $taxClassByVariant, ?CarbonInterface $at = null, string $listCode = 'retail'): array;
+
     /** @return list<int> variants whose displayed price changed in (since, until]: price edits plus sales that started or ended */
     public function changedVariantIds(CarbonInterface $since, CarbonInterface $until): array;
 

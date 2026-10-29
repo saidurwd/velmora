@@ -4,7 +4,7 @@
 
 @section('body')
     <header class="border-b border-line bg-surface">
-        <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
+        <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
             <a href="{{ url('/'.app()->getLocale()) }}" class="flex items-center gap-3" aria-label="{{ $brand->name() }}">
                 @if ($brand->logoUrl())
                     <img src="{{ $brand->logoUrl() }}" alt="" height="40" class="h-10 w-auto">
@@ -13,8 +13,8 @@
                 @endif
                 @if ($brand->tagline() !== '')<span class="hidden text-sm text-muted md:inline">{{ $brand->tagline() }}</span>@endif
             </a>
-            <x-platform::search-box :action="url('/'.app()->getLocale().'/search')" :suggest-url="url('/'.app()->getLocale().'/search/suggest')" />
-            <x-platform::language-switcher />
+            <x-platform::search-box class="order-last basis-full md:order-none md:basis-auto md:flex-1" :action="url('/'.app()->getLocale().'/search')" :suggest-url="url('/'.app()->getLocale().'/search/suggest')" />
+            <div class="flex items-center gap-2"><x-cart::link /><x-platform::language-switcher /></div>
         </div>
     </header>
 

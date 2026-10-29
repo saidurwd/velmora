@@ -49,6 +49,44 @@ final class PriceResolver implements PriceCatalog
         );
     }
 
+    public function quoteMany(array $taxClassByVariant, ?CarbonInterface $at = null, string $listCode = 'retail'): array
+    {
+        if ($taxClassByVariant === []) {
+            return [];
+        }
+
+        $at = ($at === null ? $this->clock->now() : CarbonImmutable::instance($at))->utc();
+        $when = $at->format('Y-m-d H:i:s.u');
+        $ids = array_keys($taxClassByVariant);
+        $list = DB::table('price_lists')->where('code', $listCode)->first() ?? throw PricingException::unknownList($listCode);
+
+        $regular = DB::table('prices')->where('price_list_id', $list->id)->whereIn('variant_id', $ids)->get()->keyBy('variant_id');
+        $sales = DB::table('price_sales')->where('price_list_id', $list->id)->whereIn('variant_id', $ids)->where('starts_at', '<=', $when)->where('ends_at', '>', $when)->get()->keyBy('variant_id');
+        $rates = [];
+        foreach (array_unique($taxClassByVariant) as $code) {
+            $rates[$code] = $this->taxRates->rateBp($code, $at);
+        }
+        $inclusive = $this->settings->bool('tax.prices_include_tax', true);
+        $currency = (string) $list->currency;
+
+        $out = [];
+        foreach ($taxClassByVariant as $variantId => $taxClass) {
+            $r = $regular->get($variantId);
+            if ($r === null) {
+                continue;
+            }
+            $s = $sales->get($variantId);
+            $regularMoney = Money::of((int) $r->amount_minor, $currency);
+            $out[(int) $variantId] = new PriceQuote(
+                (int) $variantId, $listCode, $s === null ? $regularMoney : Money::of((int) $s->amount_minor, $currency), $regularMoney,
+                $s !== null ? $regularMoney : ($r->compare_at_minor === null ? null : Money::of((int) $r->compare_at_minor, $currency)),
+                $s !== null, $s === null ? null : CarbonImmutable::parse((string) $s->ends_at, 'UTC'), $inclusive, $rates[$taxClass],
+            );
+        }
+
+        return $out;
+    }
+
     public function changedVariantIds(CarbonInterface $since, CarbonInterface $until): array
     {
         $from = $since->utc()->format('Y-m-d H:i:s.u');

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Analytics\Jobs\PruneAnalyticsEvents;
+use App\Modules\Cart\Jobs\PurgeExpiredCarts;
 use App\Modules\Catalog\Jobs\PublishScheduledProducts;
 use App\Modules\Catalog\Jobs\ReconcileListing;
 use App\Modules\Cms\Jobs\GenerateSitemaps;
@@ -27,6 +28,7 @@ Schedule::job(new ReconcileListing)->everyMinute()->name('catalog:reconcile-list
 Schedule::job(new PruneSearchQueries)->dailyAt('03:10')->name('search:prune-queries');
 Schedule::job(new GenerateSitemaps)->dailyAt('04:00')->name('seo:sitemaps');
 Schedule::job(new PruneAnalyticsEvents)->dailyAt('03:20')->name('analytics:prune');
+Schedule::job(new PurgeExpiredCarts)->dailyAt('03:40')->name('cart:purge-expired');
 Schedule::job(new PublishScheduledProducts)->everyMinute()->name('catalog:publish-scheduled')->withoutOverlapping();
 Schedule::job(new ExpireReservationsJob)->everyMinute()->name('inventory:expire-reservations')->withoutOverlapping();
 Schedule::job(new VerifyStockLedger)->dailyAt('02:30')->name('inventory:verify-ledger');

@@ -44,7 +44,7 @@ function slugOf(string $sku, string $locale): string
 it('shows a product with name, brand, price, breadcrumb, stock and SKU', function () {
     $this->get('/en/p/cotton-panjabi')->assertOk()
         ->assertSee('Cotton Panjabi')->assertSee('Dhaka Craft')->assertSee('1,850')->assertSee('2,200')->assertSee('PANJ-001')->assertSee('In stock')
-        ->assertSee('aria-current="page"', false)->assertSee('/en/c/clothing', false)->assertSee('disabled', false);
+        ->assertSee('aria-current="page"', false)->assertSee('/en/c/clothing', false)->assertSee('Add to cart')->assertSee('name="variant"', false);
 });
 
 it('shows the Bangla page in Bangla, with Western digits by default and Bangla digits when the store enables them', function () {

@@ -41,5 +41,9 @@ final readonly class ProductPage
         public ?string $taxNote,
         public string $stockState,
         public int $variantCount,
+        public string $variantPublicId,
+        public int $minQty,
+        public ?int $maxQty,
+        public int $qtyStep,
     ) {}
 }

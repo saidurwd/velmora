@@ -129,6 +129,7 @@ final class ProductPageBuilder
             $quote->price, $quote->onSale ? $quote->regular : $quote->compareAt, $quote->onSale, $quote->saleEndsAt,
             $quote->taxRateBp > 0 ? ($quote->pricesIncludeTax ? 'incl' : 'excl') : null,
             $this->stockState($product, $selected, $stock[$selected->id] ?? 0), $variants->count(),
+            $selected->public_id, max(1, (int) $selected->min_qty), $selected->max_qty === null ? null : (int) $selected->max_qty, max(1, (int) $selected->qty_step),
         );
     }
 

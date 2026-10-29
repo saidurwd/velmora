@@ -72,9 +72,21 @@
                 @if ($stockTone)<p><x-platform::badge :tone="$stockTone">{{ __('platform::ui.'.$page->stockState) }}</x-platform::badge></p>@endif
                 <p class="text-sm text-muted">{{ __('catalog::storefront.sku') }}: {{ $page->sku }}</p>
                 <p class="text-sm text-muted">{{ __('catalog::storefront.note_'.$page->type) }}</p>
-                {{-- Ordering arrives with the cart (Phase 5): the control is visible but cannot be used yet. --}}
-                <x-platform::btn type="button" disabled aria-disabled="true" class="w-full cursor-not-allowed opacity-60">{{ __('catalog::storefront.add_to_cart') }}</x-platform::btn>
-                <p class="text-sm text-muted">{{ __('catalog::storefront.ordering_soon') }}</p>
+                @error('cart')<x-platform::alert type="error">{{ $message }}</x-platform::alert>@enderror
+                @if ($page->stockState === 'out_of_stock')
+                    <x-platform::btn type="button" disabled aria-disabled="true" class="w-full cursor-not-allowed opacity-60">{{ __('platform::ui.out_of_stock') }}</x-platform::btn>
+                @else
+                    <form method="POST" action="{{ route('cart.add', ['locale' => app()->getLocale()]) }}" class="flex items-end gap-3" novalidate>
+                        @csrf
+                        <input type="hidden" name="variant" value="{{ $page->variantPublicId }}">
+                        <div>
+                            <label for="qty" class="block text-sm font-medium">{{ __('cart::cart.quantity') }}</label>
+                            <input id="qty" name="quantity" inputmode="numeric" value="{{ $page->minQty }}" class="w-24 rounded-md border border-line px-3 py-2 text-center" @if ($page->qtyStep > 1 || $page->minQty > 1) aria-describedby="qty-help" @endif>
+                        </div>
+                        <x-platform::btn type="submit" class="flex-1">{{ __('cart::cart.add') }}</x-platform::btn>
+                    </form>
+                    @if ($page->qtyStep > 1 || $page->minQty > 1)<p id="qty-help" class="text-sm text-muted">{{ __('catalog::storefront.qty_rule', ['min' => $page->minQty, 'step' => $page->qtyStep]) }}</p>@endif
+                @endif
             </div>
         </section>
     </div>

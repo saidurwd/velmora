@@ -75,8 +75,8 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 ## Cart & Checkout
 | Table | Columns / constraints | Flags |
 |---|---|---|
-| carts | STD; customer_id NULL, guest_token_hash NULL UNIQUE, currency, coupon_id NULL, expires_at, merged_into_id NULL | purge expired |
-| cart_items | cart_id FK, variant_id FK, quantity CHECK>0, added_price_minor (for change notice); UNIQUE(cart_id,variant_id) | |
+| carts | public_id, user_id NULL UNIQUE FK users (one cart per signed-in customer), guest_token_hash char(64) NULL UNIQUE (sha256 of the cookie token), currency, expires_at (refreshed on change; guests 30 d, customers 90 d), merged_into_id NULL; CHECK(user_id or guest_token_hash present); coupon link arrives with coupons (slice 5) | purge expired |
+| cart_items | cart_id FK cascade, variant_id FK, quantity CHECK>0 (cap 100 per line, 50 lines per cart, in the Action), added_price_minor CHECK≥0 (unit price last accepted: drives the change notice); UNIQUE(cart_id,variant_id) | |
 
 ## Orders
 | Table | Columns / constraints | Flags |

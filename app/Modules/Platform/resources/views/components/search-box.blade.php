@@ -1,6 +1,6 @@
 @props(['action', 'suggestUrl'])
 {{-- Works as a plain GET form without JavaScript. With JavaScript it adds an ARIA combobox: type ≥ 2 letters, ↓/↑ to move, Enter to open, Esc to close. --}}
-<form method="GET" action="{{ $action }}" role="search" class="relative w-full max-w-md" x-data="searchBox(@js($suggestUrl))" @keydown.escape="close()" @click.outside="close()">
+<form method="GET" action="{{ $action }}" role="search" {{ $attributes->class('relative w-full max-w-md') }} x-data="searchBox(@js($suggestUrl))" @keydown.escape="close()" @click.outside="close()">
     <label for="site-search" class="sr-only">{{ __('platform::ui.search') }}</label>
     <input id="site-search" name="q" type="search" value="{{ request()->routeIs('storefront.search') && is_string(request('q')) ? request('q') : '' }}" maxlength="100" autocomplete="off" placeholder="{{ __('platform::ui.search_placeholder') }}"
            role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" :aria-expanded="open.toString()" aria-controls="search-suggestions" :aria-activedescendant="active !== -1 ? 'sg-' + active : null"
