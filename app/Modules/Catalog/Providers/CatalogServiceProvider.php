@@ -7,12 +7,14 @@ namespace App\Modules\Catalog\Providers;
 use App\Modules\Catalog\Console\ReindexListingCommand;
 use App\Modules\Catalog\Contracts\MalwareScanner;
 use App\Modules\Catalog\Contracts\PurchasableVariants;
+use App\Modules\Catalog\Contracts\ScopeDirectory;
 use App\Modules\Catalog\Contracts\SearchableProducts;
 use App\Modules\Catalog\Contracts\SitemapSource;
 use App\Modules\Catalog\Contracts\VariantClassification;
 use App\Modules\Catalog\Contracts\VariantDirectory;
 use App\Modules\Catalog\Events\ProductListingChanged;
 use App\Modules\Catalog\Services\DatabasePurchasableVariants;
+use App\Modules\Catalog\Services\DatabaseScopeDirectory;
 use App\Modules\Catalog\Services\DatabaseVariantClassification;
 use App\Modules\Catalog\Services\DatabaseVariantDirectory;
 use App\Modules\Catalog\Services\Media\NullMalwareScanner;
@@ -59,5 +61,6 @@ class CatalogServiceProvider extends ModuleServiceProvider
         $this->app->bind(VariantClassification::class, DatabaseVariantClassification::class);
         $this->app->bind(MalwareScanner::class, NullMalwareScanner::class);
         $this->app->bind(VariantDirectory::class, DatabaseVariantDirectory::class);
+        $this->app->bind(ScopeDirectory::class, DatabaseScopeDirectory::class);
     }
 }

@@ -34,6 +34,8 @@ class PricingServiceProvider extends ModuleServiceProvider
         $menu = $this->app->make(AdminMenu::class);
         $menu->add('pricing::admin.menu.prices', 'admin.pricing.index', 'pricing.view', 40);
         $menu->add('pricing::admin.menu.bulk', 'admin.pricing.bulk', 'pricing.update', 41);
+        $menu->add('pricing::promotions.menu_coupons', 'admin.promotions.coupons.index', 'promotions.view', 42);
+        $menu->add('pricing::promotions.menu_promotions', 'admin.promotions.promotions.index', 'promotions.view', 43);
     }
 
     public function register(): void
