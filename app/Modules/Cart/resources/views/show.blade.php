@@ -45,7 +45,7 @@
                                 <x-platform::btn type="submit" size="sm" variant="secondary">{{ __('cart::cart.update') }}</x-platform::btn>
                             </form>
                         @endif
-                        <form method="POST" action="{{ route('cart.remove', ['locale' => app()->getLocale(), 'variant' => $line->variantPublicId ?: 'x']) }}">@csrf @method('DELETE')<button class="text-sm underline">{{ __('cart::cart.remove') }}</button></form>
+                        <form method="POST" action="{{ route('cart.remove', ['locale' => app()->getLocale(), 'variant' => $line->variantPublicId ?: 'x']) }}">@csrf @method('DELETE')<button class="inline-flex min-h-9 min-w-9 items-center justify-center px-2 text-sm underline">{{ __('cart::cart.remove') }}</button></form>
                     </div>
                 </li>
             @endforeach
@@ -63,7 +63,7 @@
             @endif
             @foreach ($cart->discounts?->rejected ?? [] as $r)
                 <p class="text-sm text-danger" role="status">{{ __('cart::cart.code_not_valid') }} {{ __('pricing::coupons.reasons.'.$r['reason'], ['code' => $r['code'], 'min' => $fmt(\App\Modules\Platform\DTOs\Money::of($r['min'] ?? 0))]) }}
-                    <form method="POST" action="{{ route('cart.coupon.remove', ['locale' => app()->getLocale(), 'code' => $r['code']]) }}" class="inline">@csrf @method('DELETE')<button class="underline" aria-label="{{ __('cart::cart.coupon_remove', ['code' => $r['code']]) }}">{{ __('cart::cart.remove') }}</button></form></p>
+                    <form method="POST" action="{{ route('cart.coupon.remove', ['locale' => app()->getLocale(), 'code' => $r['code']]) }}" class="inline">@csrf @method('DELETE')<button class="inline-flex min-h-9 items-center px-2 underline" aria-label="{{ __('cart::cart.coupon_remove', ['code' => $r['code']]) }}">{{ __('cart::cart.remove') }}</button></form></p>
             @endforeach
             <form method="POST" action="{{ route('cart.coupon.apply', ['locale' => app()->getLocale()]) }}" class="space-y-1">
                 @csrf
@@ -75,11 +75,15 @@
                 @error('coupon')<p id="coupon-error" class="text-sm text-danger">{{ $message }}</p>@enderror
             </form>
             @foreach (array_filter($cart->discounts?->applied ?? [], fn ($d) => $d->code) as $d)
-                <form method="POST" action="{{ route('cart.coupon.remove', ['locale' => app()->getLocale(), 'code' => $d->code]) }}" class="text-sm">@csrf @method('DELETE')<button class="underline" aria-label="{{ __('cart::cart.coupon_remove', ['code' => $d->code]) }}">{{ __('cart::cart.coupon_remove', ['code' => $d->code]) }}</button></form>
+                <form method="POST" action="{{ route('cart.coupon.remove', ['locale' => app()->getLocale(), 'code' => $d->code]) }}" class="text-sm">@csrf @method('DELETE')<button class="inline-flex min-h-9 items-center px-2 underline" aria-label="{{ __('cart::cart.coupon_remove', ['code' => $d->code]) }}">{{ __('cart::cart.coupon_remove', ['code' => $d->code]) }}</button></form>
             @endforeach
             <p class="text-sm text-muted">{{ __('cart::cart.shipping_later') }}</p>
-            <x-platform::btn type="button" disabled aria-disabled="true" class="w-full cursor-not-allowed opacity-60">{{ __('cart::cart.checkout') }}</x-platform::btn>
-            <p class="text-sm text-muted">{{ __('cart::cart.checkout_soon') }}</p>
+            @if ($cart->hasProblems())
+                <x-platform::btn type="button" disabled aria-disabled="true" class="w-full cursor-not-allowed opacity-60">{{ __('cart::cart.checkout') }}</x-platform::btn>
+                <p class="text-sm text-danger">{{ __('cart::cart.fix_first') }}</p>
+            @else
+                <x-platform::btn :href="route('checkout.details', ['locale' => app()->getLocale()])" class="w-full">{{ __('cart::cart.checkout') }}</x-platform::btn>
+            @endif
         </section>
     @endif
 </div>

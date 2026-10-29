@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $area
  * @property string $address_line
  * @property string|null $landmark
+ * @property string|null $delivery_note
  */
 class OrderAddress extends Model
 {

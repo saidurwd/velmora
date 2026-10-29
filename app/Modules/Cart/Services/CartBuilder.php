@@ -72,7 +72,7 @@ final class CartBuilder implements CartReader
                 $d->publicId, $item->variant_id, $d->sku, $d->productName, $d->optionsLabel, $d->productSlug, $d->imageUrl, $d->productType, $item->quantity,
                 $d->minQty, $d->maxQty, $d->qtyStep, $q->price, $line,
                 $item->added_price_minor !== $q->price->amountMinor ? Money::of($item->added_price_minor) : null,
-                $available !== null && $available < $item->quantity ? 'insufficient_stock' : null, $available, $d->weightG,
+                $available !== null && $available < $item->quantity ? 'insufficient_stock' : null, $available, $d->weightG, $d->taxClassCode,
             );
         }
 

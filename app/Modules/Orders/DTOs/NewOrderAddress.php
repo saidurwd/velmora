@@ -22,5 +22,6 @@ final readonly class NewOrderAddress
         public ?string $postalCode = null,
         public ?string $area = null,
         public ?string $landmark = null,
+        public ?string $deliveryNote = null,
     ) {}
 }

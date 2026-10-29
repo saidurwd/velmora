@@ -29,5 +29,6 @@ final readonly class NewOrder
         public array $lines,
         public array $addresses,
         public bool $needsReview = false,
+        public ?string $placementKey = null,
     ) {}
 }

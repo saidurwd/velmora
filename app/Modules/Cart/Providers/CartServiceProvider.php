@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\Cart\Providers;
 
+use App\Modules\Cart\Actions\ClearCart;
+use App\Modules\Cart\Contracts\CartOwnerResolver;
 use App\Modules\Cart\Contracts\CartReader;
+use App\Modules\Cart\Contracts\CartWriter;
 use App\Modules\Cart\Listeners\MergeGuestCartOnLogin;
 use App\Modules\Cart\Services\CartBuilder;
+use App\Modules\Cart\Services\CartOwners;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Event;
@@ -21,6 +25,8 @@ class CartServiceProvider extends ModuleServiceProvider
     public function register(): void
     {
         $this->app->bind(CartReader::class, CartBuilder::class);
+        $this->app->bind(CartOwnerResolver::class, CartOwners::class);
+        $this->app->bind(CartWriter::class, ClearCart::class);
     }
 
     public function boot(): void

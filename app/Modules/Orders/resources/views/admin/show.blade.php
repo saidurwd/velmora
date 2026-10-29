@@ -36,7 +36,7 @@
             <tbody>
             @foreach ($order->items as $item)
                 <tr class="border-b border-line">
-                    <td class="py-2 pe-3">{{ $item->name($locale) }}@if ($item->options_snapshot)<br><span class="text-muted">{{ collect($item->options_snapshot)->map(fn ($v, $k) => $k.': '.$v)->join(', ') }}</span>@endif</td>
+                    <td class="py-2 pe-3">{{ $item->name($locale) }}@if ($item->options($locale))<br><span class="text-muted">{{ $item->options($locale) }}</span>@endif</td>
                     <td class="py-2 pe-3">{{ $item->sku_snapshot }}</td>
                     <td class="py-2 pe-3">{{ \App\Modules\Platform\Support\Fmt::number($item->quantity) }}</td>
                     <td class="py-2 pe-3">{{ $fmt($item->unit_price_minor) }}</td>
@@ -70,6 +70,7 @@
                 <h2 id="addr-{{ $address->type }}" class="text-lg font-semibold">{{ __('orders::orders.'.$address->type.'_address') }}</h2>
                 <p>{{ $address->recipient_name }} · {{ $phone($address->phone) }}</p>
                 <p>{{ $address->address_line }}@if ($address->landmark), {{ $address->landmark }}@endif</p>
+                @if ($address->delivery_note)<p class="text-muted">{{ $address->delivery_note }}</p>@endif
                 <p>{{ collect([$address->area, $address->locationLine($locale), $address->postal_code])->filter()->join(', ') }}</p>
             </section>
         @endforeach

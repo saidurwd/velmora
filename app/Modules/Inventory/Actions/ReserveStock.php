@@ -68,7 +68,7 @@ final class ReserveStock
             if ($affected === 1) {
                 $reservation = StockReservation::query()->create([
                     'variant_id' => $variantId, 'location_id' => $candidate, 'quantity' => $quantity, 'owner_type' => $ownerType, 'owner_ref' => $ownerRef,
-                    'status' => 'active', 'expires_at' => $now->addSeconds($ttlSeconds ?? (int) config('inventory.default_reservation_ttl_seconds'))->format('Y-m-d H:i:s.u'),
+                    'status' => 'active', 'expires_at' => $ttlSeconds === 0 ? null : $now->addSeconds($ttlSeconds ?? (int) config('inventory.default_reservation_ttl_seconds'))->format('Y-m-d H:i:s.u'), // 0 = held until released or shipped (orders)
                 ]);
                 $this->alerts->afterChange($variantId, $candidate, $before);
 

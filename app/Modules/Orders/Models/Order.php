@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property int $id
  * @property string $public_id
+ * @property string|null $placement_key
  * @property string $order_number
  * @property int|null $user_id
  * @property string $contact_name

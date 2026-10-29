@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Cart\Services;
 
+use App\Modules\Cart\Contracts\CartOwnerResolver;
 use App\Modules\Cart\DTOs\CartOwner;
 use Illuminate\Http\Request;
 
 /** Works out whose cart a request is about. Reading never creates anything; writing issues the guest cookie on first use. */
-final class CartOwners
+final class CartOwners implements CartOwnerResolver
 {
     public function __construct(private readonly GuestCartToken $tokens) {}
 

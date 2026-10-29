@@ -54,7 +54,7 @@ beforeEach(function () {
     $this->address = fn () => new NewOrderAddress('shipping', 'Rahim Uddin', '+8801712345678', 3, 30, 300, ['division' => ['en' => 'Dhaka', 'bn' => 'ঢাকা'], 'district' => ['en' => 'Dhaka', 'bn' => 'ঢাকা'], 'upazila' => ['en' => 'Dhanmondi', 'bn' => 'ধানমন্ডি']], 'House 5, Road 2', '1205', 'Dhanmondi', 'Near the lake');
     $this->newOrder = fn (?PriceBreakdown $b = null, array $over = []) => new NewOrder(
         Actor::guest('checkout'), $over['userId'] ?? null, 'Rahim Uddin', '+8801712345678', null, OrderChannel::Web, 'en', 'cod', 'standard', $b ?? ($this->breakdown)(),
-        [new NewOrderLine($this->tee, 'physical', ['en' => 'Cotton Tee', 'bn' => 'সুতির টি-শার্ট'], 'TEE-1', ['Size' => 'M']), new NewOrderLine($this->mug, 'physical', ['en' => 'Mug', 'bn' => 'মগ'], 'MUG-1')],
+        [new NewOrderLine($this->tee, 'physical', ['en' => 'Cotton Tee', 'bn' => 'সুতির টি-শার্ট'], 'TEE-1', ['en' => 'Size: M', 'bn' => 'সাইজ: M']), new NewOrderLine($this->mug, 'physical', ['en' => 'Mug', 'bn' => 'মগ'], 'MUG-1')],
         $over['addresses'] ?? [($this->address)()],
     );
     $this->place = fn (?PriceBreakdown $b = null, array $over = []) => app(CreateOrder::class)->handle(($this->newOrder)($b, $over));
@@ -72,7 +72,7 @@ describe('placing an order record', function () {
             ->and($order->shipping_minor)->toBe(6000)->and($order->cod_fee_minor)->toBe(2000)->and($order->grand_total_minor)->toBe(165050 - 1000 + 6000 + 2000);
 
         $items = $order->items;
-        expect($items)->toHaveCount(2)->and($items[0]->name('bn'))->toBe('সুতির টি-শার্ট')->and($items[0]->quantity)->toBe(2)->and($items[0]->line_total_minor)->toBe(130000)->and($items[0]->options_snapshot)->toBe(['Size' => 'M'])
+        expect($items)->toHaveCount(2)->and($items[0]->name('bn'))->toBe('সুতির টি-শার্ট')->and($items[0]->quantity)->toBe(2)->and($items[0]->line_total_minor)->toBe(130000)->and($items[0]->options('bn'))->toBe('সাইজ: M')
             ->and($items[1]->discount_minor)->toBe(1000)->and($items[1]->line_total_minor)->toBe(34050)
             ->and($order->addresses)->toHaveCount(1)->and($order->addresses[0]->locationLine('bn'))->toBe('ধানমন্ডি, ঢাকা, ঢাকা')
             ->and($order->history->map(fn ($h) => $h->axis.':'.$h->to_state)->all())->toBe(['status:pending', 'payment:unpaid', 'fulfillment:unfulfilled']);

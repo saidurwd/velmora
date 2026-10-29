@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace App\Modules\Customers\Actions;
 
-use App\Modules\Customers\Contracts\Geography;
 use App\Modules\Customers\DTOs\AddressInput;
 use App\Modules\Customers\Exceptions\AddressException;
 use App\Modules\Customers\Models\CustomerAddress;
-use App\Modules\Platform\DTOs\PhoneNumber;
-use App\Modules\Platform\Exceptions\InvalidPhoneNumber;
+use App\Modules\Customers\Services\AddressValidator;
 use App\Modules\Platform\Support\BanglaText;
 use App\Modules\Platform\Support\Transactions;
 
@@ -18,25 +16,12 @@ final class SaveAddress
 {
     public const MAX_PER_CUSTOMER = 10;
 
-    public function __construct(private readonly Geography $geography) {}
+    public function __construct(private readonly AddressValidator $validator) {}
 
     /** @throws AddressException */
     public function handle(int $customerId, ?CustomerAddress $address, AddressInput $in): CustomerAddress
     {
-        try {
-            $phone = PhoneNumber::parse($in->phone)->e164();
-        } catch (InvalidPhoneNumber) {
-            throw AddressException::phoneInvalid();
-        }
-
-        if ($this->geography->resolve($in->divisionId, $in->districtId, $in->upazilaId) === null) {
-            throw AddressException::locationMismatch(); // the three ids must form a real chain, whatever the browser sent
-        }
-
-        $postal = $in->postalCode === null ? null : BanglaText::numeric($in->postalCode);
-        if ($postal !== null && preg_match('/^\d{4}$/', $postal) !== 1) {
-            throw AddressException::postalInvalid();
-        }
+        ['phone' => $phone, 'postal' => $postal] = $this->validator->validate($in);
 
         return Transactions::run(function () use ($customerId, $address, $in, $phone, $postal): CustomerAddress {
             // serialise this customer's address changes (two tabs saving at once must not both become "default")

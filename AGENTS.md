@@ -9,7 +9,7 @@ Authoritative docs: `docs/architecture/*` (esp. `ARCHITECTURE_DECISION_RECORDS.m
 * **Full gate: `composer check`** (Pint → Larastan 8 → all tests). Tests: `php artisan test` · one suite `--testsuite=Architecture|Database|Feature|Unit` · filter `--filter=Name`
 * Static analysis: `composer analyse` · Style: `vendor/bin/pint` (fix) / `composer lint`
 * New module: `php artisan make:module Name`
-* Frontend: `npm run build` / `npm run dev` · Browser tests (Playwright + axe): `npm run e2e:prepare` (builds the throw-away `velmora_e2e` database and `.env.e2e`) then `npm run e2e`; they never touch `velmora` or `velmora_test`
+* Frontend: `npm run build` / `npm run dev` · Browser tests (Playwright + axe): `npm run e2e:prepare` (builds the throw-away `velmora_e2e` database and `.env.e2e`) then `npm run e2e`; they never touch `velmora` or `velmora_test`. Re-run `npm run e2e:prepare` before every `npm run e2e`: the checkout tests place real orders that hold demo stock, so a second run on the same database runs out of stock
 * Tool output is compact JSON (laravel/pao); that is expected.
 * **Never** run `migrate:fresh`, `db:wipe` or `--env=testing` against the dev database `velmora`; tests use `velmora_test` only.
 

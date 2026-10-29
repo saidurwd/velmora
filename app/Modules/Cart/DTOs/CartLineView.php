@@ -31,5 +31,6 @@ final readonly class CartLineView
         public ?string $problem,
         public ?int $available,
         public int $weightG = 0,
+        public string $taxClassCode = 'standard',
     ) {}
 }

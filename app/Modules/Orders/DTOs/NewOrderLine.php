@@ -9,7 +9,7 @@ final readonly class NewOrderLine
 {
     /**
      * @param  array<string, string>  $name  locale => name
-     * @param  array<string, string>|null  $options  e.g. ["Size" => "M"]
+     * @param  array<string, string>|null  $options  locale => readable options, e.g. ["en" => "Size: M", "bn" => "সাইজ: M"]
      */
     public function __construct(public int $variantId, public string $productType, public array $name, public string $sku, public ?array $options = null) {}
 }

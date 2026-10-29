@@ -49,6 +49,7 @@ final class CreateOrder
             $now = $this->clock->now();
 
             $order = Order::query()->create([
+                'placement_key' => $new->placementKey,
                 'order_number' => $this->numbers->next($now),
                 'user_id' => $new->userId,
                 'contact_name' => $new->contactName, 'contact_phone' => $new->contactPhone, 'contact_email' => $new->contactEmail,
@@ -73,7 +74,7 @@ final class CreateOrder
                 $order->addresses()->create([
                     'type' => $a->type, 'recipient_name' => $a->recipientName, 'phone' => $a->phone,
                     'division_id' => $a->divisionId, 'district_id' => $a->districtId, 'upazila_id' => $a->upazilaId, 'location_snapshot' => $a->location,
-                    'postal_code' => $a->postalCode, 'area' => $a->area, 'address_line' => $a->addressLine, 'landmark' => $a->landmark,
+                    'postal_code' => $a->postalCode, 'area' => $a->area, 'address_line' => $a->addressLine, 'landmark' => $a->landmark, 'delivery_note' => $a->deliveryNote,
                 ]);
             }
 

@@ -71,10 +71,16 @@ test('the cart carries no accessibility violations: empty, with items, and in Ba
     await page.goto('/en/p/cotton-panjabi');
     await noViolations(page, 'product page with the add form');
     await page.getByRole('button', { name: 'Add to cart' }).click();
+    await expect(page).toHaveURL(/\/en\/cart$/);
+    // The consent banner (fixed to the bottom, tall on a phone) appears a moment after load and would sit on top of the line
+    // controls while they are scanned; answer it first so the scan is of the cart itself. a11y.spec.js scans the banner.
+    await page.getByRole('button', { name: 'No thanks' }).click();
+    await expect(page.getByRole('region', { name: 'Help us improve the store?' })).toBeHidden();
     await noViolations(page, 'cart with items');
 
     await page.locator('nav a[hreflang="bn"]').first().click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'bn');
+    await expect(page.getByRole('region', { name: 'Help us improve the store?' })).toBeHidden(); // the choice is remembered
     await noViolations(page, 'cart with items (Bangla)');
 });
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Orders\Actions;
 
+use App\Modules\Inventory\Contracts\StockReservations;
 use App\Modules\Orders\Enums\FulfillmentStatus;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Enums\PaymentStatus;
@@ -22,7 +23,7 @@ use Illuminate\Support\Facades\DB;
  */
 final class TransitionOrder
 {
-    public function __construct(private readonly Clock $clock, private readonly AuditLogger $audit) {}
+    public function __construct(private readonly Clock $clock, private readonly AuditLogger $audit, private readonly StockReservations $stock) {}
 
     /** @throws OrderException */
     public function status(Actor $actor, int $orderId, OrderStatus $to, ?string $reason = null): Order
@@ -110,6 +111,10 @@ final class TransitionOrder
                 'order_id' => $orderId, 'axis' => $axis, 'from_state' => $from, 'to_state' => $to,
                 'actor_type' => $actor->type->value, 'actor_id' => $actor->id, 'reason' => $reason === null || trim($reason) === '' ? null : mb_substr(trim($reason), 0, 255), 'created_at' => $this->clock->now(),
             ]);
+
+            if ($axis === 'status' && $to === OrderStatus::Cancelled->value) {
+                $this->stock->releaseForOrder($order->public_id); // in the same transaction: a cancelled order never keeps stock
+            }
 
             return $order->refresh();
         });
