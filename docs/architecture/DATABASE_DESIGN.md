@@ -81,6 +81,8 @@ Each pattern was executed on MariaDB 12.1.2 where marked.
 | 13 | Outbox consume | `SELECT … FROM outbox_messages WHERE status='pending' AND available_at<=UTC_TIMESTAMP(6) ORDER BY id LIMIT :n FOR UPDATE SKIP LOCKED` | Double dispatch by workers |
 | 14 | Reservation expiry | job: `UPDATE stock_reservations SET status='expired' WHERE status='active' AND expires_at<=now` (batch by id) then release counts per row under lock; commit-after-expiry rejected by status check | Stuck stock |
 | 15 | Stock ledger integrity | nightly: `on_hand = SUM(stock_movements.delta)` per (variant,location); mismatch ⇒ alert | Silent drift |
+| 16 | One checkout at a time per phone ("≤ N open COD orders") | `SELECT GET_LOCK('vm:phone:<hash>', 10)` taken before the order transaction starts and `RELEASE_LOCK` after it ends; the count and the insert then cannot interleave for the same phone. A count cannot be protected by a row lock (the new row does not exist yet) [VERIFIED: 8 parallel processes → 3 orders; without the lock → 8] | Exceeding a per-phone limit |
+| 17 | Same checkout submitted twice at once | `UNIQUE(orders.placement_key)` = sha256(shopper + form token); the loser gets a duplicate-key error, rolls back (stock and coupon with it) and returns the winner's order | Double order, double stock hold |
 Reservation-vs-movement rule (ADR-013): `reserved` changes on reserve/release; `on_hand` + a `stock_movements` row change **only** on shipment (−), receipt (+), adjustment, return restock.
 
 ## 6. Indexing strategy (each serves a query)

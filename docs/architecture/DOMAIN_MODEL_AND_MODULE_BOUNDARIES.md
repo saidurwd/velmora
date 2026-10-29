@@ -12,8 +12,8 @@ Rule [PINNED]: a module may use another module's **Contracts, DTOs, Enums, Event
 | Pricing/Promotions | prices, price resolver, tax, coupons, promotions | prices, tax_classes, tax_rates, coupons, coupon_redemptions | CouponRedeemed | ProductUpdated | Orders |
 | Inventory | locations, levels, movements, reservations, availability | stock_locations, stock_levels, stock_movements, stock_reservations | StockLow, StockReserved | OrderCancelled, ShipmentCreated, ReturnReceived | Catalog models (uses contracts) |
 | Cart | cart & lines, merge, expiry | carts, cart_items | — | — | Orders |
-| Checkout | orchestrates PlaceOrder (stateless) | none (uses idempotency_keys) | — | — | owns no tables |
-| Orders | order aggregate, 3 state machines, history, notes | orders, order_items, order_addresses, order_status_history | OrderPlaced/Confirmed/Cancelled/Paid | PaymentSucceeded/Failed, Shipment*, Refund* | **Payments (never calls)** |
+| Checkout | *(implemented inside Orders in Phase 5, see ADR addendum P5-2)* | — | — | — | — |
+| Orders | order aggregate, 3 state machines, history, notes, PlaceOrder + checkout pages, COD abuse rules, block list | orders, order_items, order_addresses, order_status_history, order_tax_lines, order_notes, order_fraud_flags, order_blocklist | OrderPlaced (outbox); Confirmed/Cancelled/Paid via history | PaymentSucceeded/Failed, Shipment*, Refund* | **Payments (never calls)** |
 | Payments | gateways, payments, transactions, webhooks, refunds, COD collections/remittances | payments, payment_transactions, payment_webhook_events, refunds, cod_* | PaymentSucceeded/Failed/NeedsReview, RefundSucceeded, CodCollected | OrderPlaced (via OrderPayable contract) | Orders models |
 | Shipping | zones, rates, quotes, shipments, courier providers, returns ops | shipping_*, shipments, shipment_items, shipment_events, courier_accounts, return_requests | Shipment* | OrderConfirmed | Payments |
 | DigitalProducts | assets, entitlements, downloads, license keys | digital_assets, entitlements, download_logs, license_keys | EntitlementGranted | OrderPaid, RefundSucceeded | Shipping, Inventory |

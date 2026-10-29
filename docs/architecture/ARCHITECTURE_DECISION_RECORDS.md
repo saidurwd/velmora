@@ -83,3 +83,26 @@ Adding a nullable column later is cheap on MariaDB; the hard part of a marketpla
 Phase 4 also added tables `cms_pages`, `cms_page_translations`, `banners`, `banner_translations`, `slug_redirects`, `catalog_listing` (storefront read model), `search_index`, `search_skus`, `search_terms`, `search_synonyms`, `search_queries`, `analytics_events`.
 
 Phase 3 also added `catalog_imports` (CSV import job status; not in the original data dictionary).
+
+### ADR-001 addendum — dependencies added in Phase 5
+None. Cart, addresses, shipping, pricing engine, coupons, orders, checkout, the COD rules and the admin screens use only the framework, the packages already approved, and the project's own modules. `composer audit` and `npm audit` unchanged.
+
+### Phase 5 decisions and deviations from the draft design (cart, checkout, orders)
+Owner-approved on 2026-10-29 unless noted.
+
+| # | Decision | Why / consequence |
+|---|---|---|
+| P5-1 | **Order number `VM-YYMM-NNNNNN`** from a database SEQUENCE (month in Dhaka time, six-digit counter that never resets), replacing the `ORD-` format in DATABASE_DESIGN | the shop's prefix; unique under concurrency (12 processes, 12 numbers); gaps after a rolled-back order are acceptable |
+| P5-2 | **No separate Checkout module**: `PlaceOrder` and the checkout pages live in Orders. Idempotency is a UNIQUE `orders.placement_key` (sha256 of shopper + the form's one-time token) rather than the `idempotency_keys` table | one transaction owns order + stock + coupon + cart + outbox, so a module boundary in the middle would only add contracts; the table-based `idempotent` middleware stays for the API |
+| P5-3 | **Stock is released when an order is cancelled by a direct contract call in the same transaction** (`Inventory\StockReservations`), not by an `OrderCancelled` event | atomic: a cancelled order can never keep stock; an event would add a window where it does |
+| P5-4 | **COD orders start `pending`** (flag `ORDERS_AUTO_CONFIRM_COD` to confirm at once); a flagged order is never auto-confirmed and cannot be confirmed until a person clears the review | phone confirmation is how COD is run in Bangladesh |
+| P5-5 | **Cash-order abuse rules** (settings `fraud.*`, editable in admin): blocked phone/address refused without saying why; ≤ 3 open COD orders per phone; COD above ৳10,000 needs an SMS code; many orders per phone per day and one address used by many phones are placed but held (`needs_review`). The open-order count is made safe by a per-phone `GET_LOCK` held around the order transaction | a count cannot be protected by a row lock because the new row does not exist yet; proven with 8 parallel processes → exactly 3 orders, and 0 protection (8 orders) with the lock removed |
+| P5-6 | **Block list stores only hashes** (sha256 of the E.164 phone or of a normalised address fingerprint) plus a masked hint; the list is not a second copy of customer data | privacy; matching is exact on normalised values |
+| P5-7 | **One discount coupon + one free-delivery coupon per order**, plus the single best automatic promotion; at most two codes | decided in the Phase 5 plan |
+| P5-8 | **Orders are snapshots and frozen by the database**: money, identity and time cannot be UPDATEd (trigger lists the frozen columns; only the three states, review flag and cancellation fields change); no deletes; history, notes, tax lines and fraud flags are append-only | audit trail; "totals reproducible from stored rows" is a test over 250 random orders |
+| P5-9 | **Cash on delivery is the only payment method until Phase 6**; carts with only downloads or services cannot be checked out yet (the page says so). `PaymentInitiator` is a stub contract with a COD implementation | online payments need the verified SSLCommerz docs (`docs/vendor/`) which are not saved yet |
+| P5-10 | **SMS goes through the log adapter** until SSL Wireless documentation is saved under `docs/vendor/sslwireless/` | AGENTS.md: use only endpoints present in saved official docs |
+| P5-11 | **Geography data is the MIT-licensed `nuhil/bangladesh-geocode` set** (8 divisions, 64 districts, 494 upazilas; official count is 495); source and date recorded in `app/Modules/Customers/Database/data/geography/SOURCE.md` | not an official BBS file; owner to confirm or replace |
+| P5-12 | **VAT stays disabled by default** (`tax.enabled=false`); the engine supports inclusive and exclusive prices, tax on delivery and the COD fee, and snapshots rates on order lines | owner is not VAT-registered; rates need the tax adviser |
+
+New tables in Phase 5 (all in the data dictionary): `divisions`, `districts`, `upazilas`, `customer_addresses`, `carts`, `cart_items`, `cart_coupons`, `shipping_zones`, `shipping_zone_translations`, `shipping_zone_districts`, `shipping_methods`, `shipping_method_translations`, `shipping_rates`, `coupons`, `coupon_products`, `coupon_categories`, `coupon_redemptions`, `promotions`, `promotion_translations`, `orders`, `order_items`, `order_addresses`, `order_status_history`, `order_tax_lines`, `order_notes`, `order_fraud_flags`, `order_blocklist`; plus the `order_number_seq` sequence and the OTP purpose `checkout_cod`.

@@ -96,3 +96,26 @@ test('a large cash order asks to confirm the phone first, and the order button w
     await expect(page.getByText('That code did not work')).toBeVisible();
     await expect(page.getByRole('button', { name: /Place order/ })).toBeDisabled();
 });
+
+test('double-clicking "Place order" makes one order: the same confirmation, an empty cart, no error', async ({ page }) => {
+    await page.goto('/en/p/cotton-panjabi');
+    await page.getByRole('button', { name: 'Add to cart' }).click();
+    await expect(page).toHaveURL(/\/en\/cart$/);
+    await page.getByRole('button', { name: 'No thanks' }).click();
+    await page.getByRole('link', { name: 'Checkout' }).click();
+    await fillAddress(page);
+    await page.getByRole('button', { name: 'Continue to review' }).click();
+    await expect(page.getByRole('heading', { level: 1, name: 'Review your order' })).toBeVisible();
+
+    await page.getByRole('button', { name: /Place order/ }).dblclick();
+
+    await expect(page.getByRole('heading', { level: 1, name: /Thank you/ })).toBeVisible();
+    const number = (await page.getByText(/VM-\d{4}-\d{6}/).first().textContent()) ?? '';
+    expect(number).toMatch(/VM-\d{4}-\d{6}/);
+    await expect(page.getByText(/error|sorry/i)).toHaveCount(0);
+
+    // going back and pressing the button again leads to the same order, not a second one
+    await page.goBack();
+    await page.goto('/en/cart');
+    await expect(page.getByText('Your cart is empty')).toBeVisible();
+});
