@@ -30,8 +30,8 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 | Table | Purpose | Columns / constraints | Flags |
 |---|---|---|---|
 | customers | profile (also guests) | STD; user_id NULL UNIQUE FK, name s150, phone s16, email NULL, birth_date NULL, marketing_consent b, consent_at, anonymised_at NULL; idx(phone) | PII |
-| customer_addresses | address book | STD; customer_id FK, recipient, phone, division_id/district_id/upazila_id FK, area s120, address_line s255, landmark, delivery_note, postal_code, is_default_shipping b | PII, SD |
-| divisions, districts, upazilas | BD geography | id, code s10 UNIQUE, name_en, name_bn, parent FK (district→division, upazila→district), source s100, source_date date | reference |
+| customer_addresses | address book | public_id, customer_id FK, label s40 NULL, recipient s120, phone s16 (E.164), division_id/district_id/upazila_id FK, area s120 NULL, address_line s255, landmark s160 NULL, delivery_note s255 NULL, postal_code char(4) NULL, is_default b; generated `default_marker` + UNIQUE = at most one default per customer; max 10 per customer (Action); hard delete (orders keep their own snapshot) | PII |
+| divisions, districts, upazilas | BD geography | id (the dataset's own, so seeding is an idempotent upsert), name_en, name_bn, parent FK (district→division, upazila→district); Source, licence and date: `app/Modules/Customers/Database/data/geography/SOURCE.md` (nuhil/bangladesh-geocode, MIT, 494 upazilas) | reference |
 | consents | consent records | customer_id, type, granted b, text_version, at, ip | AO |
 
 ## Catalog

@@ -3,6 +3,8 @@
 All notable changes. Format: [Keep a Changelog](https://keepachangelog.com), versioning to be decided before launch.
 
 ## [Unreleased]
+### Added — Phase 5 (cart, checkout, orders) — in progress
+- Slice 1 — geography and addresses: 8 divisions, 64 districts and 494 upazilas in English and Bangla (MIT-licensed open dataset; source, licence and date recorded in `app/Modules/Customers/Database/data/geography/SOURCE.md`; not an official BBS file, one upazila fewer than the official 495), customer address book (up to 10 addresses, one default enforced by the database, phone cleaned to +880 form, location chain validated on the server, ownership enforced), address form that works without JavaScript (every district and upazila listed under its parent) with an Alpine enhancement. `Geography` and `AddressBook` contracts for checkout and shipping.
 ### Added — Phase 4 (storefront & search) — in progress
 - Design system: admin-editable branding (name, taglines per language, logo, primary colour with a contrast guard), Blade component library, `/{locale}/dev/components`, accessible pagination.
 - Cms module: bilingual pages (sanitised, schedulable), banners with per-language responsive WebP and Dhaka-time windows, safe-link validation, `BannerSource` / `PageDirectory` contracts, demo content seeder.

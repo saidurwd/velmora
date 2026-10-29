@@ -9,5 +9,6 @@ return [
     'account_navigation' => 'Account',
     'account_overview' => 'Overview',
     'account_profile' => 'Profile',
+    'account_addresses' => 'Addresses',
     'account_security' => 'Sign-in & security',
 ];

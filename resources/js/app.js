@@ -6,6 +6,13 @@ window.Alpine = Alpine;
 
 Alpine.data('consentBanner', consentBanner);
 
+// Address form: show only the districts / upazilas that belong to the chosen parent. Without JavaScript every option is listed
+// under its parent heading and the server checks the chain.
+Alpine.data('geoSelect', (division, district) => ({
+    division,
+    district,
+}));
+
 // Search autocomplete (ARIA combobox). Enhancement only: the form submits normally without JavaScript.
 Alpine.data('searchBox', (suggestUrl) => ({
     query: '',

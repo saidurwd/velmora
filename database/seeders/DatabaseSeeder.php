@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Modules\Customers\Database\Seeders\GeographySeeder;
 use App\Modules\IdentityAccess\Database\Seeders\RolesAndPermissionsSeeder;
 use App\Modules\Inventory\Database\Seeders\StockLocationSeeder;
 use App\Modules\Platform\Database\Seeders\LanguageSeeder;
@@ -26,6 +27,7 @@ class DatabaseSeeder extends Seeder
             TaxClassSeeder::class,
             PriceListSeeder::class,
             StockLocationSeeder::class,
+            GeographySeeder::class,
             SearchSynonymSeeder::class,
         ]);
     }

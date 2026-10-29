@@ -8,6 +8,7 @@ return [
     'sign_out' => 'সাইন আউট',
     'account_navigation' => 'অ্যাকাউন্ট',
     'account_overview' => 'সংক্ষিপ্ত বিবরণ',
+    'account_addresses' => 'ঠিকানা',
     'account_profile' => 'প্রোফাইল',
     'account_security' => 'সাইন-ইন ও নিরাপত্তা',
 ];
