@@ -30,5 +30,6 @@ final readonly class CartLineView
         public ?Money $priceChangedFrom,
         public ?string $problem,
         public ?int $available,
+        public int $weightG = 0,
     ) {}
 }

@@ -106,9 +106,9 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 ## Shipping & Fulfilment
 | Table | Columns / constraints | Flags |
 |---|---|---|
-| shipping_zones / zone_regions | name; region = district_id or upazila_id | |
-| shipping_methods(+translations) | code, zone link, est_days_min/max | |
-| shipping_rates | method_id, min_weight_g, max_weight_g, min_order_minor, max_order_minor, M(rate), free_over_minor NULL, cod_fee rule | |
+| shipping_zones (+translations) / shipping_zone_districts | public_id, is_fallback b (exactly one: generated marker + UNIQUE), cod_available b, is_active, sort_order; zone name per language. A district belongs to at most one zone (UNIQUE district_id); districts no zone claims use the fallback zone. District-level only at MVP (no upazila zones) | |
+| shipping_methods (+translations) | public_id, code UNIQUE, cod_available b, cod_fee_minor ≥0 (flat), free_over_minor NULL ≥0 (order value after discounts, before shipping), is_active, sort_order; name and delivery_estimate per language. Methods are global; prices are per zone | |
+| shipping_rates | zone_id, method_id, max_weight_g NULL (upper limit of the band, NULL = and above), price_minor ≥0; UNIQUE(zone, method, max_weight_g) and at most one open band per zone+method (generated marker). The smallest band that fits the parcel weight applies; no band fits = method not offered | |
 | courier_accounts | STD; provider, label, credentials (encrypted JSON), is_active, config j | secrets |
 | shipments | STD; order_id FK, courier_account_id NULL, courier (manual/provider), courier_consignment_id NULL, tracking_code, status (created/handed_over/in_transit/out_for_delivery/delivered/failed/returned/cancelled/unknown), cod_amount_minor, attempts, shipped_at, delivered_at; UNIQUE(courier,courier_consignment_id) | |
 | shipment_items | shipment_id, order_item_id, quantity CHECK>0 | |

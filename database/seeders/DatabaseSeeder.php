@@ -11,6 +11,7 @@ use App\Modules\Platform\Database\Seeders\LanguageSeeder;
 use App\Modules\Pricing\Database\Seeders\PriceListSeeder;
 use App\Modules\Pricing\Database\Seeders\TaxClassSeeder;
 use App\Modules\Search\Database\Seeders\SearchSynonymSeeder;
+use App\Modules\Shipping\Database\Seeders\ShippingSeeder;
 use Illuminate\Database\Seeder;
 
 /**
@@ -28,6 +29,7 @@ class DatabaseSeeder extends Seeder
             PriceListSeeder::class,
             StockLocationSeeder::class,
             GeographySeeder::class,
+            ShippingSeeder::class,
             SearchSynonymSeeder::class,
         ]);
     }

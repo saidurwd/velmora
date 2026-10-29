@@ -35,7 +35,7 @@ final class DatabasePurchasableVariants implements PurchasableVariants
             ->leftJoin('product_translations as tl', fn ($j) => $j->on('tl.product_id', '=', 'p.id')->where('tl.locale', $locale))
             ->leftJoin('product_translations as td', fn ($j) => $j->on('td.product_id', '=', 'p.id')->where('td.locale', $default))
             ->whereIn('v.id', $ids)->whereNull('v.deleted_at')->whereNull('p.deleted_at')
-            ->get(['v.id', 'v.public_id', 'v.sku', 'v.status as v_status', 'v.track_inventory', 'v.min_qty', 'v.max_qty', 'v.qty_step', 'p.id as product_id', 'p.product_type', 'p.tax_class_code', 'p.status as p_status', 'p.publish_at',
+            ->get(['v.id', 'v.public_id', 'v.sku', 'v.status as v_status', 'v.track_inventory', 'v.min_qty', 'v.max_qty', 'v.qty_step', 'v.weight_g', 'p.id as product_id', 'p.product_type', 'p.tax_class_code', 'p.status as p_status', 'p.publish_at',
                 DB::raw('COALESCE(tl.name, td.name) as name'), DB::raw('COALESCE(tl.slug, td.slug) as slug')]);
 
         $options = $this->optionLabels(array_values(array_map(fn ($r) => (int) $r->id, $rows->all())), $locale, $default);
@@ -47,7 +47,7 @@ final class DatabasePurchasableVariants implements PurchasableVariants
             $out[(int) $r->id] = new PurchasableVariant(
                 (int) $r->id, (string) $r->public_id, (string) $r->sku, (string) ($r->name ?? ''), $options[(int) $r->id] ?? null, (string) ($r->slug ?? ''),
                 $images[(int) $r->product_id] ?? null, (string) $r->product_type, (string) $r->tax_class_code, $live, (bool) $r->track_inventory,
-                max(1, (int) $r->min_qty), $r->max_qty === null ? null : (int) $r->max_qty, max(1, (int) $r->qty_step),
+                max(1, (int) $r->min_qty), $r->max_qty === null ? null : (int) $r->max_qty, max(1, (int) $r->qty_step), (int) ($r->weight_g ?? 0),
             );
         }
 

@@ -22,5 +22,6 @@ final readonly class PurchasableVariant
         public int $minQty,
         public ?int $maxQty,
         public int $qtyStep,
+        public int $weightG = 0,
     ) {}
 }
