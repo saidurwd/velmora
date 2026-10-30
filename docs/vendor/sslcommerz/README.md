@@ -28,3 +28,13 @@ Saved **2026-10-30** from the provider's sandbox documentation site, because pro
 ## Security notes that follow from the docs
 - Credentials (`store_id`, `store_passwd`) are sent as **query-string parameters** on GET calls: the HTTP client and all logging/APM must redact query strings. Credentials live only in encrypted settings or environment variables, never in the repository.
 - The sandbox page shows public test credentials and test cards; they are deliberately not copied into project files. Use your own sandbox registration (https://sandbox-gw.sslcommerz.com/register).
+
+## Reference implementation: the provider's own sample app (read 2026-10-30)
+https://github.com/sslcommerz/SSLCommerz-Laravel at commit `5a3e3d21647cc68f43c502d9bf073fca04837bce` (last pushed 2025-10-12). It is a sample application, not a package, and the repository has **no licence**, so nothing is copied from it and it is not a dependency; our adapter is written from the documentation above.
+
+What it shows beyond the documentation pages:
+- It validates a payment by calling the Order Validation API and then comparing `tran_id`, `amount` and `currency`, as documented. **It accepts amounts within 1 taka (`abs(a - b) < 1`) using floats. We do not: our comparison is exact to the paisa, in integers.**
+- It contains a `verify_sign` check: take the fields listed in `verify_key`, add `store_passwd = md5(store password)`, sort by key, join as `k=v&k=v`, `md5` the result, compare with `verify_sign`. **This could not be confirmed**: applied to the example IPN printed on the saved IPN page with the public demo password and several likely variants, it did not reproduce the example's `verify_sign` (the example was probably produced with a different password). Because it cannot be verified against the documentation, the integration does **not** use `verify_sign`; authenticity rests on the server-to-server Order Validation call alone.
+
+## Credentials check (2026-10-30)
+The sandbox transaction-query endpoint answers `APIConnect: DONE` for the public demo store and `APIConnect: FAILED` for unknown or wrong credentials. Use this as a connectivity check for a newly registered sandbox store (see the opt-in sandbox suite, Phase 6).
