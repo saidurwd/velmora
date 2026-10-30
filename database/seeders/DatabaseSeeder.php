@@ -7,6 +7,7 @@ namespace Database\Seeders;
 use App\Modules\Customers\Database\Seeders\GeographySeeder;
 use App\Modules\IdentityAccess\Database\Seeders\RolesAndPermissionsSeeder;
 use App\Modules\Inventory\Database\Seeders\StockLocationSeeder;
+use App\Modules\Payments\Database\Seeders\PaymentMethodSeeder;
 use App\Modules\Platform\Database\Seeders\LanguageSeeder;
 use App\Modules\Pricing\Database\Seeders\PriceListSeeder;
 use App\Modules\Pricing\Database\Seeders\TaxClassSeeder;
@@ -30,6 +31,7 @@ class DatabaseSeeder extends Seeder
             StockLocationSeeder::class,
             GeographySeeder::class,
             ShippingSeeder::class,
+            PaymentMethodSeeder::class,
             SearchSynonymSeeder::class,
         ]);
     }

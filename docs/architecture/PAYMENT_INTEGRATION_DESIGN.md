@@ -26,7 +26,7 @@ stateDiagram-v2
 ```
 
 ## 3. Flow (see `SYSTEM_ARCHITECTURE.md` §6)
-1. `InitiatePayment`: create `payments` + `payment_transactions(initiated)` with unique `merchant_ref` (our reference, e.g. `P{publicId}-{attempt}`), call `initiate()` outside any stock/order lock, store provider session key, status `pending`, redirect.
+1. `InitiatePayment`: create `payments` + `payment_transactions(initiated)` with unique `merchant_ref` (our reference: the order number plus the attempt, e.g. `VM-2610-000123-2`; readable on a bank statement and within SSLCommerz's 30-character `tran_id`), call `initiate()` outside any stock/order lock, store provider session key, status `pending`, redirect.
 2. **Return URL** (success/fail/cancel): UX only. Page shows "verifying…" and dispatches `VerifyPayment`; polls own status endpoint. Query params are never trusted.
 3. **IPN/webhook:** controller stores raw event (`INSERT IGNORE`, UNIQUE(provider,provider_event_id); when the provider has no event id, derive `sha256(provider|txn_id|status|amount|timestamp)`), returns 200 immediately, queues `ProcessPaymentEvent`.
 4. Job: authenticate per provider → `verify()` → `BEGIN; SELECT payment FOR UPDATE` → compare amount, currency, merchant_ref, status → idempotent transition → outbox `PaymentSucceeded` → `COMMIT`.

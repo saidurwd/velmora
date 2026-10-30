@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    // How long an online payment may stay unfinished before the order's held stock goes back (minutes).
+    'expiry_minutes' => (int) env('PAYMENTS_EXPIRY_MINUTES', 30),
+
+    // A refund above this amount (minor units) needs a second person to approve it. Editable later in the admin panel (setting payments.refund_second_approver_minor).
+    'refund_second_approver_minor' => (int) env('PAYMENTS_REFUND_SECOND_APPROVER_MINOR', 500_000),
+
+    // SSLCommerz credentials: environment only, never in the repository. Sandbox host unless PAYMENT_SSLCOMMERZ_SANDBOX=false.
+    'sslcommerz' => [
+        'store_id' => env('PAYMENT_SSLCOMMERZ_STORE_ID'),
+        'store_password' => env('PAYMENT_SSLCOMMERZ_STORE_PASSWORD'),
+        'sandbox' => (bool) env('PAYMENT_SSLCOMMERZ_SANDBOX', true),
+    ],
+];
