@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPN Callbacks | SSLCommerz Sandbox Docs</title>
+            <meta name="description" content="Validate Payment with IPN: the full official SSLCOMMERZ v4 reference for the Instant Payment Notification POST and its parameters.">
+        <!-- Design system: fonts + compiled Tailwind build (resources/css/app.css) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+
+<link rel="preload" as="style" href="https://sandbox-gw.sslcommerz.com/build/assets/app-B4WdDL2O.css" /><link rel="modulepreload" as="script" href="https://sandbox-gw.sslcommerz.com/build/assets/app-DOweopCY.js" /><link rel="stylesheet" href="https://sandbox-gw.sslcommerz.com/build/assets/app-B4WdDL2O.css" data-navigate-track="reload" /><script type="module" src="https://sandbox-gw.sslcommerz.com/build/assets/app-DOweopCY.js" data-navigate-track="reload"></script>    <link rel="modulepreload" as="script" href="https://sandbox-gw.sslcommerz.com/build/assets/docs-ajg1spE8.js" /><script type="module" src="https://sandbox-gw.sslcommerz.com/build/assets/docs-ajg1spE8.js" data-navigate-track="reload"></script></head>
+<body class="bg-white font-sans text-[var(--color-text)] antialiased">
+    <a href="#docs-content" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:shadow-lg">Skip to main content</a>
+
+    <header data-docs-header class="sticky top-0 z-40 flex h-[var(--docs-header-h)] items-center gap-4 border-b border-[var(--color-border)] bg-white/95 px-4 backdrop-blur lg:px-6">
+    <button
+        type="button"
+        data-nav-open="docs-nav-dialog"
+        aria-controls="docs-nav-dialog"
+        aria-expanded="false"
+        class="rounded-md p-2 text-slate-500 hover:bg-slate-100 lg:hidden"
+        aria-label="Open navigation"
+    >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>
+    </button>
+
+    <a href="https://sandbox-gw.sslcommerz.com" class="flex items-center gap-2.5">
+        <img src="https://sandbox-gw.sslcommerz.com/assets/img/logo.png" alt="SSLCommerz" class="h-6 w-auto">
+        <span class="hidden text-sm font-bold tracking-wide text-[var(--color-heading)] sm:inline">SANDBOX DOCS</span>
+    </a>
+
+    <div class="flex-1"></div>
+
+    <nav aria-label="Sandbox links" class="flex items-center gap-1">
+        <a
+        href="https://sandbox-gw.sslcommerz.com/demo"
+        class="inline-flex items-center justify-center gap-2 font-semibold rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--color-focus)] disabled:opacity-50 disabled:pointer-events-none px-3 py-1.5 text-sm text-[var(--color-text)] hover:bg-slate-100 hidden sm:inline-flex"
+                    >Demonstration</a>
+                    <a
+        href="https://sandbox-gw.sslcommerz.com/register"
+        class="inline-flex items-center justify-center gap-2 font-semibold rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--color-focus)] disabled:opacity-50 disabled:pointer-events-none px-3 py-1.5 text-sm bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] shadow-sm"
+                    >Create Sandbox Account</a>
+            </nav>
+</header>
+
+    <div class="lg:flex">
+        <aside class="hidden lg:sticky lg:block lg:h-[calc(100dvh-var(--docs-header-h))] lg:w-[var(--docs-sidebar-w)] lg:shrink-0 lg:overflow-y-auto lg:border-r lg:border-[var(--color-border)] lg:py-6" style="top: var(--docs-header-h)">
+    <nav aria-label="Documentation" data-nav-tree class="space-y-6 px-3">
+            <div>
+            <h3 id="docs-nav-desktop-introduction" class="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-widest text-slate-400">Introduction</h3>
+            <ul aria-labelledby="docs-nav-desktop-introduction" class="space-y-0.5">
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs#getting-started"
+                            data-nav-key="getting-started"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Getting Started</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs#credentials"
+                            data-nav-key="credentials"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Sandbox Credentials</span>
+                                                    </a>
+                    </li>
+                            </ul>
+        </div>
+            <div>
+            <h3 id="docs-nav-desktop-integration-v4" class="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-widest text-slate-400">Integration V4</h3>
+            <ul aria-labelledby="docs-nav-desktop-integration-v4" class="space-y-0.5">
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs#initiation"
+                            data-nav-key="initiation"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Transaction Initiation</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/doc/v4/ipn.html"
+                            data-nav-key="ipn"
+                             aria-current="page"                             class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm is-active font-semibold text-[var(--color-accent)]"
+                        >
+                            <span>IPN Callbacks</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/doc/v4/order-validation.html"
+                            data-nav-key="order-validation"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Order Validation</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs#easy-checkout"
+                            data-nav-key="easy-checkout"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Easy Checkout</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs#refund-api"
+                            data-nav-key="refund"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Refund API</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/doc/v4/order-query.html"
+                            data-nav-key="order-query"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Order Query</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs#common-issues"
+                            data-nav-key="common-issues"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Common Issues</span>
+                                                    </a>
+                    </li>
+                            </ul>
+        </div>
+            <div>
+            <h3 id="docs-nav-desktop-additional" class="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-widest text-slate-400">Additional Integrations</h3>
+            <ul aria-labelledby="docs-nav-desktop-additional" class="space-y-0.5">
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/doc/v4/invoice.html"
+                            data-nav-key="invoice"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Invoice &amp; QR API</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/doc/v4/quickBankPay.html"
+                            data-nav-key="quick-bank-pay"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Bill Query API</span>
+                                                            <span class="inline-flex items-center gap-1 rounded-full font-semibold px-1.5 py-0.5 text-[11px] bg-[var(--color-warning-50)] text-[var(--color-warning-700)] uppercase tracking-wide">Partially available</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/doc/v4/google-pay-integration.html"
+                            data-nav-key="google-pay"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Google Pay</span>
+                                                            <span class="inline-flex items-center gap-1 rounded-full font-semibold px-1.5 py-0.5 text-[11px] bg-slate-100 text-slate-700 uppercase tracking-wide">Not available in sandbox</span>
+                                                    </a>
+                    </li>
+                            </ul>
+        </div>
+            <div>
+            <h3 id="docs-nav-desktop-diagnostics" class="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-widest text-slate-400">Diagnostics</h3>
+            <ul aria-labelledby="docs-nav-desktop-diagnostics" class="space-y-0.5">
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs/self-test?section=ipn-testing"
+                            data-nav-key="selftest-ipn"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>IPN Testing</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs/self-test?section=recurring-test"
+                            data-nav-key="selftest-recurring"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Recurring Test</span>
+                                                            <span class="inline-flex items-center gap-1 rounded-full font-semibold px-1.5 py-0.5 text-[11px] bg-slate-100 text-slate-700 uppercase tracking-wide">Not available in sandbox</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs/self-test?section=bill-query-api"
+                            data-nav-key="selftest-billquery"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Bill Query API</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs/self-test?section=bill-payment-integration"
+                            data-nav-key="selftest-billint"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Bill Payment Integration</span>
+                                                            <span class="inline-flex items-center gap-1 rounded-full font-semibold px-1.5 py-0.5 text-[11px] bg-slate-100 text-slate-700 uppercase tracking-wide">Not available in sandbox</span>
+                                                    </a>
+                    </li>
+                            </ul>
+        </div>
+            <div>
+            <h3 id="docs-nav-desktop-resources" class="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-widest text-slate-400">Resources</h3>
+            <ul aria-labelledby="docs-nav-desktop-resources" class="space-y-0.5">
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs#library"
+                            data-nav-key="library"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Library Resources</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs#securepay"
+                            data-nav-key="securepay"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>SecurePay API</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs#postman"
+                            data-nav-key="postman"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Postman Collection</span>
+                                                    </a>
+                    </li>
+                            </ul>
+        </div>
+    </nav>
+</aside>
+
+
+<dialog id="docs-nav-dialog" data-nav-dialog class="m-0 h-full max-h-none w-72 max-w-[85vw] p-0 backdrop:bg-slate-900/50 lg:hidden">
+    <div class="flex h-full flex-col">
+        <div class="flex justify-end border-b border-[var(--color-border)] p-2">
+            <button type="button" data-nav-close class="rounded-md p-2 text-slate-500 hover:bg-slate-100" aria-label="Close navigation">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 10-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
+            </button>
+        </div>
+        <div class="min-h-0 flex-1 overflow-y-auto py-4">
+            <nav aria-label="Documentation" data-nav-tree class="space-y-6 px-3">
+            <div>
+            <h3 id="docs-nav-mobile-introduction" class="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-widest text-slate-400">Introduction</h3>
+            <ul aria-labelledby="docs-nav-mobile-introduction" class="space-y-0.5">
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs#getting-started"
+                            data-nav-key="getting-started"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Getting Started</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs#credentials"
+                            data-nav-key="credentials"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Sandbox Credentials</span>
+                                                    </a>
+                    </li>
+                            </ul>
+        </div>
+            <div>
+            <h3 id="docs-nav-mobile-integration-v4" class="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-widest text-slate-400">Integration V4</h3>
+            <ul aria-labelledby="docs-nav-mobile-integration-v4" class="space-y-0.5">
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs#initiation"
+                            data-nav-key="initiation"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Transaction Initiation</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/doc/v4/ipn.html"
+                            data-nav-key="ipn"
+                             aria-current="page"                             class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm is-active font-semibold text-[var(--color-accent)]"
+                        >
+                            <span>IPN Callbacks</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/doc/v4/order-validation.html"
+                            data-nav-key="order-validation"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Order Validation</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs#easy-checkout"
+                            data-nav-key="easy-checkout"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Easy Checkout</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs#refund-api"
+                            data-nav-key="refund"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Refund API</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/doc/v4/order-query.html"
+                            data-nav-key="order-query"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Order Query</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs#common-issues"
+                            data-nav-key="common-issues"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Common Issues</span>
+                                                    </a>
+                    </li>
+                            </ul>
+        </div>
+            <div>
+            <h3 id="docs-nav-mobile-additional" class="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-widest text-slate-400">Additional Integrations</h3>
+            <ul aria-labelledby="docs-nav-mobile-additional" class="space-y-0.5">
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/doc/v4/invoice.html"
+                            data-nav-key="invoice"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Invoice &amp; QR API</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/doc/v4/quickBankPay.html"
+                            data-nav-key="quick-bank-pay"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Bill Query API</span>
+                                                            <span class="inline-flex items-center gap-1 rounded-full font-semibold px-1.5 py-0.5 text-[11px] bg-[var(--color-warning-50)] text-[var(--color-warning-700)] uppercase tracking-wide">Partially available</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/doc/v4/google-pay-integration.html"
+                            data-nav-key="google-pay"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Google Pay</span>
+                                                            <span class="inline-flex items-center gap-1 rounded-full font-semibold px-1.5 py-0.5 text-[11px] bg-slate-100 text-slate-700 uppercase tracking-wide">Not available in sandbox</span>
+                                                    </a>
+                    </li>
+                            </ul>
+        </div>
+            <div>
+            <h3 id="docs-nav-mobile-diagnostics" class="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-widest text-slate-400">Diagnostics</h3>
+            <ul aria-labelledby="docs-nav-mobile-diagnostics" class="space-y-0.5">
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs/self-test?section=ipn-testing"
+                            data-nav-key="selftest-ipn"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>IPN Testing</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs/self-test?section=recurring-test"
+                            data-nav-key="selftest-recurring"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Recurring Test</span>
+                                                            <span class="inline-flex items-center gap-1 rounded-full font-semibold px-1.5 py-0.5 text-[11px] bg-slate-100 text-slate-700 uppercase tracking-wide">Not available in sandbox</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs/self-test?section=bill-query-api"
+                            data-nav-key="selftest-billquery"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Bill Query API</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs/self-test?section=bill-payment-integration"
+                            data-nav-key="selftest-billint"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Bill Payment Integration</span>
+                                                            <span class="inline-flex items-center gap-1 rounded-full font-semibold px-1.5 py-0.5 text-[11px] bg-slate-100 text-slate-700 uppercase tracking-wide">Not available in sandbox</span>
+                                                    </a>
+                    </li>
+                            </ul>
+        </div>
+            <div>
+            <h3 id="docs-nav-mobile-resources" class="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-widest text-slate-400">Resources</h3>
+            <ul aria-labelledby="docs-nav-mobile-resources" class="space-y-0.5">
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs#library"
+                            data-nav-key="library"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Library Resources</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs#securepay"
+                            data-nav-key="securepay"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>SecurePay API</span>
+                                                    </a>
+                    </li>
+                                    <li>
+                        <a
+                            href="https://sandbox-gw.sslcommerz.com/docs#postman"
+                            data-nav-key="postman"
+                                                        class="docs-nav-link flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[var(--color-text)]"
+                        >
+                            <span>Postman Collection</span>
+                                                    </a>
+                    </li>
+                            </ul>
+        </div>
+    </nav>
+        </div>
+    </div>
+</dialog>
+
+        <main id="docs-content" data-toc-source data-page-enter class="min-w-0 flex-1">
+            <div class="max-w-[var(--docs-content-max)] px-6 py-10 lg:px-10">
+                                    <nav aria-label="Breadcrumb" class="mb-6">
+    <ol class="flex items-center gap-1.5 text-sm text-[var(--color-text-muted)]">
+                    <li class="flex items-center gap-1.5">
+                                                    <a href="https://sandbox-gw.sslcommerz.com/docs" class="hover:text-[var(--color-accent)]">Docs</a>
+                            </li>
+                    <li class="flex items-center gap-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-300" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" /></svg>
+                                                    <span aria-current="page" class="font-medium text-[var(--color-text)]">Integration V4</span>
+                            </li>
+                    <li class="flex items-center gap-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-300" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" /></svg>
+                                                    <span aria-current="page" class="font-medium text-[var(--color-text)]">IPN Callbacks</span>
+                            </li>
+            </ol>
+</nav>
+                
+                <header class="mb-10 space-y-3">
+        <div class="flex flex-wrap items-center gap-3">
+        <h1 class="text-3xl font-semibold tracking-tight text-[var(--color-heading)]">Receive Payment Notification (IPN)</h1>
+            </div>
+            <p class="max-w-2xl text-base text-[var(--color-text-muted)]">The full official SSLCOMMERZ v4 reference for the Instant Payment Notification your IPN listener receives.</p>
+        </header>
+
+    <div class="doc-prose"><h2 id="validate-payment-with-ipn">Validate Payment with IPN</h2>
+<p>Remember, We have set an IPN URL in first step so that your server can listen at the right moment when payment is done at Bank End. So, It is important to validate the transaction notification to maintain security and standard.</p>
+
+<h3 id="grab-the-notification">Grab the Notification</h3>
+<p>As IPN URL already set in panel. All the payment notification will reach through IPN prior to user return back. So it needs validation for amount and transaction properly.</p>
+<p>The IPN will send a POST REQUEST with below parameters. Grab the post notification with your desired platform ( PHP: <code class="highlighter-rouge">$_POST</code>)</p>
+<div role="region" tabindex="0" aria-label="IPN notification — parameters" class="overflow-x-auto rounded-lg border border-[var(--color-border)]">
+    <table class="w-full text-left text-sm">
+        <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+    <tr class="">
+    <th  scope="col"  class="px-4 py-3 text-left">Param Name</th>
+            <th  scope="col"  class="px-4 py-3 text-left">Data Type</th>
+            <th  scope="col"  class="px-4 py-3 text-left">Description</th>
+</tr>
+</thead>
+    <tbody>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">status</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">string (20)</td>
+            <td  class="px-4 py-3 text-left">Transaction Status - as VALID / FAILED / CANCELLED / EXPIRED / UNATTEMPTED <span class="font-semibold text-[var(--color-danger-700)]">This parameter needs to be checked before update your database</span><ul><li><b>VALID</b> : A successful transaction.</li><li><b>FAILED</b> : Transaction is declined by customer's Issuer Bank.</li><li><b>CANCELLED</b> : Transaction is cancelled by the customer.</li><li><b>UNATTEMPTED</b> : Customer did not choose to pay any channel.</li><li><b>EXPIRED</b> : Payment Timeout.</li></ul></td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">tran_date</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">datetime</td>
+            <td  class="px-4 py-3 text-left">Transaction date - Payment completion date as 2016-05-08 15:53:49 ( PHP date('Y-m-d H:i:s') )</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">tran_id</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">string (30)</td>
+            <td  class="px-4 py-3 text-left">Transaction ID (Unique) that was sent by you during initiation. This parameter needs to be validated with your system database for security</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">val_id</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">string (50)</td>
+            <td  class="px-4 py-3 text-left">A Validation ID against the Transaction which is provided by SSLCOMMERZ.</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">amount</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">decimal (10,2)</td>
+            <td  class="px-4 py-3 text-left">The total amount sent by you. However, it could be changed based on currency type. This parameter needs to be validated with your system database for security</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">store_amount</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">decimal (10,2)</td>
+            <td  class="px-4 py-3 text-left">The amount what you will get in your account after bank charge ( Example: 100 BDT will be your store amount of 96 BDT after 4% Bank Commission )</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">card_type</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">string (50)</td>
+            <td  class="px-4 py-3 text-left">The Bank Gateway Name that customer selected</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">card_no</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">string (80)</td>
+            <td  class="px-4 py-3 text-left">Customer’s Card number. However, for Mobile Banking and Internet Banking, it will return customer's reference id.</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">currency</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">string (3)</td>
+            <td  class="px-4 py-3 text-left">Currency Type which will be settled with your merchant account after deducting the Gateway charges. This parameter is the currency type of the parameter amount</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">bank_tran_id</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">string (80)</td>
+            <td  class="px-4 py-3 text-left">The transaction ID at Banks End</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">card_issuer</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">string (100)</td>
+            <td  class="px-4 py-3 text-left">Issuer Bank Name</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">card_brand</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">string (30)</td>
+            <td  class="px-4 py-3 text-left">VISA, MASTER, AMEX, IB or MOBILE BANKING</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">card_issuer_country</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">string (50)</td>
+            <td  class="px-4 py-3 text-left">Country of Card Issuer Bank</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">card_issuer_country_code</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">string (2)</td>
+            <td  class="px-4 py-3 text-left">2 digits short code of Country of Card Issuer Bank</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">currency_type</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">string (3)</td>
+            <td  class="px-4 py-3 text-left">The currency you have sent during initiation of this transaction. If the currency is different than BDT, then it will be converted to BDT by the current conversion rate. This parameter needs to be validated with your system database for security</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">currency_amount</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">decimal (10,2)</td>
+            <td  class="px-4 py-3 text-left">The currency amount you have sent during initiation of this transaction. If the amount is not mentioned in BDT, then it will be converted to BDT by the current conversion rate and return by the above field <b>amount</b>. This parameter needs to be validated with your system database for security</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">value_a</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">string (255)</td>
+            <td  class="px-4 py-3 text-left">Same Value will be returned as Passed during initiation</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">value_b</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">string (255)</td>
+            <td  class="px-4 py-3 text-left">Same Value will be returned as Passed during initiation</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">value_c</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">string (255)</td>
+            <td  class="px-4 py-3 text-left">Same Value will be returned as Passed during initiation</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">value_d</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">string (255)</td>
+            <td  class="px-4 py-3 text-left">Same Value will be returned as Passed during initiation</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">verify_sign</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">string (255)</td>
+            <td  class="px-4 py-3 text-left">Data Validation Key</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">verify_key</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">string</td>
+            <td  class="px-4 py-3 text-left">Data Validation Key</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">risk_level</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">integer (1)</td>
+            <td  class="px-4 py-3 text-left">Transaction's Risk Level - High (1) for most risky transactions and Low (0) for safe transactions. Please hold the service and proceed to collect customer verification documents</td>
+</tr>
+        <tr class="border-t border-[var(--color-border)] hover:bg-slate-50/60">
+    <td  class="px-4 py-3 text-left font-mono">risk_title</td>
+            <td  class="px-4 py-3 text-left text-[var(--color-text-muted)]">string (50)</td>
+            <td  class="px-4 py-3 text-left">Transaction's Risk Level Description</td>
+</tr>
+    </tbody>
+    </table>
+</div>
+<div data-tabs data-tabs-sync="lang" class="overflow-hidden rounded-lg my-4">
+    <div role="tablist" aria-label="Code sample language" class="flex gap-1 bg-[var(--color-code-surface)] px-3 pt-2">
+                    <button
+                type="button"
+                role="tab"
+                id="tab-ipn-listener-curl"
+                aria-controls="panel-ipn-listener-curl"
+                data-tab-key="curl"
+                aria-selected="true"
+                tabindex="0"
+                class="rounded-t-md px-3 py-1.5 text-xs font-medium text-slate-400 transition-colors hover:text-white aria-selected:bg-slate-800 aria-selected:text-white"
+            >cURL</button>
+                    <button
+                type="button"
+                role="tab"
+                id="tab-ipn-listener-php"
+                aria-controls="panel-ipn-listener-php"
+                data-tab-key="php"
+                aria-selected="false"
+                tabindex="-1"
+                class="rounded-t-md px-3 py-1.5 text-xs font-medium text-slate-400 transition-colors hover:text-white aria-selected:bg-slate-800 aria-selected:text-white"
+            >PHP</button>
+                    <button
+                type="button"
+                role="tab"
+                id="tab-ipn-listener-laravel"
+                aria-controls="panel-ipn-listener-laravel"
+                data-tab-key="laravel"
+                aria-selected="false"
+                tabindex="-1"
+                class="rounded-t-md px-3 py-1.5 text-xs font-medium text-slate-400 transition-colors hover:text-white aria-selected:bg-slate-800 aria-selected:text-white"
+            >Laravel</button>
+            </div>
+            <div role="tabpanel" id="panel-ipn-listener-curl" aria-labelledby="tab-ipn-listener-curl" data-tab-key="curl" >
+            <figure class="overflow-hidden rounded-lg border border-[var(--color-code-border)] bg-[var(--color-code-surface)]">
+    <figcaption class="flex items-center justify-between gap-2 border-b border-[var(--color-code-border)] px-4 py-2">
+        <span class="text-xs font-medium text-slate-400">cURL</span>
+                    <button
+    type="button"
+    data-copy
+     data-copy-target="#code-6ae428f2321a1"          aria-label="Copy code sample"     class="inline-flex items-center gap-1.5 rounded-md border font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] px-2.5 py-1 text-xs border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white focus-visible:ring-offset-slate-900"
+>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M7 3a1 1 0 00-1 1v1H5a2 2 0 00-2 2v9a2 2 0 002 2h7a2 2 0 002-2v-1h1a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 00-1-1H7zm5 3H8a2 2 0 00-2 2v7H5a1 1 0 01-1-1V6a1 1 0 011-1h8v1zm-4 1h5a1 1 0 011 1v9a1 1 0 01-1 1H8a1 1 0 01-1-1V8a1 1 0 011-1z" />
+    </svg>
+    <span data-copy-label>Copy</span>
+    <span data-copy-status class="sr-only" aria-live="polite"></span>
+</button>
+            </figcaption>
+    <pre tabindex="0" class="overflow-x-auto p-4 text-[13px] leading-relaxed text-[var(--color-code-text)]"><code id="code-6ae428f2321a1" class="language-bash" data-lang="bash">POST &lt;YOUR IPN LISTENER&gt;
+
+$ curl -X POST &lt;YOUR IPN LISTENER MENTIONED BY YOU IN YOUR MERCHANT PANEL&gt;
+-d
+&#039;tran_id=5a16c68b23783&amp;
+val_id=1711231900331kHP17lnrr9T8Gt&amp;
+amount=100&amp;
+card_type=VISA-Dutch Bangla&amp;
+store_amount=97&amp;
+card_no=425272XXXXXX3456&amp;
+bank_tran_id=1711231900331S0R8atkhAZksmM&amp;
+status=VALID&amp;
+tran_date=2017-11-23 18:59:55&amp;
+currency=BDT&amp;
+card_issuer=Standard Chartered Bank&amp;
+card_brand=VISA&amp;
+card_issuer_country=Bangladesh&amp;
+card_issuer_country_code=BD&amp;
+store_id=testbox&amp;
+verify_sign=8070c0cefed9e629b01100d8a92afda2&amp;
+verify_key=amount,bank_tran_id,base_fair,card_brand,card_issuer,card_issuer_country,card_issuer_country_code,card_no,card_type,currency,currency_amount,currency_rate,currency_type,risk_level,risk_title,status,store_amount,store_id,tran_date,tran_id,val_id,value_a,value_b,value_c,value_d&amp;
+cus_fax=01711111111&amp;
+currency_type=BDT&amp;
+currency_amount=100.00&amp;
+currency_rate=1.0000&amp;
+base_fair=0.00&amp;
+value_a=ref001_A&amp;
+value_b=ref002_B&amp;
+value_c=ref003_C&amp;
+value_d=ref004_D&amp;
+risk_level=0&amp;
+risk_title=Safe&#039;
+
+Response Example
+
+&lt;YOU CAN PRINT ANY MESSAGE&gt;</code></pre>
+</figure>
+        </div>
+            <div role="tabpanel" id="panel-ipn-listener-php" aria-labelledby="tab-ipn-listener-php" data-tab-key="php"  hidden >
+            <figure class="overflow-hidden rounded-lg border border-[var(--color-code-border)] bg-[var(--color-code-surface)]">
+    <figcaption class="flex items-center justify-between gap-2 border-b border-[var(--color-code-border)] px-4 py-2">
+        <span class="text-xs font-medium text-slate-400">PHP</span>
+                    <button
+    type="button"
+    data-copy
+     data-copy-target="#code-6ae428f232249"          aria-label="Copy code sample"     class="inline-flex items-center gap-1.5 rounded-md border font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] px-2.5 py-1 text-xs border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white focus-visible:ring-offset-slate-900"
+>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M7 3a1 1 0 00-1 1v1H5a2 2 0 00-2 2v9a2 2 0 002 2h7a2 2 0 002-2v-1h1a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 00-1-1H7zm5 3H8a2 2 0 00-2 2v7H5a1 1 0 01-1-1V6a1 1 0 011-1h8v1zm-4 1h5a1 1 0 011 1v9a1 1 0 01-1 1H8a1 1 0 01-1-1V8a1 1 0 011-1z" />
+    </svg>
+    <span data-copy-label>Copy</span>
+    <span data-copy-status class="sr-only" aria-live="polite"></span>
+</button>
+            </figcaption>
+    <pre tabindex="0" class="overflow-x-auto p-4 text-[13px] leading-relaxed text-[var(--color-code-text)]"><code id="code-6ae428f232249" class="language-php" data-lang="php">&lt;?php
+
+// Your IPN listener endpoint - the URL registered in the merchant panel.
+$notification = $_POST;
+
+if (($notification[&#039;status&#039;] ?? null) !== &#039;VALID&#039;) {
+    http_response_code(200); // acknowledge receipt; nothing to do yet
+    exit;
+}
+
+// Never trust the notification on its own - always re-validate
+// server-to-server via the Order Validation API below before updating
+// your database.</code></pre>
+</figure>
+        </div>
+            <div role="tabpanel" id="panel-ipn-listener-laravel" aria-labelledby="tab-ipn-listener-laravel" data-tab-key="laravel"  hidden >
+            <figure class="overflow-hidden rounded-lg border border-[var(--color-code-border)] bg-[var(--color-code-surface)]">
+    <figcaption class="flex items-center justify-between gap-2 border-b border-[var(--color-code-border)] px-4 py-2">
+        <span class="text-xs font-medium text-slate-400">Laravel</span>
+                    <button
+    type="button"
+    data-copy
+     data-copy-target="#code-6ae428f2322d0"          aria-label="Copy code sample"     class="inline-flex items-center gap-1.5 rounded-md border font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] px-2.5 py-1 text-xs border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white focus-visible:ring-offset-slate-900"
+>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M7 3a1 1 0 00-1 1v1H5a2 2 0 00-2 2v9a2 2 0 002 2h7a2 2 0 002-2v-1h1a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 00-1-1H7zm5 3H8a2 2 0 00-2 2v7H5a1 1 0 01-1-1V6a1 1 0 011-1h8v1zm-4 1h5a1 1 0 011 1v9a1 1 0 01-1 1H8a1 1 0 01-1-1V8a1 1 0 011-1z" />
+    </svg>
+    <span data-copy-label>Copy</span>
+    <span data-copy-status class="sr-only" aria-live="polite"></span>
+</button>
+            </figcaption>
+    <pre tabindex="0" class="overflow-x-auto p-4 text-[13px] leading-relaxed text-[var(--color-code-text)]"><code id="code-6ae428f2322d0" class="language-php" data-lang="php">use Illuminate\Http\Request;
+
+public function handle(Request $request)
+{
+    $notification = $request-&gt;all();
+
+    if (($notification[&#039;status&#039;] ?? null) !== &#039;VALID&#039;) {
+        return response()-&gt;noContent(); // acknowledge; nothing to do yet
+    }
+
+    // Never trust the notification on its own - always re-validate
+    // server-to-server via the Order Validation API below before updating
+    // your database.
+}</code></pre>
+</figure>
+        </div>
+    </div></div>
+
+                                    <nav aria-label="Documentation pages" class="mt-16 grid gap-4 border-t border-[var(--color-border)] pt-8 sm:grid-cols-2">
+        <div>
+                            <a href="https://sandbox-gw.sslcommerz.com/docs#initiation" class="group flex flex-col rounded-lg border border-[var(--color-border)] p-4 transition-colors hover:border-[var(--color-accent)]">
+                    <span class="text-xs text-[var(--color-text-muted)]">&larr; Previous</span>
+                    <span class="mt-1 font-medium text-[var(--color-text)] group-hover:text-[var(--color-accent)]">Transaction Initiation</span>
+                </a>
+                    </div>
+        <div>
+                            <a href="https://sandbox-gw.sslcommerz.com/doc/v4/order-validation.html" class="group flex flex-col rounded-lg border border-[var(--color-border)] p-4 text-right transition-colors hover:border-[var(--color-accent)]">
+                    <span class="text-xs text-[var(--color-text-muted)]">Next &rarr;</span>
+                    <span class="mt-1 font-medium text-[var(--color-text)] group-hover:text-[var(--color-accent)]">Order Validation</span>
+                </a>
+                    </div>
+    </nav>
+                            </div>
+        </main>
+
+                    <div class="lg:py-10">
+                <aside
+    data-toc-root
+    class="toc-empty hidden lg:sticky lg:block lg:h-fit lg:w-[var(--docs-toc-w)] lg:shrink-0 lg:border-l lg:border-[var(--color-border)] lg:px-6"
+    style="top: calc(var(--docs-header-h) + 2rem)"
+>
+    <p class="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-400">On this page</p>
+</aside>
+            </div>
+            </div>
+
+    </body>
+</html>

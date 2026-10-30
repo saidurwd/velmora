@@ -1,0 +1,703 @@
+
+ Order Query | SSLCommerz Sandbox Docs
+ Skip to main content
+ SANDBOX DOCS
+ Demonstration
+ Create Sandbox Account
+ Introduction
+ Getting Started
+ Sandbox Credentials
+ Integration V4
+ Transaction Initiation
+ IPN Callbacks
+ Order Validation
+ Easy Checkout
+ Refund API
+ Order Query
+ Common Issues
+ Additional Integrations
+ Invoice & QR API
+ Bill Query API
+ Partially available
+ Google Pay
+ Not available in sandbox
+ Diagnostics
+ IPN Testing
+ Recurring Test
+ Not available in sandbox
+ Bill Query API
+ Bill Payment Integration
+ Not available in sandbox
+ Resources
+ Library Resources
+ SecurePay API
+ Postman Collection
+ Introduction
+ Getting Started
+ Sandbox Credentials
+ Integration V4
+ Transaction Initiation
+ IPN Callbacks
+ Order Validation
+ Easy Checkout
+ Refund API
+ Order Query
+ Common Issues
+ Additional Integrations
+ Invoice & QR API
+ Bill Query API
+ Partially available
+ Google Pay
+ Not available in sandbox
+ Diagnostics
+ IPN Testing
+ Recurring Test
+ Not available in sandbox
+ Bill Query API
+ Bill Payment Integration
+ Not available in sandbox
+ Resources
+ Library Resources
+ SecurePay API
+ Postman Collection
+ Docs
+ Integration V4
+ Order Query
+ Transaction Query API
+ The full official SSLCOMMERZ v4 reference for querying a transaction by Session ID or by Transaction ID.
+ Transaction Query API
+You can query your transaction status any time while you want. For ticketing system or product limitation, it will help you to release before recheck.
+By Session ID
+You can check the status of a transaction by the session id
+So, Let's call the API and the example given below REST API
+ Sandbox / Test Environment
+ HTTP method GET
+ https://sandbox.sslcommerz.com/validator/api/merchantTransIDvalidationAPI.php
+ Copy
+ Live Environment
+ HTTP method GET
+ https://securepay.sslcommerz.com/validator/api/merchantTransIDvalidationAPI.php
+ Copy
+Method: GET
+Request Parameters
+ Transaction Query by Session ID — request parameters
+ Parameter | 
+ Type | 
+ Required | 
+ Description | 
+ sessionkey | 
+ string (50) | 
+ mandatory | 
+ Mandatory - The session id has been generated at the time of transaction initiated. | 
+ store_id | 
+ string (30) | 
+ mandatory | 
+ Mandatory - Your SSLCOMMERZ Store ID is the integration credential which can be collected through our managers | 
+ store_passwd | 
+ string (30) | 
+ mandatory | 
+ Mandatory - Your SSLCOMMERZ Store Password is the integration credential which can be collected through our managers | 
+Returned Parameters
+ Param Name | 
+ Data Type | 
+ Description | 
+ APIConnect | 
+ string (30) | 
+ API Connection Status - INVALID_REQUEST : Invalid data imputed to call the API
+FAILED : API Authentication Failed
+INACTIVE : API User/Store ID is Inactive
+DONE : API Connection Success
+ | 
+ status | 
+ string (20) | 
+ Transaction Status. This parameter needs to be checked before update your database as a successful transaction. VALID : A successful transaction.
+VALIDATED : A successful transaction but called by your end more than one.
+PENDING : The transaction is still not completed and waiting to get the status.
+FAILED : The transaction is failed.
+ | 
+ sessionkey | 
+ string (50) | 
+ The session id has been generated at the time of transaction initiated. | 
+ tran_date | 
+ datetime | 
+ Transaction date - Payment completion date as 2016-05-08 15:53:49 ( PHP date('Y-m-d H:i:s') ) | 
+ tran_id | 
+ string (30) | 
+ Transaction ID (Unique) that was sent by you during initiation. This parameter needs to be validated with your system database for security | 
+ val_id | 
+ string (50) | 
+ A Validation ID against the Transaction which is provided by SSLCOMMERZ. | 
+ amount | 
+ decimal (10,2) | 
+ The total amount sent by you. However, it could be changed based on currency type. This parameter needs to be validated with your system database for security | 
+ store_amount | 
+ decimal (10,2) | 
+ The amount what you will get in your account after bank charge ( Example: 100 BDT will be your store amount of 96 BDT after 4% Bank Commission ) | 
+ card_type | 
+ string (50) | 
+ The Bank Gateway Name that customer selected | 
+ card_no | 
+ string (80) | 
+ Customer’s Card number. However, for Mobile Banking and Internet Banking, it will return customer's reference id. | 
+ currency | 
+ string (3) | 
+ Currency Type which will be settled with your merchant account after deducting the Gateway charges. This parameter is the currency type of the parameter amount | 
+ bank_tran_id | 
+ string (80) | 
+ The transaction ID at Banks End | 
+ card_issuer | 
+ string (50) | 
+ Issuer Bank Name | 
+ card_brand | 
+ string (30) | 
+ VISA, MASTER, AMEX, IB or MOBILE BANKING | 
+ card_issuer_country | 
+ string (50) | 
+ Country of Card Issuer Bank | 
+ card_issuer_country_code | 
+ string (2) | 
+ 2 digits short code of Country of Card Issuer Bank | 
+ currency_type | 
+ string (3) | 
+ The currency you have sent during initiation of this transaction. If the currency is different than BDT, then it will be converted to BDT by the current conversion rate. This parameter needs to be validated with your system database for security | 
+ currency_amount | 
+ decimal (10,2) | 
+ The currency amount you have sent during initiation of this transaction. If the amount is not mentioned in BDT, then it will be converted to BDT by the current conversion rate and return by the above field amount. This parameter needs to be validated with your system database for security | 
+ emi_instalment | 
+ integer (2) | 
+ Tenure of the EMI transaction which is chosen by the customer. | 
+ emi_amount | 
+ decimal (10,2) | 
+ EMI charge which will be paid to the Issuer Bank | 
+ discount_percentage | 
+ decimal (10,2) | 
+ If customer gets any discount based on the campaign is managed by both you and SSLCOMMERZ. | 
+ discount_remarks | 
+ string (255) | 
+ Short description of the campaign which is managed by both you and SSLCOMMERZ. | 
+ value_a | 
+ string (255) | 
+ Same Value will be returned as Passed during initiation | 
+ value_b | 
+ string (255) | 
+ Same Value will be returned as Passed during initiation | 
+ value_c | 
+ string (255) | 
+ Same Value will be returned as Passed during initiation | 
+ value_d | 
+ string (255) | 
+ Same Value will be returned as Passed during initiation | 
+ risk_level | 
+ integer (1) | 
+ Transaction's Risk Level - High (1) for most risky transactions and Low (0) for safe transactions. Please hold the service and proceed to collect customer verification documents | 
+ risk_title | 
+ string (50) | 
+ Transaction's Risk Level Description | 
+ cURL
+ PHP
+ Laravel
+ cURL
+ Copy
+ GET validator/api/merchantTransIDvalidationAPI.php
+Request Example
+$ curl -X GET 'https://sandbox.sslcommerz.com/validator/api/merchantTransIDvalidationAPI.php?sessionkey=C3329C5E252DF44B323D9BAF47ACBCD9&store_id=testbox&store_passwd=qwerty&format=json'
+Response Example
+{
+ "status": "VALID",
+ "sessionkey": "C3329C5E252DF44B323D9BAF47ACBCD9",
+ "tran_date": "2017-09-20 23:37:56",
+ "tran_id": "59C2A4F6432F8",
+ "val_id": "1709202338060TUgLqWw1PgB4GA",
+ "amount": "10.00",
+ "store_amount": "9.6",
+ "bank_tran_id": "1709202338061Ac2MhyeosVJmUh",
+ "card_type": "VISA-Brac bank",
+ "card_no": "418117XXXXXX6675",
+ "card_issuer": "TRUST BANK, LTD.",
+ "card_brand": "VISA",
+ "card_issuer_country": "Bangladesh",
+ "card_issuer_country_code": "BD",
+ "currency_type": "USD",
+ "currency_amount": "10.00",
+ "currency_rate": "1.0000",
+ "base_fair": "0.00",
+ "value_a": "",
+ "value_b": "",
+ "value_c": "",
+ "value_d": "",
+ "risk_title": "Safe",
+ "risk_level": "0",
+ "APIConnect": "DONE",
+ "validated_on": "2017-09-20 23:38:07",
+ "gw_version": "3.00"
+}
+ PHP
+ Copy
+ $sessionkey=urlencode($_POST['sessionkey']);
+$store_id=urlencode("testbox");
+$store_passwd=urlencode("qwerty");
+$requested_url = ("https://sandbox.sslcommerz.com/validator/api/merchantTransIDvalidationAPI.php?sessionkey=".$sessionkey."&store_id=".$store_id."&store_passwd=".$store_passwd."&v=1&format=json");
+$handle = curl_init();
+curl_setopt($handle, CURLOPT_URL, $requested_url);
+curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
+# The official sample sets both to false "IF YOU RUN FROM LOCAL PC" - local testing only; never disable TLS verification in production.
+curl_setopt($handle, CURLOPT_SSL_VERIFYHOST, 2);
+curl_setopt($handle, CURLOPT_SSL_VERIFYPEER, true);
+$result = curl_exec($handle);
+$code = curl_getinfo($handle, CURLINFO_HTTP_CODE);
+if($code == 200 && !( curl_errno($handle)))
+{
+ # TO CONVERT AS ARRAY
+ # $result = json_decode($result, true);
+ # $status = $result['status'];
+ # TO CONVERT AS OBJECT
+ $result = json_decode($result);
+ # TRANSACTION INFO
+ $status = $result->status;
+ $tran_date = $result->tran_date;
+ $tran_id = $result->tran_id;
+ $val_id = $result->val_id;
+ $amount = $result->amount;
+ $store_amount = $result->store_amount;
+ $bank_tran_id = $result->bank_tran_id;
+ $card_type = $result->card_type;
+ # EMI INFO
+ $emi_instalment = $result->emi_instalment;
+ $emi_amount = $result->emi_amount;
+ $emi_description = $result->emi_description;
+ $emi_issuer = $result->emi_issuer;
+ # ISSUER INFO
+ $card_no = $result->card_no;
+ $card_issuer = $result->card_issuer;
+ $card_brand = $result->card_brand;
+ $card_issuer_country = $result->card_issuer_country;
+ $card_issuer_country_code = $result->card_issuer_country_code;
+ # API AUTHENTICATION
+ $APIConnect = $result->APIConnect;
+ $validated_on = $result->validated_on;
+ $gw_version = $result->gw_version;
+} else {
+ echo "Failed to connect with SSLCOMMERZ";
+}
+ Laravel
+ Copy
+ use Illuminate\Support\Facades\Http;
+$response = Http::timeout(30)
+ ->connectTimeout(30)
+ ->get('https://sandbox.sslcommerz.com/validator/api/merchantTransIDvalidationAPI.php', [
+ 'sessionkey' => $request->input('sessionkey'),
+ 'store_id' => config('services.sslcommerz.store_id'),
+ 'store_passwd' => config('services.sslcommerz.store_password'),
+ 'v' => 1,
+ 'format' => 'json',
+ ]);
+if ($response->failed() || ! is_array($response->json())) {
+ abort(502, 'Transaction Query API request failed.');
+}
+$result = $response->json();
+By Transaction ID
+You can check the status of a transaction by your transaction id
+So, Let's call the API and the example given below REST API
+ Sandbox / Test Environment
+ HTTP method GET
+ https://sandbox.sslcommerz.com/validator/api/merchantTransIDvalidationAPI.php
+ Copy
+ Live Environment
+ HTTP method GET
+ https://securepay.sslcommerz.com/validator/api/merchantTransIDvalidationAPI.php
+ Copy
+Method: GET
+Request Parameters
+ Transaction Query by Transaction ID — request parameters
+ Parameter | 
+ Type | 
+ Required | 
+ Description | 
+ tran_id | 
+ string (50) | 
+ mandatory | 
+ Mandatory - Transaction ID (Unique) that was sent by you during initiation. | 
+ store_id | 
+ string (30) | 
+ mandatory | 
+ Mandatory - Your SSLCOMMERZ Store ID is the integration credential which can be collected through our managers | 
+ store_passwd | 
+ string (30) | 
+ mandatory | 
+ Mandatory - Your SSLCOMMERZ Store Password is the integration credential which can be collected through our managers | 
+Returned Parameters
+ Param Name | 
+ Data Type | 
+ Description | 
+ APIConnect | 
+ string (30) | 
+ API Connection Status - INVALID_REQUEST : Invalid data imputed to call the API
+FAILED : API Authentication Failed
+INACTIVE : API User/Store ID is Inactive
+DONE : API Connection Success
+ | 
+ no_of_trans_found | 
+ integer (2) | 
+ No of transaction is found against the transaction id. | 
+ element | 
+ json | 
+ Details of individual transactions. | 
+ element.[].status | 
+ string (20) | 
+ Transaction Status. This parameter needs to be checked before update your database as a successful transaction. VALID : A successful transaction.
+VALIDATED : A successful transaction but called by your end more than one.
+PENDING : The transaction is still not completed and waiting to get the status.
+FAILED : The transaction is failed.
+ | 
+ element.[].tran_date | 
+ datetime | 
+ Transaction date - Payment completion date as 2016-05-08 15:53:49 ( PHP date('Y-m-d H:i:s') ) | 
+ element.[].tran_id | 
+ string (30) | 
+ Transaction ID (Unique) that was sent by you during initiation. This parameter needs to be validated with your system database for security | 
+ element.[].val_id | 
+ string (50) | 
+ A Validation ID against the Transaction which is provided by SSLCOMMERZ. | 
+ element.[].amount | 
+ decimal (10,2) | 
+ The total amount sent by you. However, it could be changed based on currency type. This parameter needs to be validated with your system database for security | 
+ element.[].store_amount | 
+ decimal (10,2) | 
+ The amount what you will get in your account after bank charge ( Example: 100 BDT will be your store amount of 96 BDT after 4% Bank Commission ) | 
+ element.[].card_type | 
+ string (50) | 
+ The Bank Gateway Name that customer selected | 
+ element.[].card_no | 
+ string (80) | 
+ Customer’s Card number. However, for Mobile Banking and Internet Banking, it will return customer's reference id. | 
+ element.[].currency | 
+ string (3) | 
+ Currency Type which will be settled with your merchant account after deducting the Gateway charges. This parameter is the currency type of the parameter amount | 
+ element.[].bank_tran_id | 
+ string (80) | 
+ The transaction ID at Banks End | 
+ element.[].card_issuer | 
+ string (50) | 
+ Issuer Bank Name | 
+ element.[].card_brand | 
+ string (30) | 
+ VISA, MASTER, AMEX, IB or MOBILE BANKING | 
+ element.[].card_issuer_country | 
+ string (50) | 
+ Country of Card Issuer Bank | 
+ element.[].card_issuer_country_code | 
+ string (2) | 
+ 2 digits short code of Country of Card Issuer Bank | 
+ element.[].currency_type | 
+ string (3) | 
+ The currency you have sent during initiation of this transaction. If the currency is different than BDT, then it will be converted to BDT by the current conversion rate. This parameter needs to be validated with your system database for security | 
+ element.[].currency_amount | 
+ decimal (10,2) | 
+ The currency amount you have sent during initiation of this transaction. If the amount is not mentioned in BDT, then it will be converted to BDT by the current conversion rate and return by the above field amount. This parameter needs to be validated with your system database for security | 
+ element.[].emi_instalment | 
+ integer (2) | 
+ Tenure of the EMI transaction which is chosen by the customer. | 
+ element.[].emi_amount | 
+ decimal (10,2) | 
+ EMI charge which will be paid to the Issuer Bank | 
+ element.[].discount_percentage | 
+ decimal (10,2) | 
+ If customer gets any discount based on the campaign is managed by both you and SSLCOMMERZ. | 
+ element.[].discount_remarks | 
+ string (255) | 
+ Short description of the campaign which is managed by both you and SSLCOMMERZ. | 
+ element.[].value_a | 
+ string (255) | 
+ Same Value will be returned as Passed during initiation | 
+ element.[].value_b | 
+ string (255) | 
+ Same Value will be returned as Passed during initiation | 
+ element.[].value_c | 
+ string (255) | 
+ Same Value will be returned as Passed during initiation | 
+ element.[].value_d | 
+ string (255) | 
+ Same Value will be returned as Passed during initiation | 
+ element.[].risk_level | 
+ integer (1) | 
+ Transaction's Risk Level - High (1) for most risky transactions and Low (0) for safe transactions. Please hold the service and proceed to collect customer verification documents | 
+ element.[].risk_title | 
+ string (50) | 
+ Transaction's Risk Level Description | 
+ element.[].error | 
+ string (255) | 
+ Transaction failed reason (if any)! | 
+ cURL
+ PHP
+ Laravel
+ cURL
+ Copy
+ GET validator/api/merchantTransIDvalidationAPI.php
+Request Example
+$ curl -X GET 'https://sandbox.sslcommerz.com/validator/api/merchantTransIDvalidationAPI.php?tran_id=59C2A4F6432F8&store_id=testbox&store_passwd=qwerty&format=json'
+Response Example
+{
+ "APIConnect": "DONE",
+ "no_of_trans_found": 5,
+ "element": [
+ {
+ "val_id": "17092023365512Wr2jmzTG69nV6",
+ "status": "VALIDATED",
+ "validated_on": "2017-09-20 23:43:17",
+ "currency_type": "USD",
+ "currency_amount": "10.00",
+ "currency_rate": "1.0000",
+ "base_fair": "0.00",
+ "value_a": "",
+ "value_b": "",
+ "value_c": "",
+ "value_d": "",
+ "tran_date": "2017-09-20 23:35:59",
+ "tran_id": "59C2A4F6432F8",
+ "amount": "10.00",
+ "store_amount": "9.75",
+ "bank_tran_id": "17092023365508TFa1fjTrvgIhz",
+ "card_type": "VISA-City Bank",
+ "risk_title": "Safe",
+ "risk_level": "0",
+ "currency": "BDT",
+ "bank_gw": "City Bank",
+ "card_no": "",
+ "card_issuer": "",
+ "card_brand": "",
+ "card_issuer_country": "",
+ "card_issuer_country_code": "",
+ "gw_version": "3.00",
+ "emi_instalment": "0",
+ "emi_amount": "",
+ "emi_description": "",
+ "emi_issuer": "",
+ "error": ""
+ },
+ {
+ "val_id": "1709202337441xmrBBLB7KPdf65",
+ "status": "VALIDATED",
+ "validated_on": "2017-09-20 23:43:17",
+ "currency_type": "USD",
+ "currency_amount": "10.00",
+ "currency_rate": "1.0000",
+ "base_fair": "0.00",
+ "value_a": "",
+ "value_b": "",
+ "value_c": "",
+ "value_d": "",
+ "tran_date": "2017-09-20 23:37:36",
+ "tran_id": "59C2A4F6432F8",
+ "amount": "10.00",
+ "store_amount": "9.6",
+ "bank_tran_id": "1709202337441P84QskOyarFmik",
+ "card_type": "VISA-Brac bank",
+ "risk_title": "Not Safe",
+ "risk_level": "1",
+ "currency": "BDT",
+ "bank_gw": "Brac bank",
+ "card_no": "450850******4050",
+ "card_issuer": "CAJA DE AHORROS Y PENSIONES DE BARCELONA(LA CAIXA)",
+ "card_brand": "VISA",
+ "card_issuer_country": "Spain",
+ "card_issuer_country_code": "ES",
+ "gw_version": "3.00",
+ "emi_instalment": "0",
+ "emi_amount": "",
+ "emi_description": "",
+ "emi_issuer": "",
+ "error": ""
+ },
+ {
+ "val_id": "1709202338060TUgLqWw1PgB4GA",
+ "status": "VALIDATED",
+ "validated_on": "2017-09-20 23:43:17",
+ "currency_type": "USD",
+ "currency_amount": "10.00",
+ "currency_rate": "1.0000",
+ "base_fair": "0.00",
+ "value_a": "",
+ "value_b": "",
+ "value_c": "",
+ "value_d": "",
+ "tran_date": "2017-09-20 23:37:56",
+ "tran_id": "59C2A4F6432F8",
+ "amount": "10.00",
+ "store_amount": "9.6",
+ "bank_tran_id": "1709202338061Ac2MhyeosVJmUh",
+ "card_type": "VISA-Brac bank",
+ "risk_title": "Safe",
+ "risk_level": "0",
+ "currency": "BDT",
+ "bank_gw": "Brac bank",
+ "card_no": "418117XXXXXX6675",
+ "card_issuer": "TRUST BANK, LTD.",
+ "card_brand": "VISA",
+ "card_issuer_country": "Bangladesh",
+ "card_issuer_country_code": "BD",
+ "gw_version": "3.00",
+ "emi_instalment": "0",
+ "emi_amount": "",
+ "emi_description": "",
+ "emi_issuer": "",
+ "error": ""
+ },
+ {
+ "val_id": "",
+ "status": "FAILED",
+ "validated_on": "",
+ "currency_type": "USD",
+ "currency_amount": "10.00",
+ "currency_rate": "1.0000",
+ "base_fair": "0.00",
+ "value_a": "",
+ "value_b": "",
+ "value_c": "",
+ "value_d": "",
+ "tran_date": "2017-09-20 23:41:42",
+ "tran_id": "59C2A4F6432F8",
+ "amount": "10.00",
+ "store_amount": "",
+ "bank_tran_id": "1709202341529IZWH403Vt8eE4F",
+ "card_type": "",
+ "risk_title": "Safe",
+ "risk_level": "0",
+ "currency": "BDT",
+ "bank_gw": "Brac bank",
+ "card_no": "421481XXXXXX4177",
+ "card_issuer": "STANDARD CHARTERED BANK",
+ "card_brand": "VISA",
+ "card_issuer_country": "Bangladesh",
+ "card_issuer_country_code": "BD",
+ "gw_version": "3.00",
+ "emi_instalment": "0",
+ "emi_amount": "",
+ "emi_description": "",
+ "emi_issuer": "",
+ "error": "system error: (unable to process transaction request)"
+ },
+ {
+ "val_id": "1709202342050Zhrs010c4wKCg5",
+ "status": "VALIDATED",
+ "validated_on": "2017-09-20 23:43:17",
+ "currency_type": "USD",
+ "currency_amount": "10.00",
+ "currency_rate": "1.0000",
+ "base_fair": "0.00",
+ "value_a": "",
+ "value_b": "",
+ "value_c": "",
+ "value_d": "",
+ "tran_date": "2017-09-20 23:41:56",
+ "tran_id": "59C2A4F6432F8",
+ "amount": "10.00",
+ "store_amount": "9.7",
+ "bank_tran_id": "170920234205YDkTyzRWy6zHVkw",
+ "card_type": "VISA-Dutch Bangla",
+ "risk_title": "Safe",
+ "risk_level": "0",
+ "currency": "BDT",
+ "bank_gw": "Dutch Bangla",
+ "card_no": "455445XXXXXX4326",
+ "card_issuer": "STANDARD CHARTERED BANK",
+ "card_brand": "VISA",
+ "card_issuer_country": "Bangladesh",
+ "card_issuer_country_code": "BD",
+ "gw_version": "3.00",
+ "emi_instalment": "0",
+ "emi_amount": "",
+ "emi_description": "",
+ "emi_issuer": "",
+ "error": ""
+ }
+ ]
+}
+ PHP
+ Copy
+ $tran_id=urlencode($_POST['tran_id']);
+$store_id=urlencode("testbox");
+$store_passwd=urlencode("qwerty");
+$requested_url = ("https://sandbox.sslcommerz.com/validator/api/merchantTransIDvalidationAPI.php?tran_id=".$tran_id."&store_id=".$store_id."&store_passwd=".$store_passwd."&v=1&format=json");
+$handle = curl_init();
+curl_setopt($handle, CURLOPT_URL, $requested_url);
+curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
+# The official sample sets both to false "IF YOU RUN FROM LOCAL PC" - local testing only; never disable TLS verification in production.
+curl_setopt($handle, CURLOPT_SSL_VERIFYHOST, 2);
+curl_setopt($handle, CURLOPT_SSL_VERIFYPEER, true);
+$result = curl_exec($handle);
+$code = curl_getinfo($handle, CURLINFO_HTTP_CODE);
+$whether_give_the_service = false;
+$t_status = "";
+if($code == 200 && !( curl_errno($handle))) {
+ # JSON CONVERT T
+ $result = json_decode($result, true);
+ if(isset($result['APIConnect']) && $result['APIConnect']=='DONE') {
+ if(isset($result['element'])) {
+ foreach($result['element'] as $t) {
+ var_dump($t);
+ $tran_date = $t['tran_date'];
+ $tran_id = $t['tran_id'];
+ $amount = $t['amount'];
+ $bank_gw = $t['bank_gw'];
+ $card_type = $t['card_type'];
+ $card_no = $t['card_no'];
+ $card_issuer = $t['card_issuer'];
+ $card_brand = $t['card_brand'];
+ $card_issuer_country = $t['card_issuer_country'];
+ $card_issuer_country_code = $t['card_issuer_country_code'];
+ $status = $t['status'];
+ $error = $t['error'];
+ $risk_title = $t['risk_title'];
+ $risk_level = $t['risk_level'];
+ # TAKE LATEST STATUS
+ $t_status = $status;
+ if($status=='VALID') { # CHECK CONDITIONS
+ $t_status = "Successful Transaction, Please check AMOUNT with your System. ";
+ if($risk_level=='1') {
+ $t_status = "Payment is Risky";
+ }
+ break;
+ } else if ($status=='VALIDATED') {
+ $t_status = "Successful Transaction already validated by you, Please check AMOUNT with your System. ";
+ if($risk_level=='1') {
+ $t_status = "Payment is Risky";
+ }
+ break;
+ }
+ }
+ } else { # NO SUCCESSFUL RECORD
+ $t_status = "No Record Found";
+ }
+ } else { # INVALID STORE ID AND PASSWORD
+ $t_status = "API Connection Failed";
+ }
+} else { # UNABLE TO CONNECT WITH SSLCOMMERZ
+ $t_status = "Failed to connect with SSLCOMMERZ";
+}
+echo $t_status;
+ Laravel
+ Copy
+ use Illuminate\Support\Facades\Http;
+$response = Http::timeout(30)
+ ->connectTimeout(30)
+ ->get('https://sandbox.sslcommerz.com/validator/api/merchantTransIDvalidationAPI.php', [
+ 'tran_id' => $request->input('tran_id'),
+ 'store_id' => config('services.sslcommerz.store_id'),
+ 'store_passwd' => config('services.sslcommerz.store_password'),
+ 'v' => 1,
+ 'format' => 'json',
+ ]);
+if ($response->failed() || ! is_array($response->json())) {
+ abort(502, 'Transaction Query API request failed.');
+}
+$result = $response->json();
+if (($result['APIConnect'] ?? null) === 'DONE') {
+ foreach ($result['element'] ?? [] as $t) {
+ // one element per attempt - check status, risk_level and amount
+ }
+}
+ ← Previous
+ Order Validation
+ Next →
+ Invoice & QR API
+ On this page
