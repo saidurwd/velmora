@@ -6,11 +6,13 @@ namespace App\Modules\Inventory\Providers;
 
 use App\Modules\Inventory\Console\StockProbeCommand;
 use App\Modules\Inventory\Contracts\Availability;
+use App\Modules\Inventory\Contracts\ShipmentStock;
 use App\Modules\Inventory\Contracts\StockInitialiser;
 use App\Modules\Inventory\Contracts\StockReservations;
 use App\Modules\Inventory\Events\StockLow;
 use App\Modules\Inventory\Services\DatabaseAvailability;
 use App\Modules\Inventory\Services\LedgerStockInitialiser;
+use App\Modules\Inventory\Services\OrderShipmentStock;
 use App\Modules\Inventory\Services\OrderStockReservations;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
@@ -27,6 +29,7 @@ class InventoryServiceProvider extends ModuleServiceProvider
     {
         $this->app->bind(Availability::class, DatabaseAvailability::class);
         $this->app->bind(StockReservations::class, OrderStockReservations::class);
+        $this->app->bind(ShipmentStock::class, OrderShipmentStock::class);
         $this->app->bind(StockInitialiser::class, LedgerStockInitialiser::class);
         $this->commands([StockProbeCommand::class]);
     }

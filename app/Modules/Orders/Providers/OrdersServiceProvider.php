@@ -9,6 +9,7 @@ use App\Modules\Orders\Console\OrderProbeCommand;
 use App\Modules\Orders\Console\PlaceOrderProbeCommand;
 use App\Modules\Orders\Contracts\CodOrders;
 use App\Modules\Orders\Contracts\OrderDirectory;
+use App\Modules\Orders\Contracts\OrderFulfilment;
 use App\Modules\Orders\Contracts\OrderPayables;
 use App\Modules\Orders\Events\OrderPlaced;
 use App\Modules\Orders\Listeners\ApplyPaymentEvent;
@@ -16,6 +17,7 @@ use App\Modules\Orders\Listeners\SendOrderConfirmation;
 use App\Modules\Orders\Services\CodPaymentInitiator;
 use App\Modules\Orders\Services\DatabaseCodOrders;
 use App\Modules\Orders\Services\DatabaseOrderDirectory;
+use App\Modules\Orders\Services\DatabaseOrderFulfilment;
 use App\Modules\Orders\Services\DatabaseOrderPayables;
 use App\Modules\Orders\Services\PaymentInitiators;
 use App\Modules\Payments\Events\PaymentExpired;
@@ -42,6 +44,7 @@ class OrdersServiceProvider extends ModuleServiceProvider
         $this->app->singleton(PaymentInitiators::class, fn ($app) => new PaymentInitiators($app->tagged('orders.payment_initiators')));
         $this->app->bind(OrderPayables::class, DatabaseOrderPayables::class);
         $this->app->bind(CodOrders::class, DatabaseCodOrders::class);
+        $this->app->bind(OrderFulfilment::class, DatabaseOrderFulfilment::class);
         $this->app->bind(OrderDirectory::class, DatabaseOrderDirectory::class);
     }
 
