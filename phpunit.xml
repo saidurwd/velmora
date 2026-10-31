@@ -31,6 +31,11 @@
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="HASH_DRIVER" value="argon2id"/>
         <env name="SMS_DRIVER" value="fake"/>
+        <!-- Tests never use real provider credentials, whatever the developer's .env holds; adapters are tested with faked HTTP -->
+        <env name="PAYMENT_SSLCOMMERZ_STORE_ID" value=""/>
+        <env name="PAYMENT_SSLCOMMERZ_STORE_PASSWORD" value=""/>
+        <env name="PAYMENT_SSLCOMMERZ_SANDBOX" value="true"/>
+        <env name="PAYMENTS_ALLOW_LIVE" value="false"/>
         <env name="ARGON_MEMORY" value="1024"/>
         <env name="ARGON_TIME" value="1"/>
         <env name="BROADCAST_CONNECTION" value="null"/>

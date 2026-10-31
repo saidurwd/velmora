@@ -37,6 +37,8 @@ use Illuminate\Support\Facades\Log;
  */
 final class VerifyPayment
 {
+    private const REVERIFY_DAYS = 7;
+
     public function __construct(
         private readonly GatewayRegistry $gateways,
         private readonly Clock $clock,
@@ -51,8 +53,10 @@ final class VerifyPayment
         if ($tx === null) {
             return VerifyOutcome::UnknownReference;
         }
-        if ($tx->status->isFinal()) {
-            return $this->settled($tx->status); // nothing can change; do not bother the gateway (and do not let replays make us call it)
+        // Paid is settled for good. A closed-but-unpaid attempt is still worth asking about for a week (a late success must not be lost),
+        // after which replays cannot make us call the gateway any more.
+        if ($tx->status->isFinal() || ($tx->status->isClosed() && $tx->created_at !== null && $tx->created_at->lt($this->clock->now()->subDays(self::REVERIFY_DAYS)))) {
+            return $this->settled($tx->status);
         }
 
         try {
@@ -77,6 +81,9 @@ final class VerifyPayment
         }
         if ($answer->merchantRef !== $tx->merchant_ref) {
             return $this->hold($payment, $tx, 'unmatched_provider_txn', 'reference_mismatch', $answer);
+        }
+        if ($tx->status->isClosed() && $answer->status !== VerifiedStatus::Valid) {
+            return $this->settled($tx->status); // already failed/cancelled/expired and the gateway says nothing new
         }
 
         return match ($answer->status) {
@@ -116,7 +123,8 @@ final class VerifyPayment
         $payable = in_array($payment->status, [PaymentState::Initiated, PaymentState::Pending, PaymentState::Failed, PaymentState::Cancelled], true) && $this->orders->isPayable($payment->order_id);
         if ($payable) {
             $this->settle($payment, PaymentState::Paid, $tx->amount_minor, $now);
-            $this->outbox->record(new PaymentSucceeded($payment->id, $payment->public_id, $payment->order_id, $payment->amount_minor, $payment->currency, $tx->merchant_ref));
+            $this->outbox->record(new PaymentSucceeded($payment->id, $payment->public_id, $payment->order_id, $payment->amount_minor, $payment->currency, $tx->merchant_ref, $answer->riskFlag ? 'risk_high' : null));
+            $this->flagExtraPayments($payment, $tx, $answer);
 
             return VerifyOutcome::Paid;
         }
@@ -128,6 +136,15 @@ final class VerifyPayment
         $this->outbox->record(new PaymentNeedsReview($payment->id, $payment->public_id, $payment->order_id, $payment->amount_minor, $payment->currency, $tx->merchant_ref, 'late_success'));
 
         return VerifyOutcome::NeedsReview;
+    }
+
+    /** The gateway reported more than one successful payment under our one reference: the extra money has to go back. */
+    private function flagExtraPayments(Payment $payment, PaymentTransaction $tx, VerifiedPayment $answer): void
+    {
+        $count = (int) ($answer->raw['valid_count'] ?? 1);
+        if ($count > 1) {
+            $this->exceptions->raise('duplicate_payment', $payment->id, $payment->order_id, $tx->merchant_ref.'#multi', ['merchant_ref' => $tx->merchant_ref, 'successful_payments' => $count, 'amount_minor_each' => $tx->amount_minor]);
+        }
     }
 
     private function stillWaiting(PaymentTransaction $tx): VerifyOutcome

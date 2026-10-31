@@ -1,0 +1,15 @@
+{
+    "status": "SUCCESS",
+    "failedreason": "",
+    "sessionkey": "F298BC45B0688E02768900C4F6B28C8B",
+    "gw": {"visa": "dbbl_visa,brac_visa,city_visa,ebl_visa,visacard", "master": "dbbl_master,brac_master,city_master,ebl_master,mastercard", "amex": "city_amex,amexcard", "othercards": "dbbl_nexus,qcash,fastcash", "internetbanking": "city,bankasia,ibbl,mtbl", "mobilebanking": "dbblmobilebanking,bkash,abbank,ibbl"},
+    "redirectGatewayURL": "https://sandbox.sslcommerz.com/gwprocess/v4/bankgw/indexhtml.php?mamount=10228.84&ssl_id=19021022820J3Tctm708jSQiZU&Q=REDIRECT&SESSIONKEY=F298BC45B0688E02768900C4F6B28C8B",
+    "directPaymentURLBank": "",
+    "directPaymentURLCard": "",
+    "directPaymentURL": "",
+    "redirectGatewayURLFailed": "",
+    "GatewayPageURL": "https://sandbox.sslcommerz.com/gwprocess/v4/gw.php?Q=PAY&SESSIONKEY=F298BC45B0688E02768900C4F6B28C8B",
+    "storeBanner": "https://securepay.sslcommerz.com/testbox/stores/banners/easyv1.png?v=5c5f37e4c6ee6",
+    "storeLogo": "https://securepay.sslcommerz.com/testbox/stores/logos/logo_SCZ100197.jpg?v=5c5f37e4c6f30",
+    "desc": []
+}

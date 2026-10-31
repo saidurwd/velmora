@@ -29,6 +29,14 @@ Saved **2026-10-30** from the provider's sandbox documentation site, because pro
 - Credentials (`store_id`, `store_passwd`) are sent as **query-string parameters** on GET calls: the HTTP client and all logging/APM must redact query strings. Credentials live only in encrypted settings or environment variables, never in the repository.
 - The sandbox page shows public test credentials and test cards; they are deliberately not copied into project files. Use your own sandbox registration (https://sandbox-gw.sslcommerz.com/register).
 
+## How our adapter uses this documentation (`app/Modules/Payments/Gateways/SslCommerzGateway.php`)
+- Fixtures in `app/Modules/Payments/tests/Fixtures/sslcommerz/` are the examples printed in these pages; nothing was recorded from an account.
+- Authenticity of a payment comes only from the server-to-server calls (validation by `val_id`, or query by `tran_id`); the notification and the browser return only say which transaction to ask about.
+- `amount` and `currency_amount` must agree for BDT; if not, the payment is held for review. Exact paisa only, never rounded.
+- One reference can have several results (the query API returns a list). We take a successful one, and raise a duplicate-payment exception if more than one succeeded.
+- `risk_level` 1: payment accepted, order held for a person (the documentation asks the shop to check the customer before delivering).
+- Unverified, so unused: `verify_sign`; partial refunds; the IPN sender's IP addresses.
+
 ## Reference implementation: the provider's own sample app (read 2026-10-30)
 https://github.com/sslcommerz/SSLCommerz-Laravel at commit `5a3e3d21647cc68f43c502d9bf073fca04837bce` (last pushed 2025-10-12). It is a sample application, not a package, and the repository has **no licence**, so nothing is copied from it and it is not a dependency; our adapter is written from the documentation above.
 

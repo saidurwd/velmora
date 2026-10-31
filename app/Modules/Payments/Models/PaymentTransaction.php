@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property array<string, scalar|null>|null $request_summary
  * @property CarbonImmutable|null $verified_at
  * @property string|null $failure_code
+ * @property CarbonImmutable|null $created_at
  */
 class PaymentTransaction extends Model
 {
@@ -34,6 +35,6 @@ class PaymentTransaction extends Model
 
     protected function casts(): array
     {
-        return ['status' => TransactionStatus::class, 'request_summary' => 'array', 'verified_at' => 'immutable_datetime'];
+        return ['status' => TransactionStatus::class, 'request_summary' => 'array', 'verified_at' => 'immutable_datetime', 'created_at' => 'immutable_datetime'];
     }
 }

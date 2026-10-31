@@ -47,6 +47,12 @@ final class ApplyPaymentEvent
             }
             $this->payment($e->orderId, PaymentStatus::Paid, 'paid online');
 
+            // The gateway rates some payments high risk and asks the shop to check the customer before delivering: hold, do not confirm.
+            if ($e->detail === 'risk_high') {
+                DB::table('orders')->where('id', $e->orderId)->update(['needs_review' => true, 'updated_at' => $this->clock->now()]);
+                DB::table('order_notes')->insert(['order_id' => $e->orderId, 'author_id' => null, 'visibility' => 'internal', 'body' => __('orders::notifications.payment_risk_note'), 'created_at' => $this->clock->now()]);
+            }
+
             // paid in full online: nobody needs to phone the customer, unless the order is being looked at for another reason
             $order->refresh();
             if ($order->status === OrderStatus::Pending && ! $order->needs_review) {

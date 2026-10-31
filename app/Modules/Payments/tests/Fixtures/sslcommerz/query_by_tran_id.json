@@ -1,0 +1,18 @@
+{
+    "APIConnect": "DONE",
+    "no_of_trans_found": 2,
+    "element": [
+        {
+            "val_id": "17092023365512Wr2jmzTG69nV6", "status": "FAILED", "validated_on": "2017-09-20 23:43:17", "currency_type": "BDT", "currency_amount": "10.00", "currency_rate": "1.0000", "base_fair": "0.00",
+            "value_a": "", "value_b": "", "value_c": "", "value_d": "", "tran_date": "2017-09-20 23:35:59", "tran_id": "59C2A4F6432F8", "amount": "10.00", "store_amount": "9.75",
+            "bank_tran_id": "17092023365508TFa1fjTrvgIhz", "card_type": "VISA-City Bank", "risk_title": "Safe", "risk_level": "0", "currency": "BDT", "bank_gw": "City Bank", "card_no": "", "card_issuer": "", "card_brand": "",
+            "card_issuer_country": "", "card_issuer_country_code": "", "gw_version": "3.00", "emi_instalment": "0", "emi_amount": "", "emi_description": "", "emi_issuer": "", "error": ""
+        },
+        {
+            "val_id": "1709202337441xmrBBLB7KPdf65", "status": "VALIDATED", "validated_on": "2017-09-20 23:43:17", "currency_type": "BDT", "currency_amount": "10.00", "currency_rate": "1.0000", "base_fair": "0.00",
+            "value_a": "", "value_b": "", "value_c": "", "value_d": "", "tran_date": "2017-09-20 23:37:36", "tran_id": "59C2A4F6432F8", "amount": "10.00", "store_amount": "9.75",
+            "bank_tran_id": "1709202337441AbCdEfGhIjKlM", "card_type": "VISA-City Bank", "risk_title": "Safe", "risk_level": "0", "currency": "BDT", "bank_gw": "City Bank", "card_no": "", "card_issuer": "", "card_brand": "",
+            "card_issuer_country": "", "card_issuer_country_code": "", "gw_version": "3.00", "emi_instalment": "0", "emi_amount": "", "emi_description": "", "emi_issuer": "", "error": ""
+        }
+    ]
+}
