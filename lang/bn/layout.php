@@ -10,5 +10,6 @@ return [
     'account_overview' => 'সংক্ষিপ্ত বিবরণ',
     'account_addresses' => 'ঠিকানা',
     'account_profile' => 'প্রোফাইল',
+    'account_orders' => 'আমার অর্ডার',
     'account_security' => 'সাইন-ইন ও নিরাপত্তা',
 ];

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Orders\Providers;
 
+use App\Modules\Orders\Console\AccountProbeCommand;
 use App\Modules\Orders\Console\OrderProbeCommand;
 use App\Modules\Orders\Console\PlaceOrderProbeCommand;
 use App\Modules\Orders\Contracts\CodOrders;
@@ -48,7 +49,7 @@ class OrdersServiceProvider extends ModuleServiceProvider
     {
         parent::boot();
 
-        $this->commands([OrderProbeCommand::class, PlaceOrderProbeCommand::class]);
+        $this->commands([OrderProbeCommand::class, PlaceOrderProbeCommand::class, AccountProbeCommand::class]);
         $this->app->make(OutboxRegistry::class)->register(OrderPlaced::class);
         Event::listen(OrderPlaced::class, SendOrderConfirmation::class);
         Event::listen(PaymentInitiated::class, [ApplyPaymentEvent::class, 'initiated']);

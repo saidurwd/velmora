@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\IdentityAccess\Providers;
 
+use App\Modules\IdentityAccess\Actions\RegisterCustomerWithEmail;
 use App\Modules\IdentityAccess\Auth\AccountTypeUserProvider;
 use App\Modules\IdentityAccess\Auth\RecentAuth;
 use App\Modules\IdentityAccess\Console\CreateSuperAdminCommand;
 use App\Modules\IdentityAccess\Console\RbacMatrixCommand;
+use App\Modules\IdentityAccess\Contracts\CustomerRegistration;
 use App\Modules\IdentityAccess\Contracts\PhoneConfirmation;
 use App\Modules\IdentityAccess\Contracts\StaffDirectory;
 use App\Modules\IdentityAccess\Events\UserRegistered;
@@ -42,6 +44,7 @@ class IdentityAccessServiceProvider extends ModuleServiceProvider
         $this->app->singleton(SuperAdminBypass::class);
         $this->app->bind(PhoneConfirmation::class, CheckoutPhoneConfirmation::class);
         $this->app->bind(StaffDirectory::class, DatabaseStaffDirectory::class);
+        $this->app->bind(CustomerRegistration::class, RegisterCustomerWithEmail::class);
         $this->commands([CreateSuperAdminCommand::class, RbacMatrixCommand::class]);
         $this->app->scoped(RecentAuth::class, fn ($app) => new RecentAuth($app['session.store'], $app->make(Clock::class)));
         $this->app->scoped(PendingStaffLogin::class, fn ($app) => new PendingStaffLogin($app['session.store'], $app->make(Clock::class)));

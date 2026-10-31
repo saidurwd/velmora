@@ -35,6 +35,7 @@ const PUBLIC_WEB = [
     '{locale}/email/verify/{id}/{hash}' => 'emailed signed link (signature + single use)',
     '{locale}/pay/return/{payment}/{outcome}' => 'the browser coming back from the payment gateway: signed URL we issued; believes nothing it carries, verifies server to server; no CSRF possible (cross-site POST)',
     '{locale}/pay/order/{order}' => '"Pay now / pay again" link on the order page: signed, expiring URL',
+    '{locale}/orders/{order}/account' => 'sign-up from the order confirmation page: signed, expiring URL that only the shopper received (the proof of ownership); creates an account and adds that one order to it; same answer whether or not the address already has an account',
     'api/v1/webhooks/payments/{provider}' => 'payment gateway notifications: cannot log in; stored raw, never trusted, verified server to server, throttled',
     '{fallbackPlaceholder}' => 'renders the 404 page',
 ];

@@ -249,7 +249,17 @@ class CheckoutController
         $open = ! in_array($model->status->value, ['cancelled', 'completed'], true) && in_array($model->payment_status->value, ['unpaid', 'pending', 'failed'], true);
         $online = $model->payment_method_code !== 'cod';
 
+        $user = $request->user('web');
+        $panel = match (true) {
+            $model->user_id !== null && $user !== null && $model->user_id === (int) $user->getAuthIdentifier() => 'mine',
+            $model->user_id !== null => 'none',
+            $user !== null => 'attach',
+            default => 'create',
+        };
+
         return view('orders::checkout.thanks', [
+            'accountPanel' => $panel,
+            'accountUrl' => in_array($panel, ['attach', 'create'], true) ? URL::temporarySignedRoute($panel === 'attach' ? 'checkout.account.attach' : 'checkout.account.create', now()->addDays((int) config('orders.confirmation_link_days')), ['locale' => $locale, 'order' => $model->public_id]) : null,
             'order' => $model, 'online' => $online, 'methodLabel' => $this->methods->label($model->payment_method_code, $locale),
             'payUrl' => $online && $open && Route::has('payments.pay') ? URL::temporarySignedRoute('payments.pay', now()->addDays((int) config('orders.confirmation_link_days')), ['locale' => $locale, 'order' => $model->public_id]) : null,
         ]);

@@ -69,6 +69,32 @@
         @if ($address)<p class="text-muted">{{ collect([$address->address_line, $address->area, $address->locationLine($locale), $address->postal_code])->filter()->join(', ') }}</p>@endif
     </section>
 
+    @if (session('account_status') === 'started')<x-platform::alert type="info">{{ __('orders::account.started') }}</x-platform::alert>@endif
+    @error('account')<x-platform::alert type="error">{{ $message }}</x-platform::alert>@enderror
+    @if ($accountPanel === 'mine')
+        <p><a class="underline" href="{{ route('account.orders.show', $order->public_id) }}">{{ __('orders::account.mine_link') }}</a></p>
+    @elseif ($accountPanel === 'attach')
+        <section aria-labelledby="acc-h" class="space-y-2 rounded-lg border border-line p-4">
+            <h2 id="acc-h" class="text-lg font-semibold">{{ __('orders::account.attach_title') }}</h2>
+            <p class="text-sm text-muted">{{ __('orders::account.attach_text') }}</p>
+            <form method="POST" action="{{ $accountUrl }}">@csrf<x-platform::btn type="submit">{{ __('orders::account.attach_btn') }}</x-platform::btn></form>
+        </section>
+    @elseif ($accountPanel === 'create' && session('account_status') !== 'started')
+        <section aria-labelledby="acc-h" class="space-y-3 rounded-lg border border-line p-4">
+            <h2 id="acc-h" class="text-lg font-semibold">{{ __('orders::account.panel_title') }}</h2>
+            <p class="text-sm text-muted">{{ __('orders::account.panel_text') }}</p>
+            <form method="POST" action="{{ $accountUrl }}" class="space-y-3">
+                @csrf
+                <x-platform::form.errors />
+                <div><label for="acc-name" class="block text-sm font-medium">{{ __('orders::account.name') }}</label><input id="acc-name" name="name" value="{{ old('name', $order->contact_name) }}" maxlength="150" required autocomplete="name" class="block w-full rounded-md border border-line px-3 py-2"></div>
+                <div><label for="acc-email" class="block text-sm font-medium">{{ __('orders::account.email') }}</label><input id="acc-email" type="email" name="email" value="{{ old('email', $order->contact_email) }}" maxlength="254" required autocomplete="email" class="block w-full rounded-md border border-line px-3 py-2"></div>
+                <div><label for="acc-pw" class="block text-sm font-medium">{{ __('orders::account.password') }}</label><input id="acc-pw" type="password" name="password" required autocomplete="new-password" class="block w-full rounded-md border border-line px-3 py-2"></div>
+                <div><label for="acc-pw2" class="block text-sm font-medium">{{ __('orders::account.password_confirmation') }}</label><input id="acc-pw2" type="password" name="password_confirmation" required autocomplete="new-password" class="block w-full rounded-md border border-line px-3 py-2"></div>
+                <x-platform::btn type="submit">{{ __('orders::account.create_btn') }}</x-platform::btn>
+            </form>
+        </section>
+    @endif
+
     <x-platform::btn :href="url('/'.$locale.'/shop')">{{ __('cart::cart.continue') }}</x-platform::btn>
 </div>
 @endsection
