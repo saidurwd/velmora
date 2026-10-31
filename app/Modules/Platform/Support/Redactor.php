@@ -12,7 +12,7 @@ final class Redactor
 {
     public const MASK = '[redacted]';
 
-    private const SENSITIVE_KEY = '/pass(word)?|secret|token|otp|authorization|api[_-]?key|store_passwd|signature|cvv|card|cookie|private[_-]?key|credential/i';
+    private const SENSITIVE_KEY = '/pass(word)?|secret|token|otp|authorization|api[_-]?key|store_passwd|signature|verify[_-]?(sign|key)|cvv|card|cookie|private[_-]?key|credential/i';
 
     /**
      * @param  array<array-key, mixed>  $data

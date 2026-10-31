@@ -96,6 +96,9 @@ Daily `DailySettlementImport` where provider supports statement files/API [UNVER
 - **Closing:** `ResolveReconciliationException` (resolved / ignored + note); first closer wins; no money moves.
 - **Later:** exceptions screen, upload form and permission `payments.reconcile` (slice 8); automatic daily import when a provider's statement API is documented and saved.
 
+### 8.2 Admin screens (slice 8)
+Pages under `/admin/payments`: `today`, list, `{payment}`, `refunds`, `cod`, `reconciliation`, `settings`. View = `payments.view`; refund request/approve/reject/send/complete = `payments.refund`; collect cash, courier statement, settlement upload, close an item, ask the gateway again, pause online payments = `payments.reconcile`; refund limit and offered methods = `settings.manage`. Raw gateway notifications are shown through `Redactor`; nothing about a payment's money can be changed from a screen except through the Actions (request/approve/send refund, record cash/statement, close an item, verify). Money typed in taka is read exactly (`ProviderAmount`, Bangla digits accepted), never as a float.
+
 ## 9. Secrets and security
 Credentials in `integration_configs` (encrypted, masked in UI) or env; never logged. Webhook routes: no session/CSRF, rate-limited, body size cap, IP allow-list when provider publishes ranges [UNVERIFIED], replay window where a timestamp exists. Raw payload viewer redacted. Never store card data.
 

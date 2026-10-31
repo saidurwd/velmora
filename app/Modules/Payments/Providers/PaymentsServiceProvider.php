@@ -21,7 +21,11 @@ use App\Modules\Payments\Services\DatabasePaymentMethodCatalog;
 use App\Modules\Payments\Services\GatewayRegistry;
 use App\Modules\Payments\Services\OnlinePaymentInitiator;
 use App\Modules\Platform\Outbox\OutboxRegistry;
+use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 
 class PaymentsServiceProvider extends ModuleServiceProvider
 {
@@ -54,6 +58,18 @@ class PaymentsServiceProvider extends ModuleServiceProvider
         foreach ([PaymentInitiated::class, PaymentSucceeded::class, PaymentFailed::class, PaymentExpired::class, PaymentNeedsReview::class, RefundSucceeded::class] as $event) {
             $outbox->register($event);
         }
+
+        // Per person AND per route: Laravel's throttle:N,M shares one counter per person across every route, so unrelated screens would eat each other's allowance.
+        RateLimiter::for('payments-actions', fn (Request $r) => Limit::perMinute(60)->by('payments-actions|'.$r->route()?->getName().'|'.($r->user('admin')?->getAuthIdentifier() ?? $r->ip())));
+        RateLimiter::for('payments-import', fn (Request $r) => Limit::perMinute(10)->by('payments-import|'.($r->user('admin')?->getAuthIdentifier() ?? $r->ip())));
+
+        $menu = $this->app->make(AdminMenu::class);
+        $menu->add('payments::admin.menu_today', 'admin.payments.today', 'payments.view', 30);
+        $menu->add('payments::admin.menu_payments', 'admin.payments.index', 'payments.view', 31);
+        $menu->add('payments::admin.menu_refunds', 'admin.payments.refunds.index', 'payments.view', 32);
+        $menu->add('payments::admin.menu_cod', 'admin.payments.cod.index', 'payments.view', 33);
+        $menu->add('payments::admin.menu_reconciliation', 'admin.payments.reconciliation.index', 'payments.view', 34);
+        $menu->add('payments::admin.menu_settings', 'admin.payments.settings', 'payments.view', 35);
     }
 
     /**

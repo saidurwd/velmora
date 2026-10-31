@@ -9,6 +9,7 @@ use App\Modules\IdentityAccess\Auth\RecentAuth;
 use App\Modules\IdentityAccess\Console\CreateSuperAdminCommand;
 use App\Modules\IdentityAccess\Console\RbacMatrixCommand;
 use App\Modules\IdentityAccess\Contracts\PhoneConfirmation;
+use App\Modules\IdentityAccess\Contracts\StaffDirectory;
 use App\Modules\IdentityAccess\Events\UserRegistered;
 use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
 use App\Modules\IdentityAccess\Http\Middleware\RequirePendingStaffLogin;
@@ -19,6 +20,7 @@ use App\Modules\IdentityAccess\Listeners\TrackSession;
 use App\Modules\IdentityAccess\Mfa\PendingStaffLogin;
 use App\Modules\IdentityAccess\Otp\CheckoutPhoneConfirmation;
 use App\Modules\IdentityAccess\Permissions\SuperAdminBypass;
+use App\Modules\IdentityAccess\Support\DatabaseStaffDirectory;
 use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\Events\LocaleChosen;
 use App\Modules\Platform\Outbox\OutboxRegistry;
@@ -39,6 +41,7 @@ class IdentityAccessServiceProvider extends ModuleServiceProvider
     {
         $this->app->singleton(SuperAdminBypass::class);
         $this->app->bind(PhoneConfirmation::class, CheckoutPhoneConfirmation::class);
+        $this->app->bind(StaffDirectory::class, DatabaseStaffDirectory::class);
         $this->commands([CreateSuperAdminCommand::class, RbacMatrixCommand::class]);
         $this->app->scoped(RecentAuth::class, fn ($app) => new RecentAuth($app['session.store'], $app->make(Clock::class)));
         $this->app->scoped(PendingStaffLogin::class, fn ($app) => new PendingStaffLogin($app['session.store'], $app->make(Clock::class)));

@@ -29,6 +29,6 @@ class ReconciliationException extends Model
 
     protected function casts(): array
     {
-        return ['details' => 'array', 'resolved_at' => 'immutable_datetime'];
+        return ['details' => 'array', 'resolved_at' => 'immutable_datetime', 'created_at' => 'immutable_datetime', 'updated_at' => 'immutable_datetime'];
     }
 }

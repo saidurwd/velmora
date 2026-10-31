@@ -9,6 +9,13 @@ use Illuminate\Support\Facades\DB;
 
 final class DatabaseOrderDirectory implements OrderDirectory
 {
+    public function findByNumber(string $orderNumber): ?array
+    {
+        $row = DB::table('orders')->where('order_number', strtoupper(trim($orderNumber)))->first(['id', 'order_number', 'public_id']);
+
+        return $row === null ? null : ['id' => (int) $row->id, 'number' => (string) $row->order_number, 'public_id' => (string) $row->public_id];
+    }
+
     public function references(array $orderIds): array
     {
         if ($orderIds === []) {

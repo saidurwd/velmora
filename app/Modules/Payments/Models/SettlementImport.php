@@ -30,6 +30,6 @@ class SettlementImport extends Model
 
     protected function casts(): array
     {
-        return ['period_from' => 'immutable_datetime', 'period_to' => 'immutable_datetime'];
+        return ['period_from' => 'immutable_datetime', 'period_to' => 'immutable_datetime', 'created_at' => 'immutable_datetime'];
     }
 }
