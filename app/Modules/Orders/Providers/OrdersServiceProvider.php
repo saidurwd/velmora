@@ -20,6 +20,7 @@ use App\Modules\Payments\Events\PaymentFailed;
 use App\Modules\Payments\Events\PaymentInitiated;
 use App\Modules\Payments\Events\PaymentNeedsReview;
 use App\Modules\Payments\Events\PaymentSucceeded;
+use App\Modules\Payments\Events\RefundSucceeded;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
@@ -52,6 +53,7 @@ class OrdersServiceProvider extends ModuleServiceProvider
         Event::listen(PaymentFailed::class, [ApplyPaymentEvent::class, 'failed']);
         Event::listen(PaymentExpired::class, [ApplyPaymentEvent::class, 'expired']);
         Event::listen(PaymentNeedsReview::class, [ApplyPaymentEvent::class, 'needsReview']);
+        Event::listen(RefundSucceeded::class, [ApplyPaymentEvent::class, 'refundSucceeded']);
 
         $menu = $this->app->make(AdminMenu::class);
         $menu->add('orders::orders.menu', 'admin.orders.index', 'orders.view', 20);

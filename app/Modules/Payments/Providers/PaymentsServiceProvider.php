@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Modules\Payments\Providers;
 
 use App\Modules\Payments\Console\PaymentProbeCommand;
+use App\Modules\Payments\Console\RefundProbeCommand;
 use App\Modules\Payments\Contracts\PaymentMethodCatalog;
 use App\Modules\Payments\Events\PaymentExpired;
 use App\Modules\Payments\Events\PaymentFailed;
 use App\Modules\Payments\Events\PaymentInitiated;
 use App\Modules\Payments\Events\PaymentNeedsReview;
 use App\Modules\Payments\Events\PaymentSucceeded;
+use App\Modules\Payments\Events\RefundSucceeded;
 use App\Modules\Payments\Gateways\FakeGateway;
 use App\Modules\Payments\Gateways\SslCommerzGateway;
 use App\Modules\Payments\Services\DatabasePaymentMethodCatalog;
@@ -28,7 +30,7 @@ class PaymentsServiceProvider extends ModuleServiceProvider
 
     public function register(): void
     {
-        $this->commands([PaymentProbeCommand::class]);
+        $this->commands([PaymentProbeCommand::class, RefundProbeCommand::class]);
         $this->app->singleton(GatewayRegistry::class);
         $this->app->singleton(FakeGateway::class);
         $this->app->bind(PaymentMethodCatalog::class, DatabasePaymentMethodCatalog::class);
@@ -47,7 +49,7 @@ class PaymentsServiceProvider extends ModuleServiceProvider
         $this->registerSslCommerz($registry, (array) config('payments.sslcommerz'), $this->app->environment('production'), (bool) config('payments.allow_live'));
 
         $outbox = $this->app->make(OutboxRegistry::class);
-        foreach ([PaymentInitiated::class, PaymentSucceeded::class, PaymentFailed::class, PaymentExpired::class, PaymentNeedsReview::class] as $event) {
+        foreach ([PaymentInitiated::class, PaymentSucceeded::class, PaymentFailed::class, PaymentExpired::class, PaymentNeedsReview::class, RefundSucceeded::class] as $event) {
             $outbox->register($event);
         }
     }

@@ -39,6 +39,8 @@ final class FakeGateway implements PaymentGateway
     /** @var array<string, string> */
     private array $refundStates = [];
 
+    private ?string $refundRefusal = null;
+
     /** @var array<string, string> a method name => the reason it should fail with, once */
     private array $failures = [];
 
@@ -62,6 +64,14 @@ final class FakeGateway implements PaymentGateway
     public function refundWillBe(string $providerRefundId, string $state): self
     {
         $this->refundStates[$providerRefundId] = $state;
+
+        return $this;
+    }
+
+    /** The next refund is refused by the "gateway" (it answers, but says it failed), once. */
+    public function refuseNextRefund(string $reason = 'Refund amount exceeds the transaction amount'): self
+    {
+        $this->refundRefusal = $reason;
 
         return $this;
     }
@@ -131,6 +141,12 @@ final class FakeGateway implements PaymentGateway
             throw new PaymentException('refund_not_supported');
         }
         $this->refunds[] = $request;
+        if ($this->refundRefusal !== null) {
+            $reason = $this->refundRefusal;
+            $this->refundRefusal = null;
+
+            return new RefundResult('failed', null, $reason);
+        }
 
         return new RefundResult('accepted', 'FAKEREF-'.$request->refundRef);
     }

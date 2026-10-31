@@ -7,6 +7,7 @@ namespace App\Modules\Payments\Models;
 use App\Modules\Payments\Enums\RefundMethod;
 use App\Modules\Payments\Enums\RefundStatus;
 use App\Modules\Platform\Concerns\HasPublicId;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $public_id
  * @property int $payment_id
  * @property int $order_id
+ * @property int|null $payment_transaction_id
  * @property int $amount_minor
  * @property string $currency
  * @property RefundStatus $status
@@ -25,6 +27,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int|null $approved_by
  * @property string|null $proof_ref
  * @property string|null $failure_reason
+ * @property CarbonImmutable|null $updated_at
  */
 class Refund extends Model
 {
@@ -34,6 +37,6 @@ class Refund extends Model
 
     protected function casts(): array
     {
-        return ['status' => RefundStatus::class, 'method' => RefundMethod::class];
+        return ['status' => RefundStatus::class, 'method' => RefundMethod::class, 'updated_at' => 'immutable_datetime'];
     }
 }

@@ -68,6 +68,15 @@ stateDiagram-v2
 ## 6. Refund design
 `RequestRefund` → `ApproveRefund` (`payments.refund`; two-person rule above threshold, configurable) → `ExecuteRefund`. Guard §5 of `DATABASE_DESIGN.md`. If `capabilities().refund` false → manual refund record (method `manual`, proof reference, who/when). Gateway "processing" ≠ done: poll `refundStatus` before `succeeded`. Refund of a COD order = manual payout record. Digital: revoke entitlement per policy; service: per cancellation policy.
 
+### 6.1 As built (slice 5)
+- **Over-refund guard:** reserved = refunds in requested/approved/processing/succeeded. `payments.refunded_minor` equals the reserved total on the *primary* (first succeeded) attempt and is raised by one conditional `UPDATE … AND refunded_minor + ? <= captured_minor` under the payment row lock; CHECK `refunded <= captured` is the backstop. Reject / gateway refusal release the reservation. A duplicate paid attempt is refundable up to its own amount and does not touch `payments.refunded_minor`.
+- **Routing (`RefundRouting`):** gateway only if the adapter declares refund, the bank transaction id is known and the amount is the whole attempt (unless `partialRefund` is declared); otherwise manual. Staff may force manual.
+- **Approval:** above `payments.refund_second_approver_minor` (default ৳5,000; 0 = no limit) the approver must differ from the requester.
+- **Sending:** lock payment then refund; one process wins approved→processing; the gateway is called with our `refund_ref`; an unreachable gateway leaves `processing` with no gateway id and the same call (same ref) is repeated after 60 s. Accepted/processing stays `processing` until `refundStatus` reports refunded (`PollRefunds`, every 5 minutes); stuck over 3 days raises `refund_stuck`.
+- **Manual:** approved → succeeded only with a proof reference.
+- **Order effect:** `RefundSucceeded` (detail full|partial|extra) through the outbox; the order listener is idempotent.
+- **Tests:** `RefundTest` (38) and `tests/Database/RefundConcurrencyTest` (7, real processes).
+
 ## 7. COD lifecycle
 `order placed (cod_pending_collection)` → courier delivered event → `cod_collections` row (AO, UNIQUE(shipment_id)) → `cod_remittances` per courier statement with items → reconcile: match sum and per-consignment amounts; short/over → `reconciliation_exceptions`. Aging report for uncollected and unremitted. COD eligibility/fee: rules by zone, order value, customer risk (Phase 5).
 

@@ -41,7 +41,7 @@ final class TransitionOrder
                 if ($o->fulfillment_status->hasShipped()) {
                     throw new OrderException('cancel_after_shipping');
                 }
-                if ($o->payment_status->holdsMoney() || $o->payment_status === PaymentStatus::Refunded) {
+                if ($o->payment_status->holdsMoney()) { // paid or partly refunded: give the rest back first; a fully refunded order can be cancelled
                     throw new OrderException('cancel_needs_refund');
                 }
                 if ($reason === null || trim($reason) === '') {

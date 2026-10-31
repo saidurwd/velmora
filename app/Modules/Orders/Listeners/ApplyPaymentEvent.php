@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Orders\Listeners;
 
+use App\Modules\Notifications\Contracts\SmsGateway;
 use App\Modules\Orders\Actions\TransitionOrder;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Enums\PaymentStatus;
@@ -14,12 +15,18 @@ use App\Modules\Payments\Events\PaymentFailed;
 use App\Modules\Payments\Events\PaymentInitiated;
 use App\Modules\Payments\Events\PaymentNeedsReview;
 use App\Modules\Payments\Events\PaymentSucceeded;
+use App\Modules\Payments\Events\RefundSucceeded;
 use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\DTOs\Actor;
+use App\Modules\Platform\DTOs\Money;
+use App\Modules\Platform\DTOs\PhoneNumber;
 use App\Modules\Platform\Outbox\DomainEvent;
 use App\Modules\Platform\Outbox\IdempotentConsumer;
+use App\Modules\Platform\Support\Fmt;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Brings an order in line with what Payments reports. This is the ONLY way an online payment changes an order: Payments announces
@@ -28,7 +35,7 @@ use Illuminate\Support\Facades\Log;
  */
 final class ApplyPaymentEvent
 {
-    public function __construct(private readonly TransitionOrder $transition, private readonly IdempotentConsumer $consumer, private readonly Clock $clock) {}
+    public function __construct(private readonly TransitionOrder $transition, private readonly IdempotentConsumer $consumer, private readonly Clock $clock, private readonly SmsGateway $sms) {}
 
     public function initiated(PaymentInitiated $e): void
     {
@@ -69,6 +76,44 @@ final class ApplyPaymentEvent
     public function expired(PaymentExpired $e): void
     {
         $this->once('orders.payment_expired', $e, fn () => $this->status($e->orderId, OrderStatus::Cancelled, 'Payment not completed in time'));
+    }
+
+    /**
+     * Money was given back. A refund of everything received makes the order "refunded"; a part makes it "partly refunded"; the return of a double payment
+     * (or of a late payment the order never took) changes nothing about the order and is only noted. The customer is told by SMS.
+     */
+    public function refundSucceeded(RefundSucceeded $e): void
+    {
+        $this->once('orders.refund_succeeded', $e, function () use ($e): void {
+            $order = Order::query()->find($e->orderId);
+            if ($order === null) {
+                return;
+            }
+
+            $amount = Fmt::money(Money::of($e->amountMinor, $e->currency));
+            $follows = in_array($order->payment_status, [PaymentStatus::Paid, PaymentStatus::PartiallyRefunded], true) && $e->detail !== 'extra';
+            if ($follows) {
+                $this->payment($e->orderId, $e->detail === 'full' ? PaymentStatus::Refunded : PaymentStatus::PartiallyRefunded, 'refund');
+            }
+            DB::table('order_notes')->insert(['order_id' => $e->orderId, 'author_id' => null, 'visibility' => 'internal', 'body' => __('orders::notifications.refund_note', ['amount' => $amount, 'kind' => $e->detail ?? 'partial']), 'created_at' => $this->clock->now()]);
+
+            if ($follows) {
+                $this->tell($order, $amount);
+            }
+        });
+    }
+
+    private function tell(Order $order, string $amount): void
+    {
+        $previous = App::getLocale();
+        App::setLocale($order->locale);
+        try {
+            $this->sms->send(PhoneNumber::parse($order->contact_phone), __('orders::notifications.sms_refunded', ['shop' => (string) config('app.name'), 'number' => $order->order_number, 'amount' => $amount]), ['purpose' => 'order_refunded']);
+        } catch (Throwable $e) {
+            Log::warning('orders.refund_sms_failed', ['order' => $order->order_number, 'error' => $e::class]); // the refund stands; only the message failed
+        } finally {
+            App::setLocale($previous);
+        }
     }
 
     public function needsReview(PaymentNeedsReview $e): void
