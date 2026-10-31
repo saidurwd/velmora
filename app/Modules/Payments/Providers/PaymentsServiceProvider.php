@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Payments\Providers;
 
+use App\Modules\Payments\Console\CodProbeCommand;
 use App\Modules\Payments\Console\PaymentProbeCommand;
 use App\Modules\Payments\Console\RefundProbeCommand;
 use App\Modules\Payments\Contracts\PaymentMethodCatalog;
@@ -30,7 +31,7 @@ class PaymentsServiceProvider extends ModuleServiceProvider
 
     public function register(): void
     {
-        $this->commands([PaymentProbeCommand::class, RefundProbeCommand::class]);
+        $this->commands([PaymentProbeCommand::class, RefundProbeCommand::class, CodProbeCommand::class]);
         $this->app->singleton(GatewayRegistry::class);
         $this->app->singleton(FakeGateway::class);
         $this->app->bind(PaymentMethodCatalog::class, DatabasePaymentMethodCatalog::class);

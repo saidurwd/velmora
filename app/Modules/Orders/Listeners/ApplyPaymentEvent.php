@@ -52,7 +52,11 @@ final class ApplyPaymentEvent
             if ($order->payment_status === PaymentStatus::Failed) {
                 $this->payment($e->orderId, PaymentStatus::Pending, 'payment retried'); // failed cannot go straight to paid
             }
-            $this->payment($e->orderId, PaymentStatus::Paid, 'paid online');
+            $cash = $e->detail === 'cod';
+            $this->payment($e->orderId, PaymentStatus::Paid, $cash ? 'cash collected on delivery' : 'paid online');
+            if ($cash) {
+                return; // the courier handed the cash over at the door: the order's progress is staff's to move, nothing to confirm
+            }
 
             // The gateway rates some payments high risk and asks the shop to check the customer before delivering: hold, do not confirm.
             if ($e->detail === 'risk_high') {

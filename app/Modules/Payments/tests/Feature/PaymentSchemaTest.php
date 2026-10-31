@@ -145,14 +145,15 @@ describe('refunds', function () {
 });
 
 describe('cash on delivery and reconciliation', function () {
-    it('records cash collections that can never be changed, and one per shipment', function () {
+    it('records cash collections that can never be changed, one per shipment and one by hand per order', function () {
         $c = fn (array $over = []) => DB::table('cod_collections')->insertGetId($over + ['public_id' => strtolower((string) Str::ulid()), 'order_id' => 1, 'amount_minor' => 50000, 'currency' => 'BDT', 'source' => 'manual', 'collected_at' => now(), 'created_at' => now()]);
         $id = $c(['shipment_id' => 7]);
 
         ($this->refuses)(fn () => $c(['shipment_id' => 7]));
         ($this->refuses)(fn () => $c(['amount_minor' => 0]));
         ($this->refuses)(fn () => $c(['source' => 'guess']));
-        expect($c())->toBeInt()->and($c())->toBeInt();   // manual collections have no shipment
+        expect($c())->toBeInt()->and($c(['shipment_id' => 8]))->toBeInt();   // a hand-recorded collection has no shipment; each shipment collects its own cash
+        ($this->refuses)(fn () => $c());   // but only one hand-recorded collection per order
         ($this->refuses)(fn () => DB::table('cod_collections')->where('id', $id)->update(['amount_minor' => 1]));
         ($this->refuses)(fn () => DB::table('cod_collections')->where('id', $id)->delete());
     });

@@ -10,11 +10,13 @@ use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Enums\PaymentStatus;
 use App\Modules\Platform\Concerns\HasPublicId;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
+ * @property CarbonInterface $created_at
  * @property string $public_id
  * @property string|null $placement_key
  * @property string $order_number

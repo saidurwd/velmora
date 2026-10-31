@@ -80,6 +80,13 @@ stateDiagram-v2
 ## 7. COD lifecycle
 `order placed (cod_pending_collection)` → courier delivered event → `cod_collections` row (AO, UNIQUE(shipment_id)) → `cod_remittances` per courier statement with items → reconcile: match sum and per-consignment amounts; short/over → `reconciliation_exceptions`. Aging report for uncollected and unremitted. COD eligibility/fee: rules by zone, order value, customer risk (Phase 5).
 
+### 7.1 As built (slice 6)
+- **Collection:** `RecordCodCollection` takes the amount from the order (via the `Orders\Contracts\CodOrders` contract), inserts payment (paid), collection and one succeeded attempt (`merchant_ref` `COD-<order number>`) in one transaction and announces `payments.succeeded` with detail `cod`. the unique marker `manual_marker` (one hand-recorded collection per order) on collections (and the unique merchant ref) stop a double recording; a cancelled order, an online order, a future date or a date before the order are refused. The order's payment status becomes `paid`; its progress is left to staff.
+- **Refunds of cash:** the normal refund machinery; routing finds no `cod` adapter, so the refund is manual with proof.
+- **Courier statements:** `RecordCodRemittance`; expected = sum of OUR collections; status reconciled / short / over / pending (parcel differs although the total agrees); exceptions `cod_short`, `cod_over`, `amount_mismatch` (once per statement). UNIQUE(courier, statement_ref) and UNIQUE(cod_collection_id) on items.
+- **Aging:** `CodAging::report()`; screens arrive in slice 8; the settlement-file import and exception resolution in slice 7.
+- **Not built (needs shipments, Phase 7):** automatic collection from a courier "delivered" event.
+
 ## 8. Reconciliation
 Daily `DailySettlementImport` where provider supports statement files/API [UNVERIFIED per provider]; otherwise CSV upload. Exceptions: unmatched provider txn, matched-but-amount-differs, orphan internal payment, long-pending. Each resolvable with audit.
 
