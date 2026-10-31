@@ -42,6 +42,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $shipping_method_code
  * @property CarbonImmutable $placed_at
  * @property CarbonImmutable|null $cancelled_at
+ * @property CarbonImmutable|null $delivered_at
  * @property string|null $cancel_reason
  */
 class Order extends Model
@@ -54,7 +55,7 @@ class Order extends Model
     {
         return [
             'status' => OrderStatus::class, 'payment_status' => PaymentStatus::class, 'fulfillment_status' => FulfillmentStatus::class, 'channel' => OrderChannel::class,
-            'needs_review' => 'boolean', 'tax_inclusive' => 'boolean', 'placed_at' => 'immutable_datetime', 'cancelled_at' => 'immutable_datetime',
+            'needs_review' => 'boolean', 'tax_inclusive' => 'boolean', 'placed_at' => 'immutable_datetime', 'cancelled_at' => 'immutable_datetime', 'delivered_at' => 'immutable_datetime',
         ];
     }
 

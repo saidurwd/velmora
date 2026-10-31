@@ -10,7 +10,10 @@ use App\Modules\Shipping\Actions\BookShipment;
 use App\Modules\Shipping\Actions\CancelShipment;
 use App\Modules\Shipping\Actions\CreateShipment;
 use App\Modules\Shipping\Actions\HandOverShipment;
+use App\Modules\Shipping\Actions\RecordCourierEvent;
+use App\Modules\Shipping\DTOs\CourierEvent;
 use App\Modules\Shipping\Exceptions\ShipmentException;
+use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
 use Throwable;
 
@@ -20,13 +23,13 @@ use Throwable;
  */
 class ShipmentProbeCommand extends Command
 {
-    protected $signature = 'shipping:probe {action : ship|book|handover|cancel} {--order=} {--shipment=} {--lines=} {--account=} {--actor-id=} {--start-at=}';
+    protected $signature = 'shipping:probe {action : ship|book|handover|cancel|event} {--order=} {--shipment=} {--lines=} {--account=} {--actor-id=} {--courier=fake} {--consignment=} {--status=} {--at=} {--start-at=}';
 
     protected $description = 'Make, book, hand over or cancel one parcel and print the outcome as JSON (concurrency testing only)';
 
     protected $hidden = true;
 
-    public function handle(CreateShipment $create, BookShipment $book, HandOverShipment $handOver, CancelShipment $cancel): int
+    public function handle(CreateShipment $create, BookShipment $book, HandOverShipment $handOver, CancelShipment $cancel, RecordCourierEvent $record): int
     {
         if (app()->environment('production')) {
             $this->error('Not available in production.');
@@ -48,6 +51,13 @@ class ShipmentProbeCommand extends Command
         }
 
         try {
+            if ($this->argument('action') === 'event') {
+                $result = $record->handle((string) $this->option('courier'), new CourierEvent((string) $this->option('consignment'), (string) $this->option('status'), CarbonImmutable::parse((string) $this->option('at'), 'UTC')), 'webhook');
+                $this->line(json_encode(['ok' => true, 'result' => $result], JSON_THROW_ON_ERROR));
+
+                return self::SUCCESS;
+            }
+
             $shipment = match ((string) $this->argument('action')) {
                 'ship' => $create->handle($actor, (string) $this->option('order'), $lines, $this->option('account') ?: null),
                 'book' => $book->handle($actor, (string) $this->option('shipment')),

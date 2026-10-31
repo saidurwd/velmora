@@ -8,6 +8,7 @@ enum PaymentStatus: string
 {
     case Unpaid = 'unpaid';
     case Pending = 'pending';
+    case PartiallyPaid = 'partially_paid';   // cash on delivery, collected parcel by parcel: some of it is in
     case Paid = 'paid';
     case PartiallyRefunded = 'partially_refunded';
     case Refunded = 'refunded';
@@ -17,7 +18,8 @@ enum PaymentStatus: string
     public function next(): array
     {
         return match ($this) {
-            self::Unpaid => [self::Pending, self::Paid, self::Failed],
+            self::Unpaid => [self::Pending, self::PartiallyPaid, self::Paid, self::Failed],
+            self::PartiallyPaid => [self::Paid, self::PartiallyRefunded, self::Refunded],
             self::Pending => [self::Paid, self::Failed, self::Unpaid],
             self::Failed => [self::Pending, self::Unpaid],
             self::Paid => [self::PartiallyRefunded, self::Refunded],
@@ -34,6 +36,6 @@ enum PaymentStatus: string
     /** Money has been taken (and not fully given back). */
     public function holdsMoney(): bool
     {
-        return in_array($this, [self::Paid, self::PartiallyRefunded], true);
+        return in_array($this, [self::PartiallyPaid, self::Paid, self::PartiallyRefunded], true);
     }
 }

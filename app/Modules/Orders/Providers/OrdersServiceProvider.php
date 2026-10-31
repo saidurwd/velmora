@@ -13,6 +13,7 @@ use App\Modules\Orders\Contracts\OrderFulfilment;
 use App\Modules\Orders\Contracts\OrderPayables;
 use App\Modules\Orders\Events\OrderPlaced;
 use App\Modules\Orders\Listeners\ApplyPaymentEvent;
+use App\Modules\Orders\Listeners\ApplyShipmentEvent;
 use App\Modules\Orders\Listeners\SendOrderConfirmation;
 use App\Modules\Orders\Services\CodPaymentInitiator;
 use App\Modules\Orders\Services\DatabaseCodOrders;
@@ -29,6 +30,10 @@ use App\Modules\Payments\Events\RefundSucceeded;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use App\Modules\Shipping\Events\ShipmentDelivered;
+use App\Modules\Shipping\Events\ShipmentFailed;
+use App\Modules\Shipping\Events\ShipmentHandedOver;
+use App\Modules\Shipping\Events\ShipmentReturned;
 use Illuminate\Support\Facades\Event;
 
 class OrdersServiceProvider extends ModuleServiceProvider
@@ -61,6 +66,10 @@ class OrdersServiceProvider extends ModuleServiceProvider
         Event::listen(PaymentExpired::class, [ApplyPaymentEvent::class, 'expired']);
         Event::listen(PaymentNeedsReview::class, [ApplyPaymentEvent::class, 'needsReview']);
         Event::listen(RefundSucceeded::class, [ApplyPaymentEvent::class, 'refundSucceeded']);
+        Event::listen(ShipmentHandedOver::class, [ApplyShipmentEvent::class, 'handedOver']);
+        Event::listen(ShipmentDelivered::class, [ApplyShipmentEvent::class, 'delivered']);
+        Event::listen(ShipmentFailed::class, [ApplyShipmentEvent::class, 'failed']);
+        Event::listen(ShipmentReturned::class, [ApplyShipmentEvent::class, 'returned']);
 
         $menu = $this->app->make(AdminMenu::class);
         $menu->add('orders::orders.menu', 'admin.orders.index', 'orders.view', 20);

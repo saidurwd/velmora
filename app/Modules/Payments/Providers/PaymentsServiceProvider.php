@@ -17,14 +17,17 @@ use App\Modules\Payments\Events\PaymentSucceeded;
 use App\Modules\Payments\Events\RefundSucceeded;
 use App\Modules\Payments\Gateways\FakeGateway;
 use App\Modules\Payments\Gateways\SslCommerzGateway;
+use App\Modules\Payments\Listeners\CollectCashOnDelivery;
 use App\Modules\Payments\Services\DatabasePaymentMethodCatalog;
 use App\Modules\Payments\Services\GatewayRegistry;
 use App\Modules\Payments\Services\OnlinePaymentInitiator;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use App\Modules\Shipping\Events\ShipmentDelivered;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 
 class PaymentsServiceProvider extends ModuleServiceProvider
@@ -62,6 +65,8 @@ class PaymentsServiceProvider extends ModuleServiceProvider
         // Per person AND per route: Laravel's throttle:N,M shares one counter per person across every route, so unrelated screens would eat each other's allowance.
         RateLimiter::for('payments-actions', fn (Request $r) => Limit::perMinute(60)->by('payments-actions|'.$r->route()?->getName().'|'.($r->user('admin')?->getAuthIdentifier() ?? $r->ip())));
         RateLimiter::for('payments-import', fn (Request $r) => Limit::perMinute(10)->by('payments-import|'.($r->user('admin')?->getAuthIdentifier() ?? $r->ip())));
+
+        Event::listen(ShipmentDelivered::class, [CollectCashOnDelivery::class, 'handle']);
 
         $menu = $this->app->make(AdminMenu::class);
         $menu->add('payments::admin.menu_today', 'admin.payments.today', 'payments.view', 30);

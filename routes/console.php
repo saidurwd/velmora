@@ -17,6 +17,7 @@ use App\Modules\Payments\Jobs\PollRefundsJob;
 use App\Modules\Payments\Jobs\ReconcilePendingPaymentsJob;
 use App\Modules\Platform\Jobs\DispatchOutboxMessages;
 use App\Modules\Search\Jobs\PruneSearchQueries;
+use App\Modules\Shipping\Jobs\PollCourierShipmentsJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
@@ -37,6 +38,7 @@ Schedule::job(new ExpireUnpaidPaymentsJob)->everyMinute()->name('payments:expire
 Schedule::job(new CancelStalePendingOrdersJob)->hourly()->name('orders:cancel-stale-pending')->withoutOverlapping();
 Schedule::job(new ReconcilePendingPaymentsJob)->everyTenMinutes()->name('payments:reconcile-pending')->withoutOverlapping();
 Schedule::job(new CheckPaymentHealthJob)->everyFiveMinutes()->name('payments:check-health')->withoutOverlapping();
+Schedule::job(new PollCourierShipmentsJob)->everyTenMinutes()->name('shipping:poll-couriers')->withoutOverlapping();
 Schedule::job(new PollRefundsJob)->everyFiveMinutes()->name('payments:poll-refunds')->withoutOverlapping();
 Schedule::job(new PurgeExpiredCarts)->dailyAt('03:40')->name('cart:purge-expired');
 Schedule::job(new PublishScheduledProducts)->everyMinute()->name('catalog:publish-scheduled')->withoutOverlapping();

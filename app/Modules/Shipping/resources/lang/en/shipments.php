@@ -25,5 +25,11 @@ return [
         'cannot_cancel_after_handover' => 'This parcel has left the shop and cannot be cancelled. Follow it to delivery or return.',
         'cannot_cancel_now' => 'This parcel cannot be cancelled right now.',
         'reason_required' => 'Please give a reason.',
+        'status_invalid' => 'Choose where the parcel is.',
+        'shipment_finished' => 'This parcel has already reached its end.',
+        'hand_over_first' => 'Hand the parcel over first.',
+        'time_invalid' => 'That time is in the future.',
+        'already_recorded' => 'That was already recorded for this time.',
+        'time_before_latest' => 'That time is before the last thing recorded for this parcel.',
     ],
 ];

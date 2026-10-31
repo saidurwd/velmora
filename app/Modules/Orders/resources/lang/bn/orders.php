@@ -8,7 +8,7 @@ return [
     'cols' => ['number' => 'অর্ডার', 'placed' => 'অর্ডারের সময়', 'customer' => 'ক্রেতা', 'total' => 'মোট', 'status' => 'অবস্থা', 'payment' => 'পেমেন্ট', 'fulfillment' => 'ডেলিভারি'],
     'axis' => ['status' => 'অর্ডারের অবস্থা', 'payment' => 'পেমেন্ট', 'fulfillment' => 'ডেলিভারি'],
     'status' => ['pending' => 'অপেক্ষমাণ', 'confirmed' => 'নিশ্চিত', 'processing' => 'প্রস্তুত হচ্ছে', 'completed' => 'সম্পন্ন', 'cancelled' => 'বাতিল'],
-    'payment' => ['unpaid' => 'অপরিশোধিত', 'pending' => 'পেমেন্ট অপেক্ষমাণ', 'paid' => 'পরিশোধিত', 'partially_refunded' => 'আংশিক ফেরত', 'refunded' => 'ফেরত দেওয়া হয়েছে', 'failed' => 'ব্যর্থ'],
+    'payment' => ['unpaid' => 'অপরিশোধিত', 'pending' => 'পেমেন্ট অপেক্ষমাণ', 'partially_paid' => 'আংশিক পরিশোধিত', 'paid' => 'পরিশোধিত', 'partially_refunded' => 'আংশিক ফেরত', 'refunded' => 'ফেরত দেওয়া হয়েছে', 'failed' => 'ব্যর্থ'],
     'fulfillment' => ['unfulfilled' => 'পাঠানো হয়নি', 'partially_fulfilled' => 'আংশিক পাঠানো হয়েছে', 'fulfilled' => 'পাঠানো হয়েছে', 'partially_returned' => 'আংশিক ফেরত এসেছে', 'returned' => 'ফেরত এসেছে'],
     'items' => 'পণ্য', 'item' => ['product' => 'পণ্য', 'sku' => 'SKU', 'qty' => 'পরিমাণ', 'unit' => 'একক দাম', 'discount' => 'ছাড়', 'tax' => 'কর', 'total' => 'লাইন মোট'],
     'totals' => ['subtotal' => 'উপমোট', 'discount' => 'ছাড়', 'shipping' => 'ডেলিভারি চার্জ', 'cod_fee' => 'ক্যাশ অন ডেলিভারি ফি', 'tax_added' => 'কর', 'tax_included' => 'দামের মধ্যে কর অন্তর্ভুক্ত', 'grand' => 'সর্বমোট'],

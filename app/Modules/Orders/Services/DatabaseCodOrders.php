@@ -32,6 +32,6 @@ final class DatabaseCodOrders implements CodOrders
 
     private function info(Order $order): CodOrderInfo
     {
-        return new CodOrderInfo($order->id, $order->public_id, $order->order_number, $order->grand_total_minor, $order->currency, $order->payment_method_code === CodPaymentInitiator::CODE, $order->status, $order->payment_status, $order->created_at->toImmutable());
+        return new CodOrderInfo($order->id, $order->public_id, $order->order_number, $order->grand_total_minor, $order->currency, $order->payment_method_code === CodPaymentInitiator::CODE, $order->status, $order->payment_status, $order->created_at->toImmutable(), $order->fulfillment_status->hasShipped());
     }
 }

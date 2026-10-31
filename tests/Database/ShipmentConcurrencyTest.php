@@ -52,6 +52,18 @@ beforeEach(function () {
 
         return [$order->public_id, $order->id, (int) DB::table('order_items')->where('order_id', $order->id)->value('id')];
     };
+    DB::table('courier_accounts')->insert(['public_id' => $this->fakeAccount = strtolower((string) Str::ulid()), 'courier' => 'fake', 'label' => 'Fake', 'is_active' => 1, 'sort_order' => 5, 'created_at' => now(), 'updated_at' => now()]);
+    foreach (['PICKED' => 'handed_over', 'IN_TRANSIT' => 'in_transit', 'OUT_FOR_DELIVERY' => 'out_for_delivery', 'DELIVERED' => 'delivered'] as $word => $meaning) {
+        DB::table('courier_status_map')->insert(['courier' => 'fake', 'provider_status' => $word, 'internal_status' => $meaning, 'created_at' => now(), 'updated_at' => now()]);
+    }
+    /** A booked, handed-over parcel with the fake courier for a new cash order of one tee. Returns [shipment public id, consignment id, order id]. */
+    $this->parcel = function (): array {
+        [$public, $id, $item] = ($this->order)(1);
+        $shipment = runShippingProbes([['shipping:probe', ['ship', "--order={$public}", "--lines={$item}:1", "--account={$this->fakeAccount}"]]])[0]['shipment'];
+        runShippingProbes([['shipping:probe', ['handover', "--shipment={$shipment}"]]]);
+
+        return [$shipment, (string) DB::table('shipments')->where('public_id', $shipment)->value('courier_consignment_id'), $id];
+    };
     $this->stock = fn () => DB::table('stock_levels')->where('variant_id', $this->tee)->first(['on_hand', 'reserved']);
 });
 
@@ -66,7 +78,7 @@ function runShippingProbes(array $jobs): array
 
     $processes = array_map(function (array $job) use ($env, $startAt) {
         [$command, $args] = $job;
-        $p = new Process([PHP_BINARY, 'artisan', $command, ...$args, '--start-at='.$startAt], base_path(), $env);
+        $p = new Process([PHP_BINARY, 'artisan', $command, ...$args, ...(str_ends_with($command, ':probe') ? ['--start-at='.$startAt] : [])], base_path(), $env);
         $p->setTimeout(180)->start();
 
         return $p;
@@ -76,6 +88,9 @@ function runShippingProbes(array $jobs): array
         $p->wait();
         $lines = array_values(array_filter(explode("\n", trim($p->getOutput()))));
         $decoded = json_decode((string) end($lines), true);
+        if ($decoded === null && ! str_contains($p->getCommandLine(), ':probe')) {
+            return ['ok' => $p->isSuccessful()];   // a worker (outbox:dispatch) prints text, not JSON
+        }
         expect($decoded)->toBeArray('probe produced no JSON: '.$p->getOutput().$p->getErrorOutput());
 
         return $decoded;
@@ -151,14 +166,14 @@ it('lets a parcel be cancelled or handed over, never both, when both are pressed
 
 it('books a parcel with its courier once when several people press book', function () {
     [$public, $id, $item] = ($this->order)(1);
-    $account = DB::table('courier_accounts')->insertGetId(['public_id' => $accountId = strtolower((string) Str::ulid()), 'courier' => 'fake', 'label' => 'Fake', 'is_active' => 1, 'sort_order' => 5, 'created_at' => now(), 'updated_at' => now()]);
+    $accountId = $this->fakeAccount;
     $shipment = runShippingProbes([['shipping:probe', ['ship', "--order={$public}", "--lines={$item}:1", "--account={$accountId}"]]])[0]['shipment'];
     DB::table('shipments')->where('public_id', $shipment)->update(['updated_at' => now()]);
 
     runShippingProbes(array_map(fn () => ['shipping:probe', ['book', "--shipment={$shipment}"]], range(1, 5)));
 
     $row = DB::table('shipments')->where('public_id', $shipment)->first();
-    expect($row->courier_consignment_id)->not->toBeNull()->and(DB::table('shipment_events')->where('shipment_id', $row->id)->where('provider_status', 'booked')->count())->toBe(1)->and($account)->toBeInt();
+    expect($row->courier_consignment_id)->not->toBeNull()->and(DB::table('shipment_events')->where('shipment_id', $row->id)->where('provider_status', 'booked')->count())->toBe(1)->and($accountId)->not->toBeEmpty();
 });
 
 it('makes a cancellation of the order wait while a parcel is being made, and a parcel wait while the order is being cancelled (the order row is the lock)', function () {
@@ -195,4 +210,41 @@ it('makes a cancellation of the order wait while a parcel is being made, and a p
     $ship->wait();
 
     expect($waited)->toBeTrue('making a parcel must wait for the order row')->and(DB::table('shipments')->where('order_id', $id2)->count())->toBe(1)->and(app(StockLedgerVerifier::class)->verify())->toBe([]);
+});
+
+it('records one delivery once when the courier and its retries report it at the same instant, and then collects the cash exactly once', function () {
+    [$shipment, $consignment, $orderId] = ($this->parcel)();
+
+    $results = runShippingProbes(array_map(fn () => ['shipping:probe', ['event', "--consignment={$consignment}", '--status=DELIVERED', '--at=2026-11-04 11:30:00']], range(1, 6)));
+
+    expect(count(array_filter($results, fn ($r) => $r['result'] === 'recorded')))->toBe(1)->and(count(array_filter($results, fn ($r) => $r['result'] === 'duplicate')))->toBe(5)
+        ->and(DB::table('outbox_messages')->where('event_name', 'shipping.delivered')->count())->toBe(1)->and(DB::table('shipments')->where('public_id', $shipment)->value('status'))->toBe('delivered');
+
+    // the delivery is announced to Orders and Payments by four workers at once, and then once more (the broker delivers at least once)
+    runShippingProbes(array_map(fn () => ['outbox:dispatch', ['--limit=20']], range(1, 4)));
+    DB::table('outbox_messages')->where('event_name', 'shipping.delivered')->update(['status' => 'pending', 'available_at' => now()->subMinute()]);
+    runShippingProbes([['outbox:dispatch', ['--limit=20']], ['outbox:dispatch', ['--limit=20']]]);
+
+    expect(DB::table('cod_collections')->count())->toBe(1)->and(DB::table('payments')->where('provider', 'cod')->count())->toBe(1)->and(DB::table('outbox_messages')->where('event_name', 'payments.succeeded')->count())->toBe(1)
+        ->and(DB::table('orders')->where('id', $orderId)->value('payment_status'))->toBe('paid')->and(DB::table('orders')->where('id', $orderId)->value('status'))->toBe('completed')
+        ->and(DB::table('order_status_history')->where('order_id', $orderId)->where('axis', 'status')->where('to_state', 'completed')->count())->toBe(1);
+});
+
+it('ends in the right state whatever order concurrent messages arrive in, each stored once, the cash collected once', function () {
+    foreach (range(1, 2) as $round) {
+        [$shipment, $consignment, $orderId] = ($this->parcel)();
+        $messages = [['IN_TRANSIT', '2026-11-03 10:00:00'], ['OUT_FOR_DELIVERY', '2026-11-04 08:00:00'], ['DELIVERED', '2026-11-04 12:00:00']];
+        $jobs = [];
+        foreach ([...$messages, ...array_reverse($messages)] as [$status, $at]) {
+            $jobs[] = ['shipping:probe', ['event', "--consignment={$consignment}", "--status={$status}", "--at={$at}"]];
+        }
+
+        runShippingProbes($jobs);
+        runShippingProbes(array_map(fn () => ['outbox:dispatch', ['--limit=20']], range(1, 3)));
+
+        $id = (int) DB::table('shipments')->where('public_id', $shipment)->value('id');
+        $row = DB::table('shipments')->where('id', $id)->first();
+        expect($row->status)->toBe('delivered', "round {$round}")->and(substr((string) $row->delivered_at, 0, 19))->toBe('2026-11-04 12:00:00')->and(DB::table('shipment_events')->where('shipment_id', $id)->where('source', 'webhook')->count())->toBe(3, "round {$round}: each message stored once")
+            ->and(DB::table('cod_collections')->where('shipment_id', $id)->count())->toBe(1, "round {$round}: the cash once")->and(DB::table('orders')->where('id', $orderId)->value('status'))->toBe('completed');
+    }
 });

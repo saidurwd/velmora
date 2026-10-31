@@ -38,5 +38,6 @@ return [
         'setting_out_of_range' => 'That value is not allowed. Use a number from :min to :max.',
         'method_not_found' => 'That payment method was not found.',
         'verify_not_applicable' => 'Cash payments have no payment service to ask.',
+        'cod_use_parcels' => 'This order has parcels, so its cash is recorded when each parcel is delivered. Mark the parcel as delivered instead.',
     ],
 ];

@@ -10,12 +10,15 @@ use App\Modules\Shipping\DTOs\CourierCapabilities;
 use App\Modules\Shipping\DTOs\CourierEvent;
 use App\Modules\Shipping\DTOs\ShipmentRequest;
 use App\Modules\Shipping\Exceptions\CourierException;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 
 /** A courier that lives in memory, for tests and local work. Never registered in production. Tells tests what it was asked and can be made to fail. */
 final class FakeCourier implements CourierProvider
 {
     public const NAME = 'fake';
+
+    public const WEBHOOK_SECRET = 'fake-courier-secret';
 
     /** @var list<ShipmentRequest> */
     public array $booked = [];
@@ -70,9 +73,26 @@ final class FakeCourier implements CourierProvider
         return $this->events[$consignmentId] ?? [];
     }
 
+    /** Genuine when it carries our test secret; the body is {"events": [{"consignment_id", "status", "occurred_at", "note"}]}. */
     public function parseWebhook(Request $request): array
     {
-        throw new CourierException('not_supported');
+        if (! hash_equals(self::WEBHOOK_SECRET, (string) $request->header('X-Fake-Courier-Secret'))) {
+            throw new CourierException('webhook_unauthenticated');
+        }
+
+        $out = [];
+        foreach ((array) $request->input('events', []) as $row) {
+            if (! is_array($row) || ! isset($row['consignment_id'], $row['status'], $row['occurred_at'])) {
+                throw new CourierException('webhook_malformed');
+            }
+            try {
+                $out[] = new CourierEvent((string) $row['consignment_id'], (string) $row['status'], CarbonImmutable::parse((string) $row['occurred_at'], 'UTC'), isset($row['note']) ? (string) $row['note'] : null);
+            } catch (\Throwable) {
+                throw new CourierException('webhook_malformed');
+            }
+        }
+
+        return $out;
     }
 
     private function maybeFail(string $method): void

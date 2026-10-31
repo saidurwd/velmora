@@ -56,5 +56,11 @@ Shipment list/detail, bulk create, label/packing-slip PDFs (Bangla font embedded
 ## 11. Tests (Phase 7)
 Partial shipment stock; cancel-vs-ship race; out-of-order/duplicate events; unknown status; delivery→COD exactly once; return restock vs quarantine; courier down → ManualCourier; stock-take variance approval.
 
+## 11a. As built (slices 1–3)
+- **Tables:** shipments, shipment_items, shipment_events (append-only), courier_accounts (credentials encrypted), courier_status_map, shipment_exceptions. Over-shipping guarded by `order_items.fulfilled_qty` (CHECK ≤ quantity, one conditional UPDATE); the order row is the lock that settles cancel-versus-ship; stock leaves at parcel creation for the shipped quantities only, and returns with a `shipment_cancelled` ledger row if the parcel is cancelled before handover.
+- **Events:** the parcel state is the latest event by the courier's time; unknown words are kept, raised to `shipment_exceptions`, and change nothing else; webhook `POST /api/v1/webhooks/couriers/{courier}` + polling every 10 minutes; `ManualCourier` + `RecordManualShipmentStatus` mean the shop can run without any courier API.
+- **Cash:** delivery records the parcel's cash once (per-parcel payment `provider=cod`); order payment status `partially_paid` until the parcels add up to the order total; the order completes when delivered and paid.
+- **Not built yet:** first real courier adapter (needs the courier's official documentation saved under `docs/vendor/<courier>/`), returns, transfers and stock-take, courier statement reconciliation, tracking page, admin screens.
+
 ## 12. Open
 Q4 courier · whether to hold delivery-charge VAT (see localization tax) · return shipping cost responsibility (Q10) · courier fee accounting.

@@ -8,7 +8,7 @@ return [
     'cols' => ['number' => 'Order', 'placed' => 'Placed', 'customer' => 'Customer', 'total' => 'Total', 'status' => 'Status', 'payment' => 'Payment', 'fulfillment' => 'Delivery'],
     'axis' => ['status' => 'Order status', 'payment' => 'Payment', 'fulfillment' => 'Delivery'],
     'status' => ['pending' => 'Pending', 'confirmed' => 'Confirmed', 'processing' => 'Processing', 'completed' => 'Completed', 'cancelled' => 'Cancelled'],
-    'payment' => ['unpaid' => 'Unpaid', 'pending' => 'Payment pending', 'paid' => 'Paid', 'partially_refunded' => 'Partly refunded', 'refunded' => 'Refunded', 'failed' => 'Failed'],
+    'payment' => ['unpaid' => 'Unpaid', 'pending' => 'Payment pending', 'partially_paid' => 'Partly paid', 'paid' => 'Paid', 'partially_refunded' => 'Partly refunded', 'refunded' => 'Refunded', 'failed' => 'Failed'],
     'fulfillment' => ['unfulfilled' => 'Not shipped', 'partially_fulfilled' => 'Partly shipped', 'fulfilled' => 'Shipped', 'partially_returned' => 'Partly returned', 'returned' => 'Returned'],
     'items' => 'Items', 'item' => ['product' => 'Product', 'sku' => 'SKU', 'qty' => 'Qty', 'unit' => 'Unit price', 'discount' => 'Discount', 'tax' => 'Tax', 'total' => 'Line total'],
     'totals' => ['subtotal' => 'Subtotal', 'discount' => 'Discounts', 'shipping' => 'Delivery', 'cod_fee' => 'Cash-on-delivery fee', 'tax_added' => 'Tax', 'tax_included' => 'Tax included in prices', 'grand' => 'Total'],

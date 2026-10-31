@@ -46,6 +46,9 @@ final class RecordCodCollection
         if ($order->paymentStatus !== PaymentStatus::Unpaid) {
             throw new PaymentException('cod_already_collected');
         }
+        if ($order->hasParcels) {
+            throw new PaymentException('cod_use_parcels'); // parcels exist: each parcel's cash is recorded when it is delivered, so the order total must not be recorded again
+        }
 
         $now = $this->clock->now();
         $collectedAt ??= $now;
@@ -83,6 +86,52 @@ final class RecordCodCollection
         }
 
         return $collection;
+    }
+
+    /**
+     * The cash of ONE delivered parcel, recorded by the delivery itself (never typed). Once per parcel (UNIQUE shipment_id). It is a normal paid payment with its own
+     * attempt, so refunds work as for any money. When the cash of all the order's parcels reaches the order total the order is paid, until then partly paid.
+     * Returns null when this parcel's cash was already recorded.
+     *
+     * @throws PaymentException
+     */
+    public function forShipment(Actor $actor, string $orderPublicId, int $shipmentId, int $amountMinor, CarbonImmutable $collectedAt): ?CodCollection
+    {
+        if ($amountMinor < 1) {
+            return null; // a prepaid parcel collects nothing
+        }
+        $order = $this->orders->find($orderPublicId) ?? throw new PaymentException('cod_order_not_found');
+        if (DB::table('cod_collections')->where('shipment_id', $shipmentId)->exists()) {
+            return null;
+        }
+
+        try {
+            return Transactions::run(function () use ($actor, $order, $shipmentId, $amountMinor, $collectedAt): CodCollection {
+                $now = $this->clock->now();
+                $paymentId = DB::table('payments')->insertGetId([
+                    'public_id' => $this->ulid(), 'order_id' => $order->orderId, 'method_code' => self::PROVIDER, 'provider' => self::PROVIDER, 'amount_minor' => $amountMinor, 'currency' => $order->currency,
+                    'status' => 'paid', 'captured_minor' => $amountMinor, 'paid_at' => $collectedAt, 'created_at' => $now, 'updated_at' => $now,
+                ]);
+                $transactionRef = 'COD-'.$order->orderNumber.'-S'.$shipmentId;
+                $collection = CodCollection::query()->create([
+                    'public_id' => $this->ulid(), 'order_id' => $order->orderId, 'payment_id' => $paymentId, 'shipment_id' => $shipmentId, 'amount_minor' => $amountMinor, 'currency' => $order->currency,
+                    'source' => 'courier', 'collected_at' => $collectedAt, 'recorded_by' => $actor->id, 'note' => null, 'created_at' => $now,
+                ]);
+                DB::table('payment_transactions')->insert([
+                    'public_id' => $this->ulid(), 'payment_id' => $paymentId, 'provider' => self::PROVIDER, 'merchant_ref' => $transactionRef, 'attempt' => 1, 'status' => 'succeeded', 'provider_txn_id' => $collection->public_id,
+                    'amount_minor' => $amountMinor, 'currency' => $order->currency, 'verified_at' => $now, 'created_at' => $now, 'updated_at' => $now,
+                ]);
+
+                $collected = (int) DB::table('payments')->where('order_id', $order->orderId)->where('provider', self::PROVIDER)->where('status', 'paid')->sum('captured_minor');
+                $paymentPublicId = (string) DB::table('payments')->where('id', $paymentId)->value('public_id');
+                $this->outbox->record(new PaymentSucceeded($paymentId, $paymentPublicId, $order->orderId, $amountMinor, $order->currency, $transactionRef, $collected >= $order->amountMinor ? 'cod' : 'cod_partial'));
+                $this->audit->record('cod.collected_on_delivery', $collection, [], ['order' => $order->orderNumber, 'amount_minor' => $amountMinor, 'shipment_id' => $shipmentId], $actor);
+
+                return $collection;
+            });
+        } catch (UniqueConstraintViolationException) {
+            return null; // the delivery was announced twice at the same instant
+        }
     }
 
     private function ulid(): string

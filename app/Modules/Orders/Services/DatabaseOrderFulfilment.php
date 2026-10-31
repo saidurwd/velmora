@@ -38,6 +38,13 @@ final class DatabaseOrderFulfilment implements OrderFulfilment
         );
     }
 
+    public function isFullyShipped(int $orderId): bool
+    {
+        $lines = DB::table('order_items')->where('order_id', $orderId)->where('product_type', 'physical')->get(['quantity', 'fulfilled_qty']);
+
+        return $lines->isNotEmpty() && $lines->every(fn ($l): bool => (int) $l->fulfilled_qty === (int) $l->quantity);
+    }
+
     public function recordShipped(Actor $actor, int $orderId, array $quantities, string $reason): bool
     {
         ksort($quantities);

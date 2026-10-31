@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $attempts
  * @property CarbonImmutable|null $handed_over_at
  * @property CarbonImmutable|null $delivered_at
+ * @property CarbonImmutable|null $polled_at
  * @property int|null $created_by
  * @property CarbonImmutable|null $created_at
  */
@@ -36,7 +37,7 @@ class Shipment extends Model
 
     protected function casts(): array
     {
-        return ['status' => ShipmentStatus::class, 'handed_over_at' => 'immutable_datetime', 'delivered_at' => 'immutable_datetime', 'created_at' => 'immutable_datetime', 'updated_at' => 'immutable_datetime'];
+        return ['status' => ShipmentStatus::class, 'handed_over_at' => 'immutable_datetime', 'delivered_at' => 'immutable_datetime', 'polled_at' => 'immutable_datetime', 'created_at' => 'immutable_datetime', 'updated_at' => 'immutable_datetime'];
     }
 
     /** @return HasMany<ShipmentItem, $this> */

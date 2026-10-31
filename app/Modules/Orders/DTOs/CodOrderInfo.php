@@ -21,5 +21,6 @@ final readonly class CodOrderInfo
         public OrderStatus $status,
         public PaymentStatus $paymentStatus,
         public CarbonImmutable $placedAt,
+        public bool $hasParcels = false,   // anything has been put on a parcel: the cash is then recorded parcel by parcel, as each is delivered
     ) {}
 }

@@ -10,6 +10,7 @@ use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Enums\PaymentStatus;
 use App\Modules\Orders\Exceptions\OrderException;
 use App\Modules\Orders\Models\Order;
+use App\Modules\Orders\Services\OrderCompletion;
 use App\Modules\Payments\Events\PaymentExpired;
 use App\Modules\Payments\Events\PaymentFailed;
 use App\Modules\Payments\Events\PaymentInitiated;
@@ -35,7 +36,7 @@ use Throwable;
  */
 final class ApplyPaymentEvent
 {
-    public function __construct(private readonly TransitionOrder $transition, private readonly IdempotentConsumer $consumer, private readonly Clock $clock, private readonly SmsGateway $sms) {}
+    public function __construct(private readonly TransitionOrder $transition, private readonly IdempotentConsumer $consumer, private readonly Clock $clock, private readonly SmsGateway $sms, private readonly OrderCompletion $completion) {}
 
     public function initiated(PaymentInitiated $e): void
     {
@@ -52,10 +53,12 @@ final class ApplyPaymentEvent
             if ($order->payment_status === PaymentStatus::Failed) {
                 $this->payment($e->orderId, PaymentStatus::Pending, 'payment retried'); // failed cannot go straight to paid
             }
-            $cash = $e->detail === 'cod';
-            $this->payment($e->orderId, PaymentStatus::Paid, $cash ? 'cash collected on delivery' : 'paid online');
+            $cash = in_array($e->detail, ['cod', 'cod_partial'], true);
+            $this->payment($e->orderId, $e->detail === 'cod_partial' ? PaymentStatus::PartiallyPaid : PaymentStatus::Paid, $cash ? 'cash collected on delivery' : 'paid online');
             if ($cash) {
-                return; // the courier handed the cash over at the door: the order's progress is staff's to move, nothing to confirm
+                $this->completion->attempt($e->orderId); // delivered and now fully paid: the order is complete
+
+                return; // the cash was handed over at the door: the order's progress is not ours to move here, nothing to confirm
             }
 
             // The gateway rates some payments high risk and asks the shop to check the customer before delivering: hold, do not confirm.
@@ -95,7 +98,7 @@ final class ApplyPaymentEvent
             }
 
             $amount = Fmt::money(Money::of($e->amountMinor, $e->currency));
-            $follows = in_array($order->payment_status, [PaymentStatus::Paid, PaymentStatus::PartiallyRefunded], true) && $e->detail !== 'extra';
+            $follows = in_array($order->payment_status, [PaymentStatus::PartiallyPaid, PaymentStatus::Paid, PaymentStatus::PartiallyRefunded], true) && $e->detail !== 'extra';
             if ($follows) {
                 $this->payment($e->orderId, $e->detail === 'full' ? PaymentStatus::Refunded : PaymentStatus::PartiallyRefunded, 'refund');
             }

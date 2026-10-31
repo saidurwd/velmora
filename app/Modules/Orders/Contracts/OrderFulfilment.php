@@ -16,6 +16,9 @@ interface OrderFulfilment
     /** Locks the order row and describes it. Null when there is no such order. */
     public function lock(string $orderPublicId): ?ShippableOrder;
 
+    /** Every physical line is on a parcel. A plain read: it takes no lock. */
+    public function isFullyShipped(int $orderId): bool;
+
     /**
      * Counts these quantities as shipped (conditional on never passing the quantity ordered), moves the fulfilment state and, for the first
      * parcel, the order to "processing". False (and nothing counted) when a quantity would pass what was ordered.
