@@ -5,18 +5,18 @@ declare(strict_types=1);
 namespace App\Modules\Orders\Services;
 
 use App\Modules\Orders\Contracts\PaymentInitiator;
-use App\Modules\Orders\Models\Order;
+use App\Modules\Orders\DTOs\OrderPaymentRequest;
 
 final class CodPaymentInitiator implements PaymentInitiator
 {
     public const CODE = 'cod';
 
-    public function method(): string
+    public function supports(string $methodCode): bool
     {
-        return self::CODE;
+        return $methodCode === self::CODE;
     }
 
-    public function initiate(Order $order): ?string
+    public function initiate(OrderPaymentRequest $order): ?string
     {
         return null; // the courier collects the cash; the order stays unpaid until the delivery is recorded
     }

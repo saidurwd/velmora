@@ -33,6 +33,9 @@ const PUBLIC_WEB = [
     '{locale}/login/phone' => 'phone sign-in', '{locale}/login/phone/verify' => 'phone code entry (needs session state)',
     '{locale}/forgot-password' => 'forgot password', '{locale}/reset-password/{token}' => 'reset form', '{locale}/reset-password' => 'reset submit (token)',
     '{locale}/email/verify/{id}/{hash}' => 'emailed signed link (signature + single use)',
+    '{locale}/pay/return/{payment}/{outcome}' => 'the browser coming back from the payment gateway: signed URL we issued; believes nothing it carries, verifies server to server; no CSRF possible (cross-site POST)',
+    '{locale}/pay/order/{order}' => '"Pay now / pay again" link on the order page: signed, expiring URL',
+    'api/v1/webhooks/payments/{provider}' => 'payment gateway notifications: cannot log in; stored raw, never trusted, verified server to server, throttled',
     '{fallbackPlaceholder}' => 'renders the 404 page',
 ];
 

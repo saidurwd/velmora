@@ -16,8 +16,14 @@ use Illuminate\Support\Str;
 
 beforeEach(function () {
     fakeOrders([1, 2]);
+    $next = 1000;
+    $this->newOrder = function () use (&$next): int {   // each payment gets its own order: an order can have only one OPEN payment
+        fakeOrders([++$next]);
+
+        return $next;
+    };
     $this->payment = fn (array $over = []) => DB::table('payments')->insertGetId($over + [
-        'public_id' => strtolower((string) Str::ulid()), 'order_id' => 1, 'method_code' => 'online', 'provider' => 'fake', 'amount_minor' => 100000, 'currency' => 'BDT',
+        'public_id' => strtolower((string) Str::ulid()), 'order_id' => ($this->newOrder)(), 'method_code' => 'online', 'provider' => 'fake', 'amount_minor' => 100000, 'currency' => 'BDT',
         'captured_minor' => 0, 'refunded_minor' => 0, 'status' => 'pending', 'created_at' => now(), 'updated_at' => now(),
     ]);
     $this->tx = fn (int $paymentId, array $over = []) => DB::table('payment_transactions')->insertGetId($over + [
@@ -78,6 +84,13 @@ describe('payment attempts', function () {
         expect(DB::table('payment_transactions')->where('id', $t)->update(['provider_txn_id' => 'BANK-9', 'status' => 'succeeded', 'verified_at' => now()]))->toBe(1);
         ($this->refuses)(fn () => DB::table('payment_transactions')->where('id', $t)->update(['provider_txn_id' => 'BANK-10']));
         ($this->refuses)(fn () => DB::table('payment_transactions')->where('id', $t)->update(['provider_txn_id' => null]));
+    });
+
+    it('records what the gateway answered once, and never rewrites it', function () {
+        $t = ($this->tx)(($this->payment)());
+
+        expect(DB::table('payment_transactions')->where('id', $t)->update(['request_summary' => json_encode(['merchant_ref' => 'x'])]))->toBe(1);
+        ($this->refuses)(fn () => DB::table('payment_transactions')->where('id', $t)->update(['request_summary' => json_encode(['merchant_ref' => 'changed'])]));
     });
 
     it('freezes the reference, amount and attempt number, and is never deleted', function () {

@@ -21,6 +21,9 @@ use App\Modules\Orders\Http\Requests\CheckoutDetailsRequest;
 use App\Modules\Orders\Http\Requests\PlaceOrderRequest;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Services\CheckoutDraft;
+use App\Modules\Orders\Services\OrderPaymentRequests;
+use App\Modules\Orders\Services\PaymentInitiators;
+use App\Modules\Payments\Contracts\PaymentMethodCatalog;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\DTOs\PhoneNumber;
 use App\Modules\Platform\Enums\ActorType;
@@ -29,6 +32,8 @@ use DomainException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 
@@ -44,6 +49,9 @@ class CheckoutController
         private readonly AddressBook $book,
         private readonly AddressChecker $checker,
         private readonly Geography $geography,
+        private readonly PaymentInitiators $initiators,
+        private readonly OrderPaymentRequests $paymentRequests,
+        private readonly PaymentMethodCatalog $methods,
     ) {}
 
     public function details(Request $request): View|RedirectResponse
@@ -184,7 +192,16 @@ class CheckoutController
 
         $this->draft->placed($order->public_id);
 
-        return $this->thanks($order->public_id);
+        // an online method: send the shopper to pay now. If payment cannot be started, the order stays (unpaid) and its page offers to try again.
+        try {
+            $payAt = $this->initiators->start($this->paymentRequests->for($order));
+        } catch (DomainException $e) {
+            Log::warning('checkout.payment_not_started', ['order' => $order->order_number, 'reason' => $e->getMessage()]);
+
+            return $this->thanks($order->public_id)->with('payment_error', trans()->has('payments::payments.errors.'.$e->getMessage()) ? $e->getMessage() : 'initiation_failed');
+        }
+
+        return $payAt !== null ? redirect()->away($payAt) : $this->thanks($order->public_id);
     }
 
     /** Sends the SMS code for a large cash order to the phone the shopper gave. */
@@ -228,7 +245,14 @@ class CheckoutController
     {
         $model = Order::query()->where('public_id', $order)->with(['items', 'addresses'])->firstOrFail();
 
-        return view('orders::checkout.thanks', ['order' => $model]);
+        $locale = app()->getLocale();
+        $open = ! in_array($model->status->value, ['cancelled', 'completed'], true) && in_array($model->payment_status->value, ['unpaid', 'pending', 'failed'], true);
+        $online = $model->payment_method_code !== 'cod';
+
+        return view('orders::checkout.thanks', [
+            'order' => $model, 'online' => $online, 'methodLabel' => $this->methods->label($model->payment_method_code, $locale),
+            'payUrl' => $online && $open && Route::has('payments.pay') ? URL::temporarySignedRoute('payments.pay', now()->addDays((int) config('orders.confirmation_link_days')), ['locale' => $locale, 'order' => $model->public_id]) : null,
+        ]);
     }
 
     private function backToStart(CheckoutException $e): RedirectResponse

@@ -30,6 +30,7 @@ use App\Modules\Orders\Exceptions\CheckoutException;
 use App\Modules\Orders\Exceptions\OrderException;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Services\CheckoutPricing;
+use App\Modules\Payments\Database\Seeders\PaymentMethodSeeder;
 use App\Modules\Platform\Database\Seeders\LanguageSeeder;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\DTOs\Money;
@@ -44,7 +45,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 beforeEach(function () {
-    $this->seed([LanguageSeeder::class, TaxClassSeeder::class, PriceListSeeder::class, StockLocationSeeder::class, GeographySeeder::class, ShippingSeeder::class, RolesAndPermissionsSeeder::class]);
+    $this->seed([LanguageSeeder::class, TaxClassSeeder::class, PriceListSeeder::class, StockLocationSeeder::class, GeographySeeder::class, ShippingSeeder::class, PaymentMethodSeeder::class, RolesAndPermissionsSeeder::class]);
     $this->withoutMiddleware(EnforceSessionPolicy::class);
     $actor = Actor::system('t');
     $category = app(SaveCategory::class)->handle($actor, null, null, [new TranslationInput('en', 'General')]);

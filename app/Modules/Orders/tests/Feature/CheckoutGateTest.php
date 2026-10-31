@@ -20,6 +20,7 @@ use App\Modules\Orders\DTOs\NewOrder;
 use App\Modules\Orders\DTOs\NewOrderAddress;
 use App\Modules\Orders\DTOs\NewOrderLine;
 use App\Modules\Orders\Enums\OrderChannel;
+use App\Modules\Payments\Database\Seeders\PaymentMethodSeeder;
 use App\Modules\Platform\Database\Seeders\LanguageSeeder;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\DTOs\Money;
@@ -39,7 +40,7 @@ use Illuminate\Support\Str;
  */
 
 beforeEach(function () {
-    $this->seed([LanguageSeeder::class, TaxClassSeeder::class, PriceListSeeder::class, StockLocationSeeder::class, GeographySeeder::class, ShippingSeeder::class]);
+    $this->seed([LanguageSeeder::class, TaxClassSeeder::class, PriceListSeeder::class, StockLocationSeeder::class, GeographySeeder::class, ShippingSeeder::class, PaymentMethodSeeder::class]);
     $this->withoutMiddleware(EnforceSessionPolicy::class);
     $actor = Actor::system('t');
     $category = app(SaveCategory::class)->handle($actor, null, null, [new TranslationInput('en', 'General')]);

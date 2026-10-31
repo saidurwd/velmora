@@ -23,6 +23,7 @@ use App\Modules\Orders\Events\OrderPlaced;
 use App\Modules\Orders\Listeners\SendOrderConfirmation;
 use App\Modules\Orders\Mail\OrderPlacedMail;
 use App\Modules\Orders\Models\Order;
+use App\Modules\Payments\Database\Seeders\PaymentMethodSeeder;
 use App\Modules\Platform\Database\Seeders\LanguageSeeder;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\DTOs\Money;
@@ -36,7 +37,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 beforeEach(function () {
-    $this->seed([LanguageSeeder::class, TaxClassSeeder::class, PriceListSeeder::class, StockLocationSeeder::class, GeographySeeder::class, ShippingSeeder::class]);
+    $this->seed([LanguageSeeder::class, TaxClassSeeder::class, PriceListSeeder::class, StockLocationSeeder::class, GeographySeeder::class, ShippingSeeder::class, PaymentMethodSeeder::class]);
     $this->withoutMiddleware(EnforceSessionPolicy::class);
     $actor = Actor::system('t');
     $category = app(SaveCategory::class)->handle($actor, null, null, [new TranslationInput('en', 'General')]);
@@ -270,7 +271,7 @@ describe('carts with only a download or a service', function () {
 
         ($this->as)()->get('/en/checkout')->assertOk()->assertSee('Your details')->assertDontSee('Division');
         ($this->as)()->post('/en/checkout', ['contact_name' => 'Rahim', 'contact_phone' => '01712345678'])->assertRedirect('/en/checkout/review');
-        ($this->as)()->get('/en/checkout/review')->assertOk()->assertSee('Online payment is coming soon')->assertSee('disabled', false);
+        ($this->as)()->get('/en/checkout/review')->assertOk()->assertSee('There is no way to pay for this order right now')->assertSee('disabled', false);
         ($this->as)()->post('/en/checkout', ['contact_name' => '', 'contact_phone' => '01712345678'])->assertSessionHasErrors('contact_name');
     });
 });

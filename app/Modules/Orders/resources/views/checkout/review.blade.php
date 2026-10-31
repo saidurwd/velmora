@@ -48,11 +48,11 @@
 
             <fieldset class="space-y-2">
                 <legend class="text-lg font-semibold">{{ __('orders::checkout.payment') }}</legend>
-                @forelse ($review->quote->paymentMethods as $m)
+                @forelse ($review->quote->paymentOptions as $o)
                     <label class="flex items-start gap-3 rounded-lg border border-line p-3">
-                        <input type="radio" name="payment" value="{{ $m }}" class="mt-1" @checked($review->paymentCode === $m)>
-                        <span class="flex-1"><span class="block font-medium">{{ __('orders::checkout.methods.'.$m) }}</span><span class="block text-sm text-muted">{{ __('orders::checkout.methods_help.'.$m) }}</span></span>
-                        @if ($m === 'cod' && $b->codFeeMinor > 0)<span class="font-medium">+{{ $fmt($b->codFeeMinor) }}</span>@endif
+                        <input type="radio" name="payment" value="{{ $o->code }}" class="mt-1" @checked($review->paymentCode === $o->code)>
+                        <span class="flex-1"><span class="block font-medium">{{ $o->label }}</span>@if ($o->description)<span class="block text-sm text-muted">{{ $o->description }}</span>@endif</span>
+                        @if ($o->isCash() && $b->codFeeMinor > 0)<span class="font-medium">+{{ $fmt($b->codFeeMinor) }}</span>@endif
                     </label>
                 @empty
                     <x-platform::alert type="error">{{ $review->needsDelivery ? __('orders::checkout.errors.payment_method_invalid') : __('orders::checkout.errors.no_online_payment') }}</x-platform::alert>

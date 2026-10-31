@@ -40,18 +40,20 @@ function enBn(string $en, ?string $bn = null): array
 }
 
 /**
- * Minimal real order rows with the given ids, for tests of things that point at an order (coupon redemptions, ...).
+ * Minimal real order rows with the given ids, for tests of things that point at an order (coupon redemptions, payments, ...).
+ * `$over` replaces any column (for example `['payment_method_code' => 'online', 'subtotal_minor' => 150000, 'grand_total_minor' => 150000]`).
  *
  * @param  list<int>  $ids
+ * @param  array<string, mixed>  $over
  */
-function fakeOrders(array $ids): void
+function fakeOrders(array $ids, array $over = []): void
 {
     foreach ($ids as $id) {
-        DB::table('orders')->insertOrIgnore([
+        DB::table('orders')->insertOrIgnore(array_replace([
             'id' => $id, 'public_id' => strtolower((string) Str::ulid()), 'order_number' => sprintf('VM-TEST-%06d', $id),
             'contact_name' => 'Test', 'contact_phone' => '+8801712345678', 'locale' => 'en', 'subtotal_minor' => 0, 'discount_minor' => 0, 'shipping_minor' => 0,
             'cod_fee_minor' => 0, 'tax_minor' => 0, 'grand_total_minor' => 0, 'tax_inclusive' => false, 'payment_method_code' => 'cod',
             'placed_at' => now(), 'created_at' => now(), 'updated_at' => now(),
-        ]);
+        ], $over));
     }
 }

@@ -15,6 +15,7 @@ use App\Modules\Catalog\Enums\ProductType;
 use App\Modules\Customers\Database\Seeders\GeographySeeder;
 use App\Modules\Inventory\Database\Seeders\StockLocationSeeder;
 use App\Modules\Orders\Services\CheckoutPricing;
+use App\Modules\Payments\Database\Seeders\PaymentMethodSeeder;
 use App\Modules\Platform\Database\Seeders\LanguageSeeder;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\DTOs\Money;
@@ -32,7 +33,7 @@ use Symfony\Component\Process\Process;
  */
 
 beforeEach(function () {
-    $this->seed([LanguageSeeder::class, TaxClassSeeder::class, PriceListSeeder::class, StockLocationSeeder::class, GeographySeeder::class, ShippingSeeder::class]);
+    $this->seed([LanguageSeeder::class, TaxClassSeeder::class, PriceListSeeder::class, StockLocationSeeder::class, GeographySeeder::class, ShippingSeeder::class, PaymentMethodSeeder::class]);
     $actor = Actor::system('t');
     $category = app(SaveCategory::class)->handle($actor, null, null, [new TranslationInput('en', 'General')]);
 

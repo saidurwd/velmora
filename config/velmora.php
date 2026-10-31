@@ -14,6 +14,7 @@ return [
         'tax.cod_fee_taxable' => false,
         'business.currency' => env('VELMORA_CURRENCY', 'BDT'),
         // Cash-on-delivery abuse rules (editable in the admin panel; Phase 5 slice 9). Money in minor units (paisa).
+        'orders.pending_cancel_days' => 3,           // an order nobody confirmed (and that is not paid) is cancelled after this many days; 0 = never
         'fraud.enabled' => true,
         'fraud.max_open_cod_per_phone' => 3,          // open = pending, confirmed or processing
         'fraud.high_value_cod_minor' => 1_000_000,    // ৳10,000: a cash order ABOVE this needs an SMS code first (0 = never)

@@ -26,6 +26,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(AssignRequestContext::class);
         $middleware->append(SecureHeaders::class);
         $middleware->appendToGroup('web', SetLocale::class);
+
+        // The gateway sends the customer's browser back with a POST from another site: no CSRF token is possible. That route is protected
+        // by a signed URL instead (see Payments routes), and nothing it brings is believed.
+        $middleware->preventRequestForgery(except: ['*/pay/return/*']);
         $middleware->appendToGroup('api', SetLocale::class);
 
         // Resolve the locale right after the session starts, before `auth` runs, so guest redirects and error

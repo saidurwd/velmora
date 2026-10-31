@@ -20,10 +20,31 @@
         <p class="text-muted">{{ __('orders::checkout.keep_link') }}</p>
     </div>
 
-    <x-platform::alert type="success">
-        <p class="font-medium">{{ $order->payment_method_code === 'cod' ? __('orders::checkout.cod_message', ['total' => $fmt($order->grand_total_minor)]) : __('orders::checkout.received') }}</p>
-        <p>{{ $order->status->value === 'pending' ? __('orders::checkout.we_will_confirm') : __('orders::checkout.confirmed') }}</p>
-    </x-platform::alert>
+    @php($state = $order->payment_status->value)
+    @if (session('payment_error'))<x-platform::alert type="error">{{ __('payments::payments.errors.'.session('payment_error')) }}</x-platform::alert>@endif
+    @if (! $online)
+        <x-platform::alert type="success">
+            <p class="font-medium">{{ __('orders::checkout.cod_message', ['total' => $fmt($order->grand_total_minor)]) }}</p>
+            <p>{{ $order->status->value === 'pending' ? __('orders::checkout.we_will_confirm') : __('orders::checkout.confirmed') }}</p>
+        </x-platform::alert>
+    @elseif ($state === 'paid')
+        <x-platform::alert type="success"><p class="font-medium">{{ __('orders::checkout.paid_title') }}</p><p>{{ $order->status->value === 'pending' ? __('orders::checkout.we_will_confirm') : __('orders::checkout.confirmed') }}</p></x-platform::alert>
+    @elseif ($order->status->value === 'cancelled')
+        <x-platform::alert type="error"><p class="font-medium">{{ __('orders::checkout.cancelled_title') }}</p><p>{{ __('orders::checkout.cancelled_text') }}</p></x-platform::alert>
+    @elseif (in_array($state, ['refunded', 'partially_refunded'], true))
+        <x-platform::alert type="success"><p>{{ __('orders::checkout.refunded_text') }}</p></x-platform::alert>
+    @else
+        <x-platform::alert type="{{ session('payment_outcome') === 'needs_review' ? 'error' : 'info' }}">
+            <p class="font-medium">{{ $state === 'pending' && ! in_array(session('payment_outcome'), ['not_completed', 'failed', 'cancelled'], true) ? __('orders::checkout.payment_checking') : __('orders::checkout.payment_due', ['total' => $fmt($order->grand_total_minor)]) }}</p>
+            @if (session('payment_outcome') === 'needs_review')<p>{{ __('orders::checkout.payment_review') }}</p>@endif
+            @if (in_array(session('payment_outcome'), ['not_completed', 'failed', 'cancelled'], true))<p>{{ __('orders::checkout.payment_not_completed') }}</p>@endif
+            <div class="mt-2 flex flex-wrap gap-3">
+                @if ($payUrl)<x-platform::btn :href="$payUrl">{{ $state === 'unpaid' ? __('orders::checkout.pay_now') : __('orders::checkout.pay_again') }}</x-platform::btn>@endif
+                <a class="inline-flex min-h-11 items-center underline" href="{{ url()->full() }}">{{ __('orders::checkout.check_again') }}</a>
+            </div>
+        </x-platform::alert>
+    @endif
+    @if ($online)<p class="text-sm text-muted">{{ __('orders::checkout.paid_with', ['method' => $methodLabel]) }}</p>@endif
 
     <section aria-labelledby="items-h" class="space-y-2">
         <h2 id="items-h" class="text-lg font-semibold">{{ __('orders::checkout.your_order') }}</h2>

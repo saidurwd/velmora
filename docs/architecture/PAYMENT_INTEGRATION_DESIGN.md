@@ -32,6 +32,8 @@ stateDiagram-v2
 4. Job: authenticate per provider → `verify()` → `BEGIN; SELECT payment FOR UPDATE` → compare amount, currency, merchant_ref, status → idempotent transition → outbox `PaymentSucceeded` → `COMMIT`.
 5. `ReconcilePendingPayments` (every few minutes): pending older than N min → `status()` → same path.
 
+**Implemented in slice 2 (decisions):** the payment's `expires_at` is 30 minutes (`PAYMENTS_EXPIRY_MINUTES`); the expiry job asks the gateway before closing; an expired payment's attempts stay open so a late success is recorded as `late_success` (payment → `needs_review`, order untouched if cancelled), never silently paid; a second paid attempt on a paid payment is a `duplicate_payment` exception (money to give back); orders follow payments only through outbox events (`payments.initiated/succeeded/failed/expired/needs_review`); the return URL is signed and CSRF-exempt, the notification route is `POST /api/v1/webhooks/payments/{provider}`.
+
 ## 4. Edge cases (each = automated test, Phase 6)
 | Case | Handling |
 |---|---|

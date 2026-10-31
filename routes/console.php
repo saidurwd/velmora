@@ -10,6 +10,8 @@ use App\Modules\Cms\Jobs\GenerateSitemaps;
 use App\Modules\IdentityAccess\Jobs\PurgeExpiredOtpChallenges;
 use App\Modules\Inventory\Jobs\ExpireReservationsJob;
 use App\Modules\Inventory\Jobs\VerifyStockLedger;
+use App\Modules\Orders\Jobs\CancelStalePendingOrdersJob;
+use App\Modules\Payments\Jobs\ExpireUnpaidPaymentsJob;
 use App\Modules\Platform\Jobs\DispatchOutboxMessages;
 use App\Modules\Search\Jobs\PruneSearchQueries;
 use Illuminate\Foundation\Inspiring;
@@ -28,6 +30,8 @@ Schedule::job(new ReconcileListing)->everyMinute()->name('catalog:reconcile-list
 Schedule::job(new PruneSearchQueries)->dailyAt('03:10')->name('search:prune-queries');
 Schedule::job(new GenerateSitemaps)->dailyAt('04:00')->name('seo:sitemaps');
 Schedule::job(new PruneAnalyticsEvents)->dailyAt('03:20')->name('analytics:prune');
+Schedule::job(new ExpireUnpaidPaymentsJob)->everyMinute()->name('payments:expire-unpaid')->withoutOverlapping();
+Schedule::job(new CancelStalePendingOrdersJob)->hourly()->name('orders:cancel-stale-pending')->withoutOverlapping();
 Schedule::job(new PurgeExpiredCarts)->dailyAt('03:40')->name('cart:purge-expired');
 Schedule::job(new PublishScheduledProducts)->everyMinute()->name('catalog:publish-scheduled')->withoutOverlapping();
 Schedule::job(new ExpireReservationsJob)->everyMinute()->name('inventory:expire-reservations')->withoutOverlapping();
