@@ -90,6 +90,12 @@ stateDiagram-v2
 ## 8. Reconciliation
 Daily `DailySettlementImport` where provider supports statement files/API [UNVERIFIED per provider]; otherwise CSV upload. Exceptions: unmatched provider txn, matched-but-amount-differs, orphan internal payment, long-pending. Each resolvable with audit.
 
+### 8.1 As built (slice 7)
+- **Scheduled check:** `ReconcilePendingPayments` every 10 minutes (attempts open > 10 minutes are verified server to server; payments open > 2 hours past their limit raise `long_pending`).
+- **Settlement file:** `ImportSettlement`. CSV `reference,bank_txn_id,amount,currency,settled_at`; provider-neutral by design [UNVERIFIED against SSLCommerz's real report: no saved document]. All-or-nothing validation; one check per file; exceptions: `unmatched_provider_txn` (reasons `not_ours`, `file_says_paid_we_do_not`, `bank_id_differs`), `amount_mismatch`, `currency_mismatch`, `orphan_payment` (paid here in the period, not in the file). The file is never proof of payment.
+- **Closing:** `ResolveReconciliationException` (resolved / ignored + note); first closer wins; no money moves.
+- **Later:** exceptions screen, upload form and permission `payments.reconcile` (slice 8); automatic daily import when a provider's statement API is documented and saved.
+
 ## 9. Secrets and security
 Credentials in `integration_configs` (encrypted, masked in UI) or env; never logged. Webhook routes: no session/CSRF, rate-limited, body size cap, IP allow-list when provider publishes ranges [UNVERIFIED], replay window where a timestamp exists. Raw payload viewer redacted. Never store card data.
 

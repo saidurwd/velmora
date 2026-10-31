@@ -27,5 +27,13 @@ return [
         'cod_currency_mixed' => 'The listed parcels are in different currencies.',
         'cod_already_remitted' => 'One of the listed parcels is already on another courier statement.',
         'cod_statement_duplicate' => 'This statement was already entered for this courier.',
+        'settlement_file_invalid' => 'The settlement file cannot be used: :errors',
+        'settlement_file_too_large' => 'The settlement file is too large.',
+        'settlement_already_imported' => 'This settlement file was already checked.',
+        'settlement_window_invalid' => 'The period must start before it ends, must not be in the future, and may be at most :days days long.',
+        'exception_not_found' => 'That item was not found.',
+        'exception_not_open' => 'This item was already closed.',
+        'exception_note_required' => 'Write a short note about what was done.',
+        'exception_outcome_invalid' => 'Choose resolved or ignored.',
     ],
 ];

@@ -27,5 +27,13 @@ return [
         'cod_currency_mixed' => 'তালিকার পার্সেলগুলো ভিন্ন মুদ্রার।',
         'cod_already_remitted' => 'তালিকার একটি পার্সেল ইতোমধ্যে অন্য কুরিয়ার স্টেটমেন্টে আছে।',
         'cod_statement_duplicate' => 'এই কুরিয়ারের জন্য এই স্টেটমেন্ট আগেই দেওয়া হয়েছে।',
+        'settlement_file_invalid' => 'সেটেলমেন্ট ফাইলটি ব্যবহার করা যাচ্ছে না: :errors',
+        'settlement_file_too_large' => 'সেটেলমেন্ট ফাইলটি অনেক বড়।',
+        'settlement_already_imported' => 'এই সেটেলমেন্ট ফাইল আগেই যাচাই করা হয়েছে।',
+        'settlement_window_invalid' => 'সময়কাল শুরু শেষের আগে হতে হবে, ভবিষ্যতের হতে পারবে না, এবং সর্বোচ্চ :days দিনের হতে পারবে।',
+        'exception_not_found' => 'এই বিষয়টি পাওয়া যায়নি।',
+        'exception_not_open' => 'এই বিষয়টি ইতোমধ্যে বন্ধ করা হয়েছে।',
+        'exception_note_required' => 'কী করা হয়েছে তা সংক্ষেপে লিখুন।',
+        'exception_outcome_invalid' => 'সমাধান হয়েছে বা উপেক্ষা করা হয়েছে বেছে নিন।',
     ],
 ];
