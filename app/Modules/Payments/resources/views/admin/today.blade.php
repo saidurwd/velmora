@@ -9,6 +9,7 @@
 
 @section('content')
 <div class="space-y-8">
+    @include('payments::admin._alerts')
     <h1 class="text-2xl font-bold">{{ __('payments::admin.today_title') }}</h1>
 
     <dl class="grid gap-4 sm:grid-cols-3">

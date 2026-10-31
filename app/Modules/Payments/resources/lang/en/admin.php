@@ -258,4 +258,13 @@ return [
     'live_mode' => 'Live',
     'never' => 'never',
     'not_set_up' => 'Not set up',
+    'alerts_title' => 'Needs attention now',
+    'alert' => [
+        'callback_failure_rate' => 'Many of the payment service\'s messages could not be processed (percent)',
+        'pending_too_long' => 'Payments still open long after their time limit',
+        'amount_mismatches' => 'Payments whose amount or currency disagrees with the payment service',
+        'refund_failures' => 'Refunds that failed or are stuck',
+        'forged_notifications' => 'Messages that did not pass the payment service\'s own check',
+    ],
+    'alert_value' => ':value now, alert at :threshold',
 ];

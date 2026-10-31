@@ -109,4 +109,5 @@ Opt-in suite (not in CI default) against each provider's sandbox; CI uses a `Fak
 Admin feature flag disables all online methods (COD remains) in < 2 min; in-flight payments still reconcile.
 
 ## 12. Open
-Q3 provider · refund-after-expiry policy · two-person refund threshold · whether bKash/Nagad come through the aggregator · fee display to customer.
+Decided in Phase 6 (see ADR "Phase 6 decisions", P6-1 to P6-18): provider (SSLCommerz hosted page, bKash through it) · refund-after-expiry policy (never auto-refund; a person decides) · two-person refund threshold (৳5,000, editable) · fee display (shop absorbs fees).
+Still open: SSLCommerz's own settlement report format and any statement API (no saved document) · whether partial refunds work through SSLCommerz (sandbox proof needed) · direct bKash/Nagad adapters (not in the MVP) · claiming older guest orders by verified phone number · automatic collection of cash from a courier "delivered" event (needs shipments, Phase 7) · "owed by the gateway" (paid online but not yet settled to the shop) on the finance page needs the settlement report.

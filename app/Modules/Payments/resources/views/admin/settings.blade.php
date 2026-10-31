@@ -9,6 +9,7 @@
 
 @section('content')
 <div class="space-y-8">
+    @include('payments::admin._alerts')
     <h1 class="text-2xl font-bold">{{ __('payments::admin.settings_title') }}</h1>
     @if (session('status'))<x-platform::alert type="success">{{ session('status') }}</x-platform::alert>@endif
     @error('settings')<x-platform::alert type="error">{{ $message }}</x-platform::alert>@enderror

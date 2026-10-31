@@ -22,6 +22,17 @@ Daily full + continuous binlog (PITR) using mariadb-backup or equivalent; encryp
 ## 5. Monitoring and alerting
 Uptime checks (storefront, checkout, webhook endpoints); error tracking; APM and slow-query alerts; Horizon/queue lag; scheduler heartbeat; metrics: orders/min, payment success rate, pending payments age, callback failure/signature failures, mismatch count, refund failures, deadlock retries, SMS spend, stock-ledger integrity job, disk/CPU/memory, DB replication (if any). Alert routing with severity and escalation (on-call rota is a bus-factor mitigation).
 
+### 5.1 Payment alerts and scheduled jobs (Phase 6)
+The scheduler (one `schedule:run` per minute) runs: `payments:expire-unpaid` (every minute), `payments:poll-refunds` and `payments:check-health` (every 5 minutes), `payments:reconcile-pending` (every 10 minutes), plus the outbox dispatcher. `payments:check-health` writes an ERROR log line `payments.alert` with `signal`, `value` and `threshold` for each breached signal (once an hour per signal): `callback_failure_rate`, `pending_too_long`, `amount_mismatches`, `refund_failures`, `forged_notifications`. **Alert on that log line**, and on the scheduler heartbeat. Thresholds: `PAYMENTS_ALERT_*` and `PAYMENTS_RECONCILE_AFTER_MINUTES`, `PAYMENTS_LONG_PENDING_HOURS` (see `config/payments.php`). Finance sees the same signals as a banner on *Money today* and *Payment settings*.
+
+### 5.2 Going live with payments (human steps, in this order)
+1. Test first: put the **sandbox** store id and password (they end in `@ssl`) into `PAYMENT_SSLCOMMERZ_STORE_ID` / `PAYMENT_SSLCOMMERZ_STORE_PASSWORD`, keep `PAYMENT_SSLCOMMERZ_SANDBOX=true`, switch the "online" method on in *Payment settings*, and run the sandbox suite (`SSLCOMMERZ_SANDBOX_TESTS=1`, see `app/Modules/Payments/tests/Sandbox/README.md`). Never put live credentials on a development machine.
+2. In the production secret store set the **live** store id/password, `PAYMENT_SSLCOMMERZ_SANDBOX=false` and, as the deliberate last switch, `PAYMENTS_ALLOW_LIVE=true`. The live gateway is reachable only when `APP_ENV=production`, sandbox is off **and** `PAYMENTS_ALLOW_LIVE=true`; any one missing keeps the shop on the sandbox.
+3. Register the notification address (`POST /api/v1/webhooks/payments/sslcommerz`) and the return pages with the provider; confirm what the provider requires (IP allow-list) from its dashboard.
+4. A human places one real order of the smallest amount, confirms it shows *paid*, requests a refund of it, approves it with a second person and checks the money came back.
+5. Rollback: *Payment settings → Pause online payments* (cash on delivery keeps working; in-flight payments still reconcile), then clear `PAYMENTS_ALLOW_LIVE`.
+6. The owner confirms tax settings with the adviser before payments go live (`tax.enabled` stays false until then).
+
 ## 6. Runbooks (to write in Phase 12/13)
 Payment stuck · gateway outage (payment-freeze) · courier outage (ManualCourier) · stock mismatch · SMS provider failure · queue backlog · DB failover/restore · rollback · secret leak · pen-test finding triage · COD fraud spike.
 
