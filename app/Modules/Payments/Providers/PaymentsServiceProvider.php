@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Payments\Providers;
 
+use App\Modules\Payments\Console\PaymentProbeCommand;
 use App\Modules\Payments\Contracts\PaymentMethodCatalog;
 use App\Modules\Payments\Events\PaymentExpired;
 use App\Modules\Payments\Events\PaymentFailed;
@@ -27,6 +28,7 @@ class PaymentsServiceProvider extends ModuleServiceProvider
 
     public function register(): void
     {
+        $this->commands([PaymentProbeCommand::class]);
         $this->app->singleton(GatewayRegistry::class);
         $this->app->singleton(FakeGateway::class);
         $this->app->bind(PaymentMethodCatalog::class, DatabasePaymentMethodCatalog::class);

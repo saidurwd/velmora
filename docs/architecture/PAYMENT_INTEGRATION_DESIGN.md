@@ -52,6 +52,9 @@ stateDiagram-v2
 | App crash after commit | outbox redelivers `PaymentSucceeded`; consumer idempotent |
 | Duplicate "already validated" | treated as success-replay, not error |
 
+**Where each edge case above is tested (slice 4):** every row is a story in `app/Modules/Payments/tests/Feature/PaymentReplayTest.php` (checked against the money invariants after every step) and, for the races, a real multi-process test in `tests/Database/PaymentConcurrencyTest.php`: duplicate callback; callback before/after browser return; forged success redirect and forged IPN; amount / currency / reference mismatch; late success after expiry or after the order was cancelled; out-of-order events (a late "failed" never undoes "paid"); parallel attempts on one order; app crash after commit (outbox redelivery); "already validated" replays.
+**Known limit:** an attempt that closed unpaid is re-checked with the gateway for 7 days after it started. A success reported later than that is not picked up by a notification; the settlement-file / reconciliation step (slice 7) is what catches provider payments we have no paid record for (`unmatched_provider_txn`).
+
 ## 5. SSLCommerz facts [VERIFIED-official, developer.sslcommerz.com/doc/v4, 2026-10-28]
 - IPN: POST to listener URL (merchant panel or `ipn_url`); statuses VALID, FAILED, CANCELLED, UNATTEMPTED, EXPIRED. IPN carries `verify_sign` / `verify_key`; **the page does not document how to compute `verify_sign`** → our adapter authenticates via the **Order Validation API**, not by signature.
 - Validation: GET `…/validator/api/validationserverAPI.php` with `val_id`, `store_id`, `store_passwd`, `format`; results VALID / VALIDATED (already validated) / INVALID_TRANSACTION. Must check `tran_id`, `amount`, `currency` against our DB.
