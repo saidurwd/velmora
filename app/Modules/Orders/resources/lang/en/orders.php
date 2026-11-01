@@ -29,4 +29,5 @@ return [
         'review_pending' => 'This order is flagged for review. Look at it and mark it as reviewed before confirming.', 'not_under_review' => 'This order is not waiting for review.',
         'changed_meanwhile' => 'The order was changed by someone else. Reload and try again.', 'breakdown_mismatch' => 'The order totals do not add up.', 'lines_mismatch' => 'The order lines do not match the priced lines.', 'address_required' => 'A delivery address is required.',
     ],
+    'parcels_link' => 'Parcels for this order',
 ];

@@ -55,7 +55,14 @@ class ShippingServiceProvider extends ModuleServiceProvider
             $this->app->make(CourierRegistry::class)->register(FakeCourier::NAME, fn () => $this->app->make(FakeCourier::class)); // never available in production
         }
 
+        RateLimiter::for('shipping-actions', fn (Request $r) => Limit::perMinute(60)->by('shipping-actions|'.$r->route()?->getName().'|'.($r->user('admin')?->getAuthIdentifier() ?? $r->ip())));
+        RateLimiter::for('shipping-import', fn (Request $r) => Limit::perMinute(10)->by('shipping-import|'.($r->user('admin')?->getAuthIdentifier() ?? $r->ip())));
+
         $menu = $this->app->make(AdminMenu::class);
+        $menu->add('shipping::fulfilment.menu.shipments', 'admin.shipping.shipments.index', 'shipping.view', 56);
+        $menu->add('shipping::fulfilment.menu.returns', 'admin.shipping.returns.index', 'shipping.view', 57);
+        $menu->add('shipping::fulfilment.menu.issues', 'admin.shipping.issues.index', 'shipping.view', 58);
+        $menu->add('shipping::fulfilment.menu.statements', 'admin.shipping.statements.index', 'shipping.view', 59);
         $menu->add('shipping::admin.menu.zones', 'admin.shipping.zones.index', 'shipping.view', 60);
         $menu->add('shipping::admin.menu.methods', 'admin.shipping.methods.index', 'shipping.view', 61);
     }

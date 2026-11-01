@@ -21,6 +21,7 @@
         <a class="text-sm underline" href="{{ route('admin.orders.index') }}">← {{ __('orders::orders.back') }}</a>
         <h1 class="mt-1 text-2xl font-bold">{{ __('orders::orders.order', ['number' => $order->order_number]) }}</h1>
         <p class="text-muted">{{ \App\Modules\Platform\Support\Fmt::dateTime($order->placed_at) }} · {{ __('orders::orders.channels.'.$order->channel->value) }}@if ($order->needs_review) · <strong class="text-danger">{{ __('orders::orders.needs_review') }}</strong>@endif</p>
+        @if (\Illuminate\Support\Facades\Route::has('admin.shipping.orders.show') && auth('admin')->user()?->can('shipping.view'))<p><a class="text-sm underline" href="{{ route('admin.shipping.orders.show', $order->public_id) }}">{{ __('orders::orders.parcels_link') }}</a></p>@endif
         @if ($order->cancel_reason)<p class="text-danger">{{ __('orders::orders.cancelled_because', ['reason' => $order->cancel_reason]) }}</p>@endif
     </div>
     @if (session('status'))<x-platform::alert type="success">{{ session('status') }}</x-platform::alert>@endif
