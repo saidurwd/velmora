@@ -8,6 +8,7 @@ use App\Modules\Payments\Console\CodProbeCommand;
 use App\Modules\Payments\Console\PaymentProbeCommand;
 use App\Modules\Payments\Console\ReconcileProbeCommand;
 use App\Modules\Payments\Console\RefundProbeCommand;
+use App\Modules\Payments\Contracts\CodCashLedger;
 use App\Modules\Payments\Contracts\PaymentMethodCatalog;
 use App\Modules\Payments\Events\PaymentExpired;
 use App\Modules\Payments\Events\PaymentFailed;
@@ -18,6 +19,7 @@ use App\Modules\Payments\Events\RefundSucceeded;
 use App\Modules\Payments\Gateways\FakeGateway;
 use App\Modules\Payments\Gateways\SslCommerzGateway;
 use App\Modules\Payments\Listeners\CollectCashOnDelivery;
+use App\Modules\Payments\Services\DatabaseCodCashLedger;
 use App\Modules\Payments\Services\DatabasePaymentMethodCatalog;
 use App\Modules\Payments\Services\GatewayRegistry;
 use App\Modules\Payments\Services\OnlinePaymentInitiator;
@@ -43,6 +45,7 @@ class PaymentsServiceProvider extends ModuleServiceProvider
         $this->app->singleton(GatewayRegistry::class);
         $this->app->singleton(FakeGateway::class);
         $this->app->bind(PaymentMethodCatalog::class, DatabasePaymentMethodCatalog::class);
+        $this->app->bind(CodCashLedger::class, DatabaseCodCashLedger::class);
         $this->app->tag([OnlinePaymentInitiator::class], 'orders.payment_initiators'); // Orders starts payment through this
     }
 

@@ -33,14 +33,14 @@ final class RecordCodRemittance
      *
      * @throws PaymentException
      */
-    public function handle(Actor $actor, string $courier, string $statementRef, int $receivedMinor, ?CarbonImmutable $receivedAt, array $items): CodRemittance
+    public function handle(Actor $actor, string $courier, string $statementRef, int $receivedMinor, ?CarbonImmutable $receivedAt, array $items, int $feeMinor = 0): CodRemittance
     {
         $courier = mb_substr(trim(BanglaText::input($courier)), 0, 40);
         $statementRef = mb_substr(trim(BanglaText::input($statementRef)), 0, 80);
         if ($courier === '' || $statementRef === '') {
             throw new PaymentException('cod_statement_invalid');
         }
-        if ($receivedMinor < 0) {
+        if ($receivedMinor < 0 || $feeMinor < 0) {
             throw new PaymentException('cod_amount_invalid');
         }
         if ($items === []) {
@@ -64,7 +64,7 @@ final class RecordCodRemittance
         }
 
         try {
-            return Transactions::run(function () use ($actor, $courier, $statementRef, $receivedMinor, $receivedAt, $reported): CodRemittance {
+            return Transactions::run(function () use ($actor, $courier, $statementRef, $receivedMinor, $feeMinor, $receivedAt, $reported): CodRemittance {
                 $collections = CodCollection::query()->whereIn('public_id', array_keys($reported))->get();
                 /** @var array<string, CodCollection> $byId */
                 $byId = $collections->keyBy('public_id')->all();
@@ -83,15 +83,16 @@ final class RecordCodRemittance
                         $differing[$publicId] = ['collected' => $ours, 'courier_says' => $amount];
                     }
                 }
+                $accounted = $receivedMinor + $feeMinor; // what the courier paid us plus what it kept for its own charge
                 $status = match (true) {
-                    $receivedMinor < $expected => 'short',
-                    $receivedMinor > $expected => 'over',
+                    $accounted < $expected => 'short',
+                    $accounted > $expected => 'over',
                     $differing !== [] => 'pending', // the total agrees but a parcel does not: a person must look
                     default => 'reconciled',
                 };
 
                 $remittance = CodRemittance::query()->create([
-                    'public_id' => strtolower((string) Str::ulid()), 'courier' => $courier, 'statement_ref' => $statementRef, 'amount_minor' => $receivedMinor, 'expected_minor' => $expected,
+                    'public_id' => strtolower((string) Str::ulid()), 'courier' => $courier, 'statement_ref' => $statementRef, 'amount_minor' => $receivedMinor, 'fee_minor' => $feeMinor, 'expected_minor' => $expected,
                     'currency' => (string) $collections->first()?->currency, 'status' => $status, 'received_at' => $receivedAt, 'recorded_by' => $actor->id,
                 ]);
                 DB::table('cod_remittance_items')->insert(array_map(
@@ -100,14 +101,14 @@ final class RecordCodRemittance
                 ));
 
                 $reference = 'cod-remittance:'.$remittance->public_id;
-                $details = ['courier' => $courier, 'statement' => $statementRef, 'expected_minor' => $expected, 'received_minor' => $receivedMinor];
+                $details = ['courier' => $courier, 'statement' => $statementRef, 'expected_minor' => $expected, 'received_minor' => $receivedMinor, 'fee_minor' => $feeMinor];
                 if ($status === 'short' || $status === 'over') {
-                    $this->exceptions->raise($status === 'short' ? 'cod_short' : 'cod_over', null, null, $reference, $details + ['difference_minor' => abs($expected - $receivedMinor)]);
+                    $this->exceptions->raise($status === 'short' ? 'cod_short' : 'cod_over', null, null, $reference, $details + ['difference_minor' => abs($expected - $accounted)]);
                 }
                 if ($differing !== []) {
                     $this->exceptions->raise('amount_mismatch', null, null, $reference, $details + ['parcels' => $differing]);
                 }
-                $this->audit->record('cod.remitted', $remittance, [], ['status' => $status, 'expected_minor' => $expected, 'received_minor' => $receivedMinor], $actor);
+                $this->audit->record('cod.remitted', $remittance, [], ['status' => $status, 'expected_minor' => $expected, 'received_minor' => $receivedMinor, 'fee_minor' => $feeMinor], $actor);
 
                 return $remittance;
             });

@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $courier
  * @property string $statement_ref
  * @property int $amount_minor
+ * @property int $fee_minor
  * @property int $expected_minor
  * @property string $currency
  * @property string $status

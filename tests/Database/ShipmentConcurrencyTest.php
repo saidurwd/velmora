@@ -285,3 +285,36 @@ it('counts a return as received once and looks at a line once, however many peop
     expect(count(array_filter($looked, fn ($r) => $r['ok'])))->toBe(1)->and(DB::table('stock_movements')->where('ref_type', 'return')->where('ref_id', $return->public_id)->count())->toBe(1)
         ->and(DB::table('return_requests')->where('id', $return->id)->value('status'))->toBe('closed')->and(app(StockLedgerVerifier::class)->verify())->toBe([]);
 });
+
+it('checks one courier statement once when five people import it at the same instant, with one record of the cash and each problem raised once', function () {
+    [$shipment, $consignment, $orderId] = ($this->parcel)();
+    runShippingProbes([['shipping:probe', ['event', "--consignment={$consignment}", '--status=DELIVERED', '--at='.now()->addMinute()->format('Y-m-d H:i:s')]]]);
+    runShippingProbes([['outbox:dispatch', ['--limit=20']]]);   // the delivery is announced: the parcel's cash is recorded
+    $path = sys_get_temp_dir().'/velmora-statement-'.bin2hex(random_bytes(6)).'.csv';
+    file_put_contents($path, "consignment_id,status,cod_amount,courier_fee,delivered_at\n{$consignment},DELIVERED,730.00,60.00,2026-11-02T10:00:00Z\nGHOST-1,DELIVERED,100.00,10.00,2026-11-02T10:00:00Z");
+
+    $results = runShippingProbes(array_map(fn () => ['shipping:probe', ['statement', '--courier=fake', '--statement-ref=ST-1', "--file={$path}", '--received=67000']], range(1, 5)));
+    @unlink($path);
+
+    expect(count(array_filter($results, fn ($r) => $r['ok'])))->toBe(1)->and(array_unique(array_column(array_filter($results, fn ($r) => ! $r['ok']), 'reason')))->toBe(['statement_already_imported'])
+        ->and(DB::table('courier_statements')->count())->toBe(1)->and(DB::table('cod_remittances')->count())->toBe(1)->and(DB::table('cod_remittance_items')->count())->toBe(1)
+        ->and(DB::table('shipment_exceptions')->where('type', 'statement_unknown_parcel')->count())->toBe(1);
+});
+
+it('puts a delivered parcel\'s cash on one statement only when two different statements claim it at the same instant', function () {
+    [$shipment, $consignment, $orderId] = ($this->parcel)();
+    runShippingProbes([['shipping:probe', ['event', "--consignment={$consignment}", '--status=DELIVERED', '--at='.now()->addMinute()->format('Y-m-d H:i:s')]]]);
+    runShippingProbes([['outbox:dispatch', ['--limit=20']]]);   // the delivery is announced: the parcel's cash is recorded
+    $files = [];
+    foreach (['A', 'B', 'C'] as $i => $ref) {
+        $files[$ref] = sys_get_temp_dir().'/velmora-statement-'.bin2hex(random_bytes(6)).'.csv';
+        file_put_contents($files[$ref], "consignment_id,status,cod_amount,courier_fee,delivered_at\n{$consignment},DELIVERED,730.00,6{$i}.00,2026-11-02T10:00:00Z");
+    }
+
+    $results = runShippingProbes(array_map(fn ($ref) => ['shipping:probe', ['statement', '--courier=fake', "--statement-ref=ST-{$ref}", "--file={$files[$ref]}", '--received=60000']], ['A', 'B', 'C']));
+    array_map('unlink', $files);
+
+    $items = DB::table('cod_remittance_items')->count();
+    expect($items)->toBe(1)->and(DB::table('cod_remittances')->count())->toBe(1)->and(count(array_filter($results, fn ($r) => $r['ok'])))->toBeGreaterThanOrEqual(1)
+        ->and(DB::table('cod_collections')->count())->toBe(1)->and(array_diff(array_column(array_filter($results, fn ($r) => ! $r['ok']), 'reason'), ['statement_conflict', 'statement_already_imported']))->toBe([]);
+});

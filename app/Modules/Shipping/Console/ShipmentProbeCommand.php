@@ -10,6 +10,7 @@ use App\Modules\Shipping\Actions\BookShipment;
 use App\Modules\Shipping\Actions\CancelShipment;
 use App\Modules\Shipping\Actions\CreateShipment;
 use App\Modules\Shipping\Actions\HandOverShipment;
+use App\Modules\Shipping\Actions\ImportCourierStatement;
 use App\Modules\Shipping\Actions\InspectReturnItem;
 use App\Modules\Shipping\Actions\ReceiveReturn;
 use App\Modules\Shipping\Actions\RecordCourierEvent;
@@ -26,13 +27,13 @@ use Throwable;
  */
 class ShipmentProbeCommand extends Command
 {
-    protected $signature = 'shipping:probe {action : ship|book|handover|cancel|event|return-request|return-receive|return-inspect} {--return=} {--item=} {--outcome=} {--actor-type=staff} {--order=} {--shipment=} {--lines=} {--account=} {--actor-id=} {--courier=fake} {--consignment=} {--status=} {--at=} {--start-at=}';
+    protected $signature = 'shipping:probe {action : ship|book|handover|cancel|event|return-request|return-receive|return-inspect|statement} {--statement-ref=} {--file=} {--received=0} {--return=} {--item=} {--outcome=} {--actor-type=staff} {--order=} {--shipment=} {--lines=} {--account=} {--actor-id=} {--courier=fake} {--consignment=} {--status=} {--at=} {--start-at=}';
 
     protected $description = 'Make, book, hand over or cancel one parcel and print the outcome as JSON (concurrency testing only)';
 
     protected $hidden = true;
 
-    public function handle(CreateShipment $create, BookShipment $book, HandOverShipment $handOver, CancelShipment $cancel, RecordCourierEvent $record, RequestReturn $requestReturn, ReceiveReturn $receiveReturn, InspectReturnItem $inspectReturn): int
+    public function handle(CreateShipment $create, BookShipment $book, HandOverShipment $handOver, CancelShipment $cancel, RecordCourierEvent $record, RequestReturn $requestReturn, ReceiveReturn $receiveReturn, InspectReturnItem $inspectReturn, ImportCourierStatement $statement): int
     {
         if (app()->environment('production')) {
             $this->error('Not available in production.');
@@ -57,6 +58,13 @@ class ShipmentProbeCommand extends Command
             if ($this->argument('action') === 'event') {
                 $result = $record->handle((string) $this->option('courier'), new CourierEvent((string) $this->option('consignment'), (string) $this->option('status'), CarbonImmutable::parse((string) $this->option('at'), 'UTC')), 'webhook');
                 $this->line(json_encode(['ok' => true, 'result' => $result], JSON_THROW_ON_ERROR));
+
+                return self::SUCCESS;
+            }
+
+            if ($this->argument('action') === 'statement') {
+                $result = $statement->handle($actor, (string) $this->option('courier'), (string) $this->option('statement-ref'), (string) file_get_contents((string) $this->option('file')), CarbonImmutable::now('UTC')->subDay(), CarbonImmutable::now('UTC')->addMinutes(4), (int) $this->option('received'));
+                $this->line(json_encode(['ok' => true, 'statement' => $result->public_id], JSON_THROW_ON_ERROR));
 
                 return self::SUCCESS;
             }
