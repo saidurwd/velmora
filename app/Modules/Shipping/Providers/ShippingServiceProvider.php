@@ -63,6 +63,7 @@ class ShippingServiceProvider extends ModuleServiceProvider
         $menu->add('shipping::fulfilment.menu.returns', 'admin.shipping.returns.index', 'shipping.view', 57);
         $menu->add('shipping::fulfilment.menu.issues', 'admin.shipping.issues.index', 'shipping.view', 58);
         $menu->add('shipping::fulfilment.menu.statements', 'admin.shipping.statements.index', 'shipping.view', 59);
+        $menu->add('shipping::fulfilment.menu.settings', 'admin.shipping.settings', 'shipping.view', 62);
         $menu->add('shipping::admin.menu.zones', 'admin.shipping.zones.index', 'shipping.view', 60);
         $menu->add('shipping::admin.menu.methods', 'admin.shipping.methods.index', 'shipping.view', 61);
     }

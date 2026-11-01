@@ -317,3 +317,29 @@ describe('both languages', function () {
         ($this->as)($this->warehouse)->get('/admin/shipping/issues')->assertSee('কুরিয়ার এমন একটি অবস্থা লিখেছে');
     });
 });
+
+describe('delivery rules', function () {
+    it('shows the rules to anyone who can see parcels, and lets only those who manage settings change them, with a record', function () {
+        $owner = catalogStaff(['shipping.view', 'settings.manage']);
+
+        ($this->as)($this->viewer)->get('/admin/shipping/settings')->assertOk()->assertSee('Delivery rules')->assertSee('value="7"', false)->assertSee('changing them needs the permission to manage settings');
+        ($this->as)($this->viewer)->put('/admin/shipping/settings', ['window' => 14, 'attempts' => 2])->assertForbidden();
+        ($this->as)($this->manager)->put('/admin/shipping/settings', ['window' => 14, 'attempts' => 2])->assertForbidden();   // managing returns is not managing settings
+        ($this->as)($owner)->put('/admin/shipping/settings', ['window' => 0, 'attempts' => 2])->assertSessionHasErrors('window');
+        ($this->as)($owner)->put('/admin/shipping/settings', ['window' => 14, 'attempts' => 11])->assertSessionHasErrors('attempts');
+        ($this->as)($owner)->put('/admin/shipping/settings', ['window' => 14, 'attempts' => 2])->assertSessionHas('status', 'Saved.');
+
+        ($this->as)($owner)->get('/admin/shipping/settings')->assertOk()->assertSee('value="14"', false)->assertSee('value="2"', false);
+        expect(DB::table('audit_events')->where('action', 'shipping.settings_changed')->count())->toBe(1);
+    });
+
+    it('gives a parcel as many delivery attempts as the setting says', function () {
+        $owner = catalogStaff(['shipping.view', 'settings.manage']);
+        ($this->as)($owner)->put('/admin/shipping/settings', ['window' => 7, 'attempts' => 1]);
+        $parcel = ($this->made)([$this->mug => 1], true);
+
+        ($this->say)($parcel, 'DELIVERY_FAILED', ($this->at)(1));
+
+        expect(DB::table('shipment_exceptions')->where('type', 'attempts_exhausted')->count())->toBe(1);   // the first failure was already the last
+    });
+});

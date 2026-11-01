@@ -45,6 +45,7 @@ return [
         'outcome_invalid' => 'Choose restock, quarantine or write off.',
         'payer_invalid' => 'Choose who pays for sending the goods back.',
         'line_not_in_return' => 'That item is not in this return.',
+        'setting_out_of_range' => 'Enter a whole number from :min to :max.',
         'statement_invalid' => 'The statement cannot be used: :errors',
         'statement_already_imported' => 'This statement was already checked.',
         'statement_window_invalid' => 'The period must start before it ends, must not be in the future, and may be at most :days days long.',

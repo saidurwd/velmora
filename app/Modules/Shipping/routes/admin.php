@@ -5,13 +5,14 @@ declare(strict_types=1);
 use App\Modules\Shipping\Http\Controllers\Admin\IssueController;
 use App\Modules\Shipping\Http\Controllers\Admin\MethodController;
 use App\Modules\Shipping\Http\Controllers\Admin\ReturnController;
+use App\Modules\Shipping\Http\Controllers\Admin\SettingsController;
 use App\Modules\Shipping\Http\Controllers\Admin\ShipmentController;
 use App\Modules\Shipping\Http\Controllers\Admin\StatementController;
 use App\Modules\Shipping\Http\Controllers\Admin\ZoneController;
 use Illuminate\Support\Facades\Route;
 
 // Mounted under /admin with the `admin.` name prefix. Looking = shipping.view; making, booking, handing over, cancelling and counting goods back = shipping.create_shipment;
-// allowing or refusing returns and closing exception items = shipping.manage; importing a courier statement (it records cash) = payments.reconcile.
+// allowing or refusing returns and closing exception items = shipping.manage; importing a courier statement (it records cash) = payments.reconcile; the two delivery rules (return window, delivery attempts) = settings.manage.
 Route::middleware(['auth:admin', 'session.policy:admin'])->prefix('shipping')->name('shipping.')->group(function (): void {
     Route::prefix('zones')->name('zones.')->group(function (): void {
         Route::get('/', [ZoneController::class, 'index'])->middleware('permission:shipping.view')->name('index');
@@ -52,6 +53,9 @@ Route::middleware(['auth:admin', 'session.policy:admin'])->prefix('shipping')->n
 
     Route::get('/issues', [IssueController::class, 'index'])->middleware('permission:shipping.view')->name('issues.index');
     Route::post('/issues/{issue}/resolve', [IssueController::class, 'resolve'])->whereAlphaNumeric('issue')->middleware(['permission:shipping.manage', 'throttle:shipping-actions'])->name('issues.resolve');
+
+    Route::get('/settings', [SettingsController::class, 'show'])->middleware('permission:shipping.view')->name('settings');
+    Route::put('/settings', [SettingsController::class, 'update'])->middleware(['permission:settings.manage', 'throttle:shipping-actions'])->name('settings.update');
 
     Route::get('/statements', [StatementController::class, 'index'])->middleware('permission:shipping.view')->name('statements.index');
     Route::post('/statements/import', [StatementController::class, 'import'])->middleware(['permission:payments.reconcile', 'throttle:shipping-import'])->name('statements.import');

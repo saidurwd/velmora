@@ -20,6 +20,9 @@ use App\Modules\Inventory\Services\OrderStockReservations;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 
 class InventoryServiceProvider extends ModuleServiceProvider
 {
@@ -43,6 +46,13 @@ class InventoryServiceProvider extends ModuleServiceProvider
         parent::boot();
 
         $this->app->make(OutboxRegistry::class)->register(StockLow::class);
-        $this->app->make(AdminMenu::class)->add('inventory::admin.menu.stock', 'admin.inventory.index', 'inventory.view', 50);
+        RateLimiter::for('inventory-actions', fn (Request $r) => Limit::perMinute(60)->by('inventory-actions|'.$r->route()?->getName().'|'.($r->user('admin')?->getAuthIdentifier() ?? $r->ip())));
+
+        $menu = $this->app->make(AdminMenu::class);
+        $menu->add('inventory::admin.menu.stock', 'admin.inventory.index', 'inventory.view', 50);
+        $menu->add('inventory::screens.menu.transfers', 'admin.inventory.transfers.index', 'inventory.view', 51);
+        $menu->add('inventory::screens.menu.counts', 'admin.inventory.counts.index', 'inventory.view', 52);
+        $menu->add('inventory::screens.menu.low', 'admin.inventory.reports.low', 'inventory.view', 53);
+        $menu->add('inventory::screens.menu.aging', 'admin.inventory.reports.aging', 'inventory.view', 54);
     }
 }

@@ -11,6 +11,7 @@ use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\Enums\ActorType;
 use App\Modules\Platform\Outbox\Outbox;
 use App\Modules\Platform\Support\AuditLogger;
+use App\Modules\Platform\Support\Settings;
 use App\Modules\Platform\Support\Transactions;
 use App\Modules\Shipping\DTOs\CourierEvent;
 use App\Modules\Shipping\Enums\ShipmentStatus;
@@ -51,6 +52,7 @@ final class RecordCourierEvent
         private readonly ShipmentIssues $issues,
         private readonly AuditLogger $audit,
         private readonly Clock $clock,
+        private readonly Settings $settings,
     ) {}
 
     /** @param  'webhook'|'poll'  $source */
@@ -179,7 +181,7 @@ final class RecordCourierEvent
                 $this->outbox->record(new ShipmentDelivered(...$args, detail: $this->orderDelivered($shipment) ? 'all_delivered' : null));
                 break;
             case ShipmentStatus::Failed:
-                $final = $attempts >= (int) config('shipping.max_delivery_attempts');
+                $final = $attempts >= $this->settings->int(SaveFulfilmentSettings::ATTEMPTS_KEY, (int) config('shipping.max_delivery_attempts'));
                 $this->outbox->record(new ShipmentFailed(...$args, detail: $final ? 'final' : null));
                 if ($final) {
                     $this->issues->raise('attempts_exhausted', $shipment->id, $shipment->public_id, ['attempts' => $attempts]);

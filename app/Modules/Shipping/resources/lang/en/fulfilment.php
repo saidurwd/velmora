@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 return [
-    'menu' => ['shipments' => 'Parcels', 'returns' => 'Returns', 'issues' => 'Delivery problems', 'statements' => 'Courier statements'],
+    'menu' => ['shipments' => 'Parcels', 'returns' => 'Returns', 'issues' => 'Delivery problems', 'statements' => 'Courier statements', 'settings' => 'Delivery rules'],
     'parcel_made' => 'The parcel was made.',
     'done' => ['booked' => 'The courier booking was tried. See the parcel for the result.', 'handed_over' => 'The parcel is marked as handed over.', 'cancelled' => 'The parcel was cancelled.', 'status_recorded' => 'The parcel’s status was recorded.'],
     'status' => [
@@ -55,5 +55,9 @@ return [
         'empty' => 'No statements yet.', 'show_title' => 'Statement :number', 'line_cols' => ['consignment' => 'Courier’s reference', 'status' => 'Status', 'cash' => 'Cash', 'fee' => 'Charge', 'delivered' => 'Delivered', 'result' => 'Result'],
         'result' => ['matched' => 'Matched', 'unknown_parcel' => 'Not our parcel', 'status_mismatch' => 'Status differs', 'cod_mismatch' => 'Cash differs', 'already_remitted' => 'Already paid over'],
         'imported' => 'The statement was checked.', 'not_utf8' => 'The file must be saved as UTF-8 text.', 'amount_invalid' => 'enter the cash received in taka, like 1500 or 1500.50', 'only_view' => 'You can look at statements, but importing needs the permission to reconcile payments.',
+    ],
+    'settings' => [
+        'title' => 'Delivery rules', 'window' => 'Days to return goods', 'window_help' => 'Customers may ask to send goods back this many days after the parcel arrives. Staff can start a return at any time.',
+        'attempts' => 'Delivery attempts', 'attempts_help' => 'A parcel that fails this many times (the first try counts) is raised to a person to be returned to the shop.', 'save' => 'Save', 'saved' => 'Saved.', 'only_view' => 'You can see these rules, but changing them needs the permission to manage settings.',
     ],
 ];
