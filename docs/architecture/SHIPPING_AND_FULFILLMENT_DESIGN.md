@@ -61,6 +61,7 @@ Partial shipment stock; cancel-vs-ship race; out-of-order/duplicate events; unkn
 - **Events:** the parcel state is the latest event by the courier's time; unknown words are kept, raised to `shipment_exceptions`, and change nothing else; webhook `POST /api/v1/webhooks/couriers/{courier}` + polling every 10 minutes; `ManualCourier` + `RecordManualShipmentStatus` mean the shop can run without any courier API.
 - **Cash:** delivery records the parcel's cash once (per-parcel payment `provider=cod`); order payment status `partially_paid` until the parcels add up to the order total; the order completes when delivered and paid.
 - **Returns:** customer returns (own order, delivered goods only, window from arrival) and returns of undelivered parcels (opened by the courier's return); received quantity counts on `order_items.returned_qty`; each line is restocked, quarantined (non-sellable location) or written off with ledger rows; a closing refund suggestion for a person, never executed.
+- **Inventory operations:** transfers (units leave the source at once and wait in transit; lost units recorded on the line), stock-take with a second person's approval (database-enforced), low-stock and aging reports. Purchase orders and suppliers: backlog epic.
 - **Not built yet:** first real courier adapter (needs the courier's official documentation saved under `docs/vendor/<courier>/`), returns, transfers and stock-take, courier statement reconciliation, tracking page, admin screens.
 
 ## 12. Open

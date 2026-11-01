@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Inventory\Providers;
 
+use App\Modules\Inventory\Console\StockOpsProbeCommand;
 use App\Modules\Inventory\Console\StockProbeCommand;
 use App\Modules\Inventory\Contracts\Availability;
 use App\Modules\Inventory\Contracts\ReturnStock;
@@ -34,7 +35,7 @@ class InventoryServiceProvider extends ModuleServiceProvider
         $this->app->bind(ShipmentStock::class, OrderShipmentStock::class);
         $this->app->bind(ReturnStock::class, LedgerReturnStock::class);
         $this->app->bind(StockInitialiser::class, LedgerStockInitialiser::class);
-        $this->commands([StockProbeCommand::class]);
+        $this->commands([StockProbeCommand::class, StockOpsProbeCommand::class]);
     }
 
     public function boot(): void
