@@ -9,6 +9,7 @@
 @section('content')
 <div class="space-y-6">
     <h1 class="text-2xl font-bold">{{ __('shipping::fulfilment.shipments.title') }}</h1>
+    @include('shipping::admin._alerts')
 
     <form method="GET" action="{{ route('admin.shipping.shipments.index') }}" class="grid gap-3 sm:grid-cols-4 sm:items-end">
         <div><label for="status" class="block text-sm font-medium">{{ __('shipping::fulfilment.shipments.status') }}</label>

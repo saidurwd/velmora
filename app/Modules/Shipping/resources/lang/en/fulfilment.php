@@ -60,4 +60,9 @@ return [
         'title' => 'Delivery rules', 'window' => 'Days to return goods', 'window_help' => 'Customers may ask to send goods back this many days after the parcel arrives. Staff can start a return at any time.',
         'attempts' => 'Delivery attempts', 'attempts_help' => 'A parcel that fails this many times (the first try counts) is raised to a person to be returned to the shop.', 'save' => 'Save', 'saved' => 'Saved.', 'only_view' => 'You can see these rules, but changing them needs the permission to manage settings.',
     ],
+    'alerts_title' => 'Deliveries that need a person',
+    'alert' => [
+        'unknown_courier_words' => 'A courier used a status or a parcel we do not know', 'stuck_parcels' => 'Parcels with no news from the courier for days', 'unhanded_parcels' => 'Parcels made but never handed to the courier',
+        'problems_waiting' => 'Delivery problems left open too long', 'returns_waiting' => 'Returns waiting for a decision',
+    ],
 ];

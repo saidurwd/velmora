@@ -10,6 +10,7 @@ use App\Modules\Shipping\Http\Concerns\ActsAsStaff;
 use App\Modules\Shipping\Http\Requests\Admin\ResolveIssueRequest;
 use App\Modules\Shipping\Models\Shipment;
 use App\Modules\Shipping\Models\ShipmentIssue;
+use App\Modules\Shipping\Services\ShippingHealth;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,13 +20,13 @@ class IssueController
 {
     use ActsAsStaff;
 
-    public function index(Request $request): View
+    public function index(Request $request, ShippingHealth $health): View
     {
         $status = in_array($request->query('status'), ['open', 'resolved', 'ignored'], true) ? (string) $request->query('status') : 'open';
         $issues = ShipmentIssue::query()->where('status', $status)->orderByDesc('id')->paginate(25)->withQueryString();
 
         return view('shipping::admin.issues.index', [
-            'issues' => $issues, 'status' => $status, 'can' => $request->user('admin')?->can('shipping.manage') === true,
+            'alerts' => $health->breached(), 'issues' => $issues, 'status' => $status, 'can' => $request->user('admin')?->can('shipping.manage') === true,
             'parcels' => Shipment::query()->whereIn('id', array_filter($issues->pluck('shipment_id')->all()))->pluck('public_id', 'id'),
         ]);
     }

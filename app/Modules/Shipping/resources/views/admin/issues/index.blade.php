@@ -5,6 +5,7 @@
 @section('content')
 <div class="space-y-6">
     <h1 class="text-2xl font-bold">{{ __('shipping::fulfilment.issues.title') }}</h1>
+    @include('shipping::admin._alerts')
     <p class="text-sm text-muted">{{ __('shipping::fulfilment.issues.help') }}</p>
     @if (session('status'))<x-platform::alert type="success">{{ session('status') }}</x-platform::alert>@endif
     @error('issue')<x-platform::alert type="error">{{ $message }}</x-platform::alert>@enderror

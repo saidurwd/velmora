@@ -197,3 +197,19 @@ describe('where the customer finds the link', function () {
         $this->actingAs($customer, 'web')->get("/bn/account/orders/{$order->public_id}")->assertOk()->assertSee('এই অর্ডার ট্র্যাক করুন');
     });
 });
+
+describe('the language switcher', function () {
+    it('leads to the same page in the other language through a link signed for it that expires when the first one does, and keeps search engines out', function () {
+        $order = ($this->order)([$this->tee => 1]);
+        $parcel = ($this->parcel)($order, [$this->tee => 1]);
+        ($this->say)($parcel, 'DELIVERED', ($this->at)(1));
+        $expires = now()->addHours(3);
+        $page = $this->get(($this->link)($order->public_id, 'en', $expires))->assertOk()->assertSee('noindex', false);
+
+        preg_match('#<a href="([^"]+)" hreflang="bn"#', $page->getContent(), $m);
+        $bn = html_entity_decode($m[1] ?? '');
+        expect($bn)->toContain('/bn/orders/')->and($bn)->toContain('expires='.$expires->timestamp);
+        $this->get($bn)->assertOk()->assertSee('আপনার অর্ডার ট্র্যাক করুন');
+        $this->get(str_replace('signature=', 'signature=0', $bn))->assertForbidden();
+    });
+});

@@ -19,6 +19,7 @@ use App\Modules\Shipping\Http\Requests\Admin\ManualStatusRequest;
 use App\Modules\Shipping\Http\Requests\Admin\ReasonRequest;
 use App\Modules\Shipping\Models\CourierAccount;
 use App\Modules\Shipping\Models\Shipment;
+use App\Modules\Shipping\Services\ShippingHealth;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,7 +29,7 @@ class ShipmentController
 {
     use ActsAsStaff;
 
-    public function __construct(private readonly OrderFulfilment $fulfilment, private readonly OrderDirectory $orders) {}
+    public function __construct(private readonly OrderFulfilment $fulfilment, private readonly OrderDirectory $orders, private readonly ShippingHealth $health) {}
 
     public function index(Request $request): View
     {
@@ -45,7 +46,7 @@ class ShipmentController
 
         return view('shipping::admin.shipments.index', [
             'parcels' => $parcels, 'orders' => $this->orders->references(array_values(array_unique(array_map('intval', $parcels->pluck('order_id')->all())))),
-            'statuses' => ShipmentStatus::cases(), 'status' => $status, 'courier' => $courier, 'search' => $search,
+            'alerts' => $this->health->breached(), 'statuses' => ShipmentStatus::cases(), 'status' => $status, 'courier' => $courier, 'search' => $search,
             'couriers' => Shipment::query()->distinct()->orderBy('courier')->pluck('courier'),
         ]);
     }
