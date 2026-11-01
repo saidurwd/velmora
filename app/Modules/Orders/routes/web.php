@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Orders\Http\Controllers\Web\AccountOrderController;
 use App\Modules\Orders\Http\Controllers\Web\CheckoutController;
+use App\Modules\Orders\Http\Controllers\Web\ReceiptController;
 use Illuminate\Support\Facades\Route;
 
 // Guest checkout is allowed; the cart comes from the shopper's own cookie or account.
@@ -20,6 +21,9 @@ Route::localized(function (): void {
 
     // The link in the confirmation email / page: signed, so only someone holding it can read the order; it expires.
     Route::get('/orders/{order}/thanks', [CheckoutController::class, 'confirmation'])->middleware(['signed', 'throttle:public-read'])->name('checkout.thanks');
+
+    // The printable receipt: also only through a link we signed (shown on the customer's order page and the confirmation page); it expires.
+    Route::get('/orders/{order}/receipt', [ReceiptController::class, 'show'])->whereAlphaNumeric('order')->middleware(['signed', 'throttle:public-read'])->name('orders.receipt');
 
     // On that page the shopper can make an account (or, signed in, use theirs) and the order goes into it. The signed link on the form is the proof of ownership.
     Route::post('/orders/{order}/account', [AccountOrderController::class, 'createAccount'])->middleware(['signed', 'throttle:auth'])->name('checkout.account.create');

@@ -62,3 +62,4 @@ sleep(2); // the courier's events are told apart by the second
 app(RecordManualShipmentStatus::class)->handle($staff, $parcel->public_id, 'in_transit', 'At the sorting centre');
 
 file_put_contents(storage_path('app/e2e-tracking-url.txt'), URL::temporarySignedRoute('orders.track', now()->addDays(7), ['locale' => 'en', 'order' => $order->public_id]));
+file_put_contents(storage_path('app/e2e-receipt-url.txt'), URL::temporarySignedRoute('orders.receipt', now()->addDays(7), ['locale' => 'en', 'order' => $order->public_id]));

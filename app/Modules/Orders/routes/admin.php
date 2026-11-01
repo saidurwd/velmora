@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Orders\Http\Controllers\Admin\FraudController;
 use App\Modules\Orders\Http\Controllers\Admin\OrderController;
+use App\Modules\Orders\Http\Controllers\Admin\ReceiptController;
 use Illuminate\Support\Facades\Route;
 
 // Mounted under /admin with the `admin.` name prefix.
@@ -18,6 +19,7 @@ Route::middleware(['auth:admin', 'session.policy:admin'])->prefix('orders')->nam
         Route::post('/blocklist/{entry}/toggle', [FraudController::class, 'toggle'])->whereNumber('entry')->middleware(['permission:orders.cancel', 'throttle:30,1'])->name('blocklist.toggle');
     });
 
+    Route::get('/{order}/receipt', [ReceiptController::class, 'show'])->whereAlphaNumeric('order')->middleware(['permission:orders.view', 'throttle:60,1'])->name('receipt');
     Route::get('/{order}', [OrderController::class, 'show'])->middleware('permission:orders.view')->name('show');
     Route::post('/{order}/transition', [OrderController::class, 'transition'])->middleware(['permission:orders.update', 'throttle:60,1'])->name('transition');
     Route::post('/{order}/review/clear', [OrderController::class, 'clearReview'])->middleware(['permission:orders.update', 'throttle:60,1'])->name('review.clear');

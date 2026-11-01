@@ -65,4 +65,11 @@ return [
         'unknown_courier_words' => 'A courier used a status or a parcel we do not know', 'stuck_parcels' => 'Parcels with no news from the courier for days', 'unhanded_parcels' => 'Parcels made but never handed to the courier',
         'problems_waiting' => 'Delivery problems left open too long', 'returns_waiting' => 'Returns waiting for a decision',
     ],
+    'documents' => [
+        'back' => 'Back', 'print' => 'Print', 'packing_slip_link' => 'Print packing slip', 'pick_list_link' => 'Pick list for parcels waiting to be handed over',
+        'slip' => ['title' => 'Packing slip', 'parcel' => 'Parcel', 'order' => 'Order', 'deliver_to' => 'Deliver to', 'phone' => 'Phone', 'courier' => 'Courier', 'tracking' => 'Tracking code', 'cash' => 'Cash to collect on delivery', 'prepaid' => 'Nothing to collect',
+            'items' => 'In this parcel', 'item' => 'Item', 'qty' => 'Qty', 'packed' => 'Packed', 'note' => 'Please check every item before closing the parcel.'],
+        'pick' => ['title' => 'Pick list', 'help' => 'Everything to take off the shelves for parcels that are made but not yet handed to the courier. No prices.', 'sku' => 'SKU', 'product' => 'Product', 'qty' => 'Total', 'for' => 'For (order, parcel)', 'picked' => 'Picked',
+            'empty' => 'No parcels are waiting to be handed over.', 'parcels' => ':count parcels', 'capped' => 'Only the first :limit lines are shown. Print this, hand those parcels over, then print again.'],
+    ],
 ];

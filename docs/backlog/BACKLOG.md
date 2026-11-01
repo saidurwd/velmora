@@ -86,7 +86,7 @@ Epics = phases; IDs `E<phase>-<n>`; estimate in person-days (AI-assisted); depen
 | E7-6 | Invoices/credit notes + PDFs (bn font) | Orders | 4 | normal | E7-5 |
 | E7-7 | Courier reconciliation + stock transfers/counts | Shipping | 4 | HIGH | E7-6 |
 
-Phase 7 status (see ADR P7-1..P7-14): E7-1, E7-2, E7-4, E7-5, E7-7 are built. **Open:** E7-3 (real courier adapter — needs the courier's official docs in `docs/vendor/<courier>/`); E7-6 (invoices, credit notes, packing slips, pick lists as printable HTML — not built); bulk create shipments and bulk label print; a read-only view of the courier status map and courier accounts in the admin; a blind (hide expected quantity) stock-take; cash-on-delivery aging for partly paid orders; a link from the suggested refund to the refund form; claiming an older guest order by phone; purchase orders and suppliers (Q9).
+Phase 7 status (see ADR P7-1..P7-14): E7-1, E7-2, E7-4, E7-5, E7-7 are built. **Open:** E7-3 (real courier adapters for Steadfast first, then Pathao — need each courier's official docs in `docs/vendor/<courier>/`; community packages are not accepted as the source); E7-6 (VAT invoices and credit notes — wait for the tax adviser; the order receipt, packing slip and pick list are built); bulk create shipments and bulk label print; a read-only view of the courier status map and courier accounts in the admin; a blind (hide expected quantity) stock-take; cash-on-delivery aging for partly paid orders; a link from the suggested refund to the refund form; claiming an older guest order by phone; purchase orders and suppliers (Q9).
 
 ## Epic E8 — Phase 8: Digital & services
 

@@ -56,4 +56,5 @@ return [
     'attach_btn' => 'Add this order to my account',
     'mine_link' => 'See this order in My orders',
     'track_link' => 'Track this order',
+    'receipt_link' => 'Print your receipt',
 ];

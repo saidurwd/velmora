@@ -15,6 +15,8 @@
     @if (session('status'))<x-platform::alert type="success">{{ session('status') }}</x-platform::alert>@endif
     @error('parcel')<x-platform::alert type="error">{{ $message }}</x-platform::alert>@enderror
 
+    <p><a class="underline" href="{{ route('admin.shipping.shipments.packing_slip', $parcel->public_id) }}">{{ __('shipping::fulfilment.documents.packing_slip_link') }}</a></p>
+
     <section aria-labelledby="d-h" class="space-y-2">
         <h2 id="d-h" class="text-lg font-semibold">{{ __('shipping::fulfilment.show.details') }}</h2>
         <dl class="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">

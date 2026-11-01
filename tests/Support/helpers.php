@@ -113,16 +113,16 @@ function shippingWorld(object $t): void
         DB::table('courier_status_map')->insert(['courier' => 'fake', 'provider_status' => $word, 'internal_status' => $meaning, 'created_at' => now(), 'updated_at' => now()]);
     }
 
-    /** A confirmed order (tee ৳650.00, mug ৳350.00, delivery ৳60, cash fee ৳20 for cash orders) with its stock held. $lines: [variant id => quantity]. */
-    $t->order = function (array $lines, string $method = 'cod') use ($t, $system): object {
+    /** A confirmed order (tee ৳650.00, mug ৳350.00, delivery ৳60, cash fee ৳20 for cash orders) with its stock held. $lines: [variant id => quantity]. $opts: lineDiscount, taxBp, inclusive, orderDiscount. */
+    $t->order = function (array $lines, string $method = 'cod', array $opts = []) use ($t, $system): object {
         $prices = [$t->tee => 65000, $t->mug => 35000];
         $calc = [];
         $newLines = [];
         foreach ($lines as $variantId => $qty) {
-            $calc[] = ['variantId' => $variantId, 'quantity' => $qty, 'unitMinor' => $prices[$variantId], 'lineDiscountMinor' => 0, 'taxRateBp' => 0];
+            $calc[] = ['variantId' => $variantId, 'quantity' => $qty, 'unitMinor' => $prices[$variantId], 'lineDiscountMinor' => $opts['lineDiscount'] ?? 0, 'taxRateBp' => $opts['taxBp'] ?? 0];
             $newLines[] = new NewOrderLine($variantId, 'physical', ['en' => $variantId === $t->tee ? 'Cotton Tee' : 'Mug', 'bn' => 'পণ্য'], $variantId === $t->tee ? 'TEE-1' : 'MUG-1');
         }
-        $breakdown = (new BreakdownCalculator)->calculate($calc, false, 0, 6000, $method === 'cod' ? 2000 : 0);
+        $breakdown = (new BreakdownCalculator)->calculate($calc, $opts['inclusive'] ?? false, $opts['orderDiscount'] ?? 0, 6000, $method === 'cod' ? 2000 : 0);
         $address = new NewOrderAddress('shipping', 'Rahim Uddin', '+8801712345678', 3, 30, 300, ['division' => ['en' => 'Dhaka', 'bn' => 'ঢাকা'], 'district' => ['en' => 'Dhaka', 'bn' => 'ঢাকা'], 'upazila' => ['en' => 'Dhanmondi', 'bn' => 'ধানমন্ডি']], 'House 5, Road 2', '1205', 'Dhanmondi', null);
         $order = app(CreateOrder::class)->handle(new NewOrder(Actor::guest('checkout'), null, 'Rahim Uddin', '+8801712345678', null, OrderChannel::Web, 'en', $method, 'standard', $breakdown, $newLines, [$address]));
         app(StockReservations::class)->holdForOrder($lines, $order->public_id);

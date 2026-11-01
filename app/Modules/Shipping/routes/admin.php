@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Shipping\Http\Controllers\Admin\DocumentController;
 use App\Modules\Shipping\Http\Controllers\Admin\IssueController;
 use App\Modules\Shipping\Http\Controllers\Admin\MethodController;
 use App\Modules\Shipping\Http\Controllers\Admin\ReturnController;
@@ -31,6 +32,8 @@ Route::middleware(['auth:admin', 'session.policy:admin'])->prefix('shipping')->n
     });
 
     Route::get('/shipments', [ShipmentController::class, 'index'])->middleware('permission:shipping.view')->name('shipments.index');
+    Route::get('/pick-list', [DocumentController::class, 'pickList'])->middleware(['permission:shipping.view', 'throttle:shipping-actions'])->name('pick_list');
+    Route::get('/shipments/{shipment}/packing-slip', [DocumentController::class, 'packingSlip'])->whereAlphaNumeric('shipment')->middleware(['permission:shipping.view', 'throttle:shipping-actions'])->name('shipments.packing_slip');
     Route::get('/shipments/{shipment}', [ShipmentController::class, 'show'])->whereAlphaNumeric('shipment')->middleware('permission:shipping.view')->name('shipments.show');
     Route::get('/orders/{order}', [ShipmentController::class, 'order'])->whereAlphaNumeric('order')->middleware('permission:shipping.view')->name('orders.show');
     Route::post('/orders/{order}/shipments', [ShipmentController::class, 'store'])->whereAlphaNumeric('order')->middleware(['permission:shipping.create_shipment', 'throttle:shipping-actions'])->name('shipments.store');

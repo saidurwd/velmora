@@ -43,3 +43,15 @@ test('a tracking page works without JavaScript', async ({ browser }) => {
     await expect(page.getByText('Parcel 1')).toBeVisible();
     await context.close();
 });
+
+test('the printable receipt shows the order and is axe clean in both languages, with no phone number', async ({ page }) => {
+    const url = readFileSync('storage/app/e2e-receipt-url.txt', 'utf8').trim();
+    await page.goto(url);
+    await expect(page.getByRole('heading', { name: 'Order receipt' })).toBeVisible();
+    await expect(page.getByText('not a VAT invoice')).toBeVisible();
+    await expect(page.locator('body')).not.toContainText('01898765432');
+    await noViolations(page, 'receipt (English)');
+
+    await page.goto(url.replace('/en/', '/bn/').replace(/signature=[0-9a-f]+/, 'signature=0000'));   // an altered link is refused
+    await expect(page.locator('body')).not.toContainText('Order receipt');
+});

@@ -13,6 +13,14 @@ interface OrderDirectory
      */
     public function references(array $orderIds): array;
 
+    /**
+     * What each order line was sold as, in one query, in the language asked for (falling back to the shop's default language).
+     *
+     * @param  list<int>  $orderItemIds
+     * @return array<int, array{name: string, sku: string}> keyed by order item id
+     */
+    public function itemLabels(array $orderItemIds, string $locale): array;
+
     /** @return array{id: int, number: string, public_id: string}|null the order with this order number (as printed, any case) */
     public function findByNumber(string $orderNumber): ?array;
 }

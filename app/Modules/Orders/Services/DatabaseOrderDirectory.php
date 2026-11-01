@@ -16,6 +16,21 @@ final class DatabaseOrderDirectory implements OrderDirectory
         return $row === null ? null : ['id' => (int) $row->id, 'number' => (string) $row->order_number, 'public_id' => (string) $row->public_id];
     }
 
+    public function itemLabels(array $orderItemIds, string $locale): array
+    {
+        if ($orderItemIds === []) {
+            return [];
+        }
+
+        $out = [];
+        foreach (DB::table('order_items')->whereIn('id', $orderItemIds)->get(['id', 'name_snapshot', 'sku_snapshot']) as $r) {
+            $names = (array) json_decode((string) $r->name_snapshot, true);
+            $out[(int) $r->id] = ['name' => (string) ($names[$locale] ?? $names[(string) config('app.default_locale')] ?? (reset($names) ?: '')), 'sku' => (string) $r->sku_snapshot];
+        }
+
+        return $out;
+    }
+
     public function references(array $orderIds): array
     {
         if ($orderIds === []) {

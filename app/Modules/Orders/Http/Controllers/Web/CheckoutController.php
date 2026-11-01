@@ -258,6 +258,7 @@ class CheckoutController
         };
 
         return view('orders::checkout.thanks', [
+            'receiptUrl' => URL::temporarySignedRoute('orders.receipt', now()->addDays((int) config('orders.confirmation_link_days')), ['locale' => $locale, 'order' => $model->public_id]),
             'trackUrl' => $model->fulfillment_status->hasShipped() && Route::has('orders.track') ? URL::temporarySignedRoute('orders.track', now()->addDays((int) config('orders.confirmation_link_days')), ['locale' => $locale, 'order' => $model->public_id]) : null,
             'accountPanel' => $panel,
             'accountUrl' => in_array($panel, ['attach', 'create'], true) ? URL::temporarySignedRoute($panel === 'attach' ? 'checkout.account.attach' : 'checkout.account.create', now()->addDays((int) config('orders.confirmation_link_days')), ['locale' => $locale, 'order' => $model->public_id]) : null,
