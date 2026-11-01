@@ -41,6 +41,7 @@ class AccountOrderController
         return view('orders::account.show', [
             'order' => $model, 'online' => $online, 'methodLabel' => $this->methods->label($model->payment_method_code, app()->getLocale()),
             'payUrl' => $online && $open && Route::has('payments.pay') ? URL::temporarySignedRoute('payments.pay', now()->addDays((int) config('orders.confirmation_link_days')), ['locale' => app()->getLocale(), 'order' => $model->public_id]) : null,
+            'trackUrl' => $this->trackUrl($model),
             'cancelDenied' => CancelOwnOrder::deniedReason($model),
             'notes' => $model->notes()->where('visibility', 'customer')->get(),
         ]);
@@ -87,6 +88,14 @@ class AccountOrderController
         }
 
         return redirect()->route('account.orders.show', ['locale' => app()->getLocale(), 'order' => $order])->with('status', __('orders::account.attached'));
+    }
+
+    /** A link to the tracking page once anything has been sent. It is signed and expires like the confirmation link. */
+    private function trackUrl(Order $order): ?string
+    {
+        return $order->fulfillment_status->hasShipped() && Route::has('orders.track')
+            ? URL::temporarySignedRoute('orders.track', now()->addDays((int) config('orders.confirmation_link_days')), ['locale' => app()->getLocale(), 'order' => $order->public_id])
+            : null;
     }
 
     private function thanks(string $order): string

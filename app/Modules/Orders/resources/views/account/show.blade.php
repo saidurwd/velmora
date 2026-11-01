@@ -15,6 +15,8 @@
 <p class="text-muted">{{ \App\Modules\Platform\Support\Fmt::dateTime($order->placed_at) }} · {{ __('orders::orders.status.'.$order->status->value) }} · {{ __('orders::orders.payment.'.$state) }}</p>
 @error('cancel')<x-platform::alert type="error">{{ $message }}</x-platform::alert>@enderror
 
+@if ($trackUrl)<p><x-platform::btn :href="$trackUrl" variant="secondary">{{ __('orders::account.track_link') }}</x-platform::btn></p>@endif
+
 @if ($payUrl)
     <x-platform::alert type="info">
         <p class="font-medium">{{ $state === 'pending' ? __('orders::account.payment_in_progress') : __('orders::account.pay_help') }}</p>

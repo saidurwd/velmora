@@ -55,4 +55,5 @@ return [
     'attach_text' => 'You are signed in. Add this order to your account to follow it in My orders.',
     'attach_btn' => 'Add this order to my account',
     'mine_link' => 'See this order in My orders',
+    'track_link' => 'Track this order',
 ];

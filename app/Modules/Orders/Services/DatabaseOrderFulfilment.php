@@ -22,13 +22,22 @@ final class DatabaseOrderFulfilment implements OrderFulfilment
 
     public function lock(string $orderPublicId): ?ShippableOrder
     {
-        $order = Order::query()->where('public_id', $orderPublicId)->lockForUpdate()->first();
+        return $this->describe(Order::query()->where('public_id', $orderPublicId)->lockForUpdate()->first());
+    }
+
+    public function view(string $orderPublicId): ?ShippableOrder
+    {
+        return $this->describe(Order::query()->where('public_id', $orderPublicId)->first());
+    }
+
+    private function describe(?Order $order): ?ShippableOrder
+    {
         if ($order === null) {
             return null;
         }
 
         $address = $order->addresses()->where('type', 'shipping')->first();
-        $lines = array_values($order->items()->get()->map(fn ($i): ShippableLine => new ShippableLine($i->id, $i->variant_id, $i->product_type, $i->name('en'), $i->sku_snapshot, $i->quantity, $i->fulfilled_qty, $i->returned_qty, $i->line_total_minor))->all());
+        $lines = array_values($order->items()->get()->map(fn ($i): ShippableLine => new ShippableLine($i->id, $i->variant_id, $i->product_type, $i->name('en'), $i->sku_snapshot, $i->quantity, $i->fulfilled_qty, $i->returned_qty, $i->line_total_minor, array_map('strval', (array) $i->name_snapshot)))->all());
         $cod = $order->payment_method_code === CodPaymentInitiator::CODE;
 
         return new ShippableOrder(

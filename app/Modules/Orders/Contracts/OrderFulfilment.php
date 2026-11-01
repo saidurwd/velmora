@@ -16,6 +16,9 @@ interface OrderFulfilment
     /** Locks the order row and describes it. Null when there is no such order. */
     public function lock(string $orderPublicId): ?ShippableOrder;
 
+    /** Describes the order without locking it (for pages that only read). Null when there is no such order. */
+    public function view(string $orderPublicId): ?ShippableOrder;
+
     /** Every physical line is on a parcel. A plain read: it takes no lock. */
     public function isFullyShipped(int $orderId): bool;
 

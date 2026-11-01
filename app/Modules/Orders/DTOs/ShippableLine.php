@@ -17,6 +17,8 @@ final readonly class ShippableLine
         public int $fulfilledQty,
         public int $returnedQty,
         public int $lineTotalMinor,
+        /** @var array<string, string> $names the item's name in each language it was sold in */
+        public array $names = [],
     ) {}
 
     public function remaining(): int
