@@ -15,10 +15,12 @@ use App\Modules\Shipping\Events\ShipmentDelivered;
 use App\Modules\Shipping\Events\ShipmentFailed;
 use App\Modules\Shipping\Events\ShipmentHandedOver;
 use App\Modules\Shipping\Events\ShipmentReturned;
+use App\Modules\Shipping\Listeners\OpenReturnForReturnedParcel;
 use App\Modules\Shipping\Services\CourierRegistry;
 use App\Modules\Shipping\Services\DatabaseShippingQuoter;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 
 class ShippingServiceProvider extends ModuleServiceProvider
@@ -39,6 +41,7 @@ class ShippingServiceProvider extends ModuleServiceProvider
         parent::boot();
 
         $this->commands([ShipmentProbeCommand::class]);
+        Event::listen(ShipmentReturned::class, [OpenReturnForReturnedParcel::class, 'handle']);
         $outbox = $this->app->make(OutboxRegistry::class);
         foreach ([ShipmentHandedOver::class, ShipmentDelivered::class, ShipmentFailed::class, ShipmentReturned::class] as $event) {
             $outbox->register($event);

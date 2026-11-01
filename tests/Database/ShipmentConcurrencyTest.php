@@ -8,6 +8,7 @@ use App\Modules\Catalog\DTOs\ProductData;
 use App\Modules\Catalog\DTOs\TranslationInput;
 use App\Modules\Catalog\DTOs\VariantData;
 use App\Modules\Catalog\Enums\ProductType;
+use App\Modules\IdentityAccess\Models\User;
 use App\Modules\Inventory\Contracts\StockInitialiser;
 use App\Modules\Inventory\Contracts\StockReservations;
 use App\Modules\Inventory\Database\Seeders\StockLocationSeeder;
@@ -24,7 +25,9 @@ use App\Modules\Platform\Database\Seeders\LanguageSeeder;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Pricing\Database\Seeders\TaxClassSeeder;
 use App\Modules\Pricing\Services\BreakdownCalculator;
+use App\Modules\Shipping\Actions\DecideReturn;
 use App\Modules\Shipping\Database\Seeders\CourierSeeder;
+use App\Modules\Shipping\Models\ReturnRequest;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Process\Process;
 
@@ -247,4 +250,38 @@ it('ends in the right state whatever order concurrent messages arrive in, each s
         expect($row->status)->toBe('delivered', "round {$round}")->and(substr((string) $row->delivered_at, 0, 19))->toBe('2026-11-04 12:00:00')->and(DB::table('shipment_events')->where('shipment_id', $id)->where('source', 'webhook')->count())->toBe(3, "round {$round}: each message stored once")
             ->and(DB::table('cod_collections')->where('shipment_id', $id)->count())->toBe(1, "round {$round}: the cash once")->and(DB::table('orders')->where('id', $orderId)->value('status'))->toBe('completed');
     }
+});
+
+it('lets exactly one of six simultaneous return requests take the last returnable unit', function () {
+    $user = User::factory()->create();
+    [$shipment, $consignment, $orderId] = ($this->parcel)();
+    DB::table('orders')->where('id', $orderId)->update(['user_id' => $user->id]);
+    runShippingProbes([['shipping:probe', ['event', "--consignment={$consignment}", '--status=DELIVERED', '--at='.now()->addMinute()->format('Y-m-d H:i:s')]]]);
+    $public = (string) DB::table('orders')->where('id', $orderId)->value('public_id');
+    $item = (int) DB::table('order_items')->where('order_id', $orderId)->value('id');
+
+    $results = runShippingProbes(array_map(fn () => ['shipping:probe', ['return-request', "--order={$public}", "--lines={$item}:1", '--actor-type=customer', "--actor-id={$user->id}"]], range(1, 6)));
+
+    expect(count(array_filter($results, fn ($r) => $r['ok'])))->toBe(1)->and(array_unique(array_column(array_filter($results, fn ($r) => ! $r['ok']), 'reason')))->toBe(['return_exceeds_delivered'])
+        ->and(DB::table('return_requests')->count())->toBe(1)->and(DB::table('return_items')->sum('quantity'))->toEqual(1);
+});
+
+it('counts a return as received once and looks at a line once, however many people press the button at the same instant', function () {
+    $user = User::factory()->create();
+    [$shipment, $consignment, $orderId] = ($this->parcel)();
+    DB::table('orders')->where('id', $orderId)->update(['user_id' => $user->id]);
+    runShippingProbes([['shipping:probe', ['event', "--consignment={$consignment}", '--status=DELIVERED', '--at='.now()->addMinute()->format('Y-m-d H:i:s')]]]);
+    $public = (string) DB::table('orders')->where('id', $orderId)->value('public_id');
+    $item = (int) DB::table('order_items')->where('order_id', $orderId)->value('id');
+    $return = ReturnRequest::query()->findOrFail(runShippingProbes([['shipping:probe', ['return-request', "--order={$public}", "--lines={$item}:1", '--actor-type=customer', "--actor-id={$user->id}"]]])[0]['ok'] ? (int) DB::table('return_requests')->value('id') : 0);
+    app(DecideReturn::class)->authorize(Actor::system('t'), $return->public_id);
+
+    $received = runShippingProbes(array_map(fn () => ['shipping:probe', ['return-receive', "--return={$return->public_id}"]], range(1, 5)));
+
+    expect(count(array_filter($received, fn ($r) => $r['ok'])))->toBe(1)->and(DB::table('order_items')->where('id', $item)->value('returned_qty'))->toBe(1)->and(DB::table('return_requests')->where('id', $return->id)->value('status'))->toBe('received');
+
+    $looked = runShippingProbes(array_map(fn ($i) => ['shipping:probe', ['return-inspect', "--return={$return->public_id}", "--item={$item}", '--outcome='.($i % 2 ? 'restock' : 'quarantine')]], range(1, 6)));
+
+    expect(count(array_filter($looked, fn ($r) => $r['ok'])))->toBe(1)->and(DB::table('stock_movements')->where('ref_type', 'return')->where('ref_id', $return->public_id)->count())->toBe(1)
+        ->and(DB::table('return_requests')->where('id', $return->id)->value('status'))->toBe('closed')->and(app(StockLedgerVerifier::class)->verify())->toBe([]);
 });

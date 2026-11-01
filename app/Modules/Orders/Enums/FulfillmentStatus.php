@@ -17,7 +17,7 @@ enum FulfillmentStatus: string
     {
         return match ($this) {
             self::Unfulfilled => [self::PartiallyFulfilled, self::Fulfilled],
-            self::PartiallyFulfilled => [self::Fulfilled, self::Unfulfilled],   // back to unfulfilled when the only parcel is cancelled before it leaves
+            self::PartiallyFulfilled => [self::Fulfilled, self::Unfulfilled, self::PartiallyReturned, self::Returned],   // back to unfulfilled when the only parcel is cancelled before it leaves
             self::Fulfilled => [self::PartiallyFulfilled, self::Unfulfilled, self::PartiallyReturned, self::Returned],
             self::PartiallyReturned => [self::Returned],
             self::Returned => [],

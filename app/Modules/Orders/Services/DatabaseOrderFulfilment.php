@@ -34,7 +34,7 @@ final class DatabaseOrderFulfilment implements OrderFulfilment
         return new ShippableOrder(
             $order->id, $order->public_id, $order->order_number, $order->payment_method_code, $order->payment_status === PaymentStatus::Unpaid && $cod, $order->fulfillment_status, $order->grand_total_minor, $order->currency,
             $address->recipient_name ?? $order->contact_name, $address->phone ?? $order->contact_phone, $address->address_line ?? '', (string) ($address?->location_snapshot['district']['en'] ?? ''), $address?->area, $address?->postal_code,
-            $lines, $this->notReady($order, $cod),
+            $lines, $this->notReady($order, $cod), $order->user_id, $order->delivered_at,
         );
     }
 
@@ -61,6 +61,31 @@ final class DatabaseOrderFulfilment implements OrderFulfilment
         $order = Order::query()->findOrFail($orderId);
         if ($order->status === OrderStatus::Confirmed) {
             $this->transition->status($actor, $orderId, OrderStatus::Processing, $reason);
+        }
+
+        return true;
+    }
+
+    public function recordReturned(Actor $actor, int $orderId, array $quantities, string $reason): bool
+    {
+        ksort($quantities);
+        $stamp = $this->clock->now();
+        foreach ($quantities as $itemId => $quantity) {
+            $affected = DB::update('UPDATE order_items SET returned_qty = returned_qty + ?, updated_at = ? WHERE id = ? AND order_id = ? AND returned_qty + ? <= fulfilled_qty', [$quantity, $stamp, $itemId, $orderId, $quantity]);
+            if ($affected !== 1) {
+                return false;
+            }
+        }
+
+        $order = Order::query()->findOrFail($orderId);
+        $lines = $order->items()->where('product_type', 'physical')->get();
+        $target = match (true) {
+            $lines->isNotEmpty() && $lines->every(fn ($l): bool => $l->returned_qty > 0 && $l->returned_qty === $l->fulfilled_qty) && $lines->sum('fulfilled_qty') === $lines->sum('quantity') => FulfillmentStatus::Returned,
+            $lines->contains(fn ($l): bool => $l->returned_qty > 0) => FulfillmentStatus::PartiallyReturned,
+            default => $order->fulfillment_status,
+        };
+        if ($target !== $order->fulfillment_status && $order->fulfillment_status->canMoveTo($target)) {
+            $this->transition->fulfillment($actor, $orderId, $target, $reason);
         }
 
         return true;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Shipping\Actions;
 
 use App\Modules\Inventory\Contracts\ShipmentStock;
+use App\Modules\Orders\Contracts\OrderDirectory;
 use App\Modules\Orders\Contracts\OrderFulfilment;
 use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\DTOs\Actor;
@@ -28,6 +29,7 @@ final class CancelShipment
 {
     public function __construct(
         private readonly OrderFulfilment $orders,
+        private readonly OrderDirectory $directory,
         private readonly ShipmentStock $stock,
         private readonly CourierRegistry $couriers,
         private readonly ShipmentLog $log,
@@ -56,7 +58,7 @@ final class CancelShipment
         }
 
         $done = Transactions::run(function () use ($actor, $shipment, $reason): Shipment {
-            $orderPublicId = (string) DB::table('orders')->where('id', $shipment->order_id)->value('public_id');
+            $orderPublicId = (string) ($this->directory->references([$shipment->order_id])[$shipment->order_id]['public_id'] ?? '');
             $order = $this->orders->lock($orderPublicId) ?? throw new ShipmentException('order_not_found'); // order first, then the parcel (the same order as making one)
             $locked = Shipment::query()->whereKey($shipment->id)->lockForUpdate()->firstOrFail();
             $this->assertCancellable($locked);

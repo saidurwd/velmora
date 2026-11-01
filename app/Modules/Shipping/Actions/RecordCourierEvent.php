@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Shipping\Actions;
 
+use App\Modules\Orders\Contracts\OrderDirectory;
 use App\Modules\Orders\Contracts\OrderFulfilment;
 use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\DTOs\Actor;
@@ -46,6 +47,7 @@ final class RecordCourierEvent
     public function __construct(
         private readonly Outbox $outbox,
         private readonly OrderFulfilment $orders,
+        private readonly OrderDirectory $directory,
         private readonly ShipmentIssues $issues,
         private readonly AuditLogger $audit,
         private readonly Clock $clock,
@@ -162,7 +164,7 @@ final class RecordCourierEvent
 
     private function announce(Shipment $shipment, ShipmentStatus $from, ShipmentStatus $to, int $attempts, CarbonImmutable $at, bool $again = false): void
     {
-        $orderPublicId = (string) DB::table('orders')->where('id', $shipment->order_id)->value('public_id');
+        $orderPublicId = (string) ($this->directory->references([$shipment->order_id])[$shipment->order_id]['public_id'] ?? '');
         $args = [$shipment->id, $shipment->public_id, $shipment->order_id, $orderPublicId, $shipment->cod_amount_minor, $shipment->currency, $at->toIso8601String(), $attempts];
 
         switch ($to) {

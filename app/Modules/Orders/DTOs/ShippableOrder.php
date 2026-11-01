@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Orders\DTOs;
 
 use App\Modules\Orders\Enums\FulfillmentStatus;
+use Carbon\CarbonImmutable;
 
 /** What making a parcel needs to know about an order, taken while the order row is locked. */
 final readonly class ShippableOrder
@@ -30,5 +31,7 @@ final readonly class ShippableOrder
         public ?string $postalCode,
         public array $lines,
         public ?string $notReadyReason,
+        public ?int $ownerUserId = null,
+        public ?CarbonImmutable $deliveredAt = null,
     ) {}
 }

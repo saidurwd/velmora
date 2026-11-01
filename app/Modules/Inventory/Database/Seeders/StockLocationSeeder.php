@@ -18,5 +18,10 @@ class StockLocationSeeder extends Seeder
         if (! DB::table('stock_locations')->where('code', 'main')->exists()) {
             DB::table('stock_locations')->insert(['public_id' => strtolower((string) Str::ulid()), 'code' => 'main', 'name' => 'Main warehouse', 'type' => 'warehouse', 'is_active' => true, 'created_at' => $now, 'updated_at' => $now]);
         }
+
+        // goods that came back and must be looked at (or written off) are kept here and are never for sale
+        if (! DB::table('stock_locations')->where('code', 'quarantine')->exists()) {
+            DB::table('stock_locations')->insert(['public_id' => strtolower((string) Str::ulid()), 'code' => 'quarantine', 'name' => 'Returns quarantine', 'type' => 'quarantine', 'is_active' => true, 'created_at' => $now, 'updated_at' => $now]);
+        }
     }
 }

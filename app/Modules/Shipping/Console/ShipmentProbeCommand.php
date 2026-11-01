@@ -10,7 +10,10 @@ use App\Modules\Shipping\Actions\BookShipment;
 use App\Modules\Shipping\Actions\CancelShipment;
 use App\Modules\Shipping\Actions\CreateShipment;
 use App\Modules\Shipping\Actions\HandOverShipment;
+use App\Modules\Shipping\Actions\InspectReturnItem;
+use App\Modules\Shipping\Actions\ReceiveReturn;
 use App\Modules\Shipping\Actions\RecordCourierEvent;
+use App\Modules\Shipping\Actions\RequestReturn;
 use App\Modules\Shipping\DTOs\CourierEvent;
 use App\Modules\Shipping\Exceptions\ShipmentException;
 use Carbon\CarbonImmutable;
@@ -23,13 +26,13 @@ use Throwable;
  */
 class ShipmentProbeCommand extends Command
 {
-    protected $signature = 'shipping:probe {action : ship|book|handover|cancel|event} {--order=} {--shipment=} {--lines=} {--account=} {--actor-id=} {--courier=fake} {--consignment=} {--status=} {--at=} {--start-at=}';
+    protected $signature = 'shipping:probe {action : ship|book|handover|cancel|event|return-request|return-receive|return-inspect} {--return=} {--item=} {--outcome=} {--actor-type=staff} {--order=} {--shipment=} {--lines=} {--account=} {--actor-id=} {--courier=fake} {--consignment=} {--status=} {--at=} {--start-at=}';
 
     protected $description = 'Make, book, hand over or cancel one parcel and print the outcome as JSON (concurrency testing only)';
 
     protected $hidden = true;
 
-    public function handle(CreateShipment $create, BookShipment $book, HandOverShipment $handOver, CancelShipment $cancel, RecordCourierEvent $record): int
+    public function handle(CreateShipment $create, BookShipment $book, HandOverShipment $handOver, CancelShipment $cancel, RecordCourierEvent $record, RequestReturn $requestReturn, ReceiveReturn $receiveReturn, InspectReturnItem $inspectReturn): int
     {
         if (app()->environment('production')) {
             $this->error('Not available in production.');
@@ -37,7 +40,7 @@ class ShipmentProbeCommand extends Command
             return self::FAILURE;
         }
 
-        $actor = new Actor(ActorType::Staff, $this->option('actor-id') === null ? null : (int) $this->option('actor-id'), null, 'probe');
+        $actor = new Actor($this->option('actor-type') === 'customer' ? ActorType::Customer : ActorType::Staff, $this->option('actor-id') === null ? null : (int) $this->option('actor-id'), null, 'probe');
         $lines = [];
         foreach (array_filter(explode(',', (string) $this->option('lines'))) as $pair) {
             [$item, $qty] = explode(':', $pair);
@@ -54,6 +57,17 @@ class ShipmentProbeCommand extends Command
             if ($this->argument('action') === 'event') {
                 $result = $record->handle((string) $this->option('courier'), new CourierEvent((string) $this->option('consignment'), (string) $this->option('status'), CarbonImmutable::parse((string) $this->option('at'), 'UTC')), 'webhook');
                 $this->line(json_encode(['ok' => true, 'result' => $result], JSON_THROW_ON_ERROR));
+
+                return self::SUCCESS;
+            }
+
+            if (str_starts_with((string) $this->argument('action'), 'return-')) {
+                $return = match ((string) $this->argument('action')) {
+                    'return-request' => $requestReturn->handle($actor, (string) $this->option('order'), $lines, 'damaged', 'concurrency probe'),
+                    'return-receive' => $receiveReturn->handle($actor, (string) $this->option('return')),
+                    default => $inspectReturn->handle($actor, (string) $this->option('return'), (int) $this->option('item'), (string) $this->option('outcome')),
+                };
+                $this->line(json_encode(['ok' => true, 'return' => $return->public_id, 'status' => $return->status->value], JSON_THROW_ON_ERROR));
 
                 return self::SUCCESS;
             }

@@ -88,7 +88,7 @@ final class ReserveStock
 
         return array_values(array_map('intval', DB::table('stock_levels')
             ->join('stock_locations', 'stock_locations.id', '=', 'stock_levels.location_id')
-            ->where('stock_locations.is_active', true)->where('stock_levels.variant_id', $variantId)
+            ->where('stock_locations.is_active', true)->where('stock_locations.type', '!=', 'quarantine')->where('stock_levels.variant_id', $variantId)
             ->whereRaw('stock_levels.on_hand - stock_levels.reserved >= ?', [$quantity])
             ->orderByRaw('(stock_levels.on_hand - stock_levels.reserved) DESC')->orderBy('stock_levels.location_id')
             ->pluck('stock_levels.location_id')->all()));
@@ -104,7 +104,7 @@ final class ReserveStock
     private function totalAvailable(int $variantId): int
     {
         return max(0, (int) DB::table('stock_levels')->join('stock_locations', 'stock_locations.id', '=', 'stock_levels.location_id')
-            ->where('stock_locations.is_active', true)->where('stock_levels.variant_id', $variantId)
+            ->where('stock_locations.is_active', true)->where('stock_locations.type', '!=', 'quarantine')->where('stock_levels.variant_id', $variantId)
             ->selectRaw('COALESCE(SUM(stock_levels.on_hand - stock_levels.reserved), 0) AS a')->value('a'));
     }
 }

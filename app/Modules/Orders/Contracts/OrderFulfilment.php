@@ -28,6 +28,14 @@ interface OrderFulfilment
     public function recordShipped(Actor $actor, int $orderId, array $quantities, string $reason): bool;
 
     /**
+     * Counts these quantities as back in the shop (never more than were shipped) and moves the fulfilment state to partly or fully returned.
+     * False (and nothing counted) when a quantity would pass what was shipped.
+     *
+     * @param  array<int, int>  $quantities  order item id => quantity
+     */
+    public function recordReturned(Actor $actor, int $orderId, array $quantities, string $reason): bool;
+
+    /**
      * Takes the quantities of a parcel cancelled before it left off the shipped counts and moves the fulfilment state back.
      * False when the counts do not allow it.
      *
