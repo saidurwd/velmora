@@ -25,6 +25,9 @@ final class DatabasePaymentMethodCatalog implements PaymentMethodCatalog
             if (! $isCash && ($frozen || ! $this->gateways->has($m->provider))) {
                 continue; // online payments are switched off, or no gateway is set up for this method
             }
+            if ($isCash && array_diff($productTypes, ['physical']) !== []) {
+                continue; // cash is paid to a courier on delivery: it can never pay for a download or a booking, however the method is set up
+            }
             if (($m->min_minor !== null && $orderTotalMinor < $m->min_minor) || ($m->max_minor !== null && $orderTotalMinor > $m->max_minor)) {
                 continue;
             }

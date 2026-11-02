@@ -8,10 +8,12 @@ use App\Modules\Inventory\Contracts\StockReservations;
 use App\Modules\Orders\Enums\FulfillmentStatus;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Enums\PaymentStatus;
+use App\Modules\Orders\Events\OrderPaid;
 use App\Modules\Orders\Exceptions\OrderException;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\DTOs\Actor;
+use App\Modules\Platform\Outbox\Outbox;
 use App\Modules\Platform\Support\AuditLogger;
 use App\Modules\Platform\Support\Transactions;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +25,7 @@ use Illuminate\Support\Facades\DB;
  */
 final class TransitionOrder
 {
-    public function __construct(private readonly Clock $clock, private readonly AuditLogger $audit, private readonly StockReservations $stock) {}
+    public function __construct(private readonly Clock $clock, private readonly AuditLogger $audit, private readonly StockReservations $stock, private readonly Outbox $outbox) {}
 
     /** @throws OrderException */
     public function status(Actor $actor, int $orderId, OrderStatus $to, ?string $reason = null): Order
@@ -115,6 +117,10 @@ final class TransitionOrder
                 'order_id' => $orderId, 'axis' => $axis, 'from_state' => $from, 'to_state' => $to,
                 'actor_type' => $actor->type->value, 'actor_id' => $actor->id, 'reason' => $reason === null || trim($reason) === '' ? null : mb_substr(trim($reason), 0, 255), 'created_at' => $this->clock->now(),
             ]);
+
+            if ($axis === 'payment' && $to === PaymentStatus::Paid->value) {
+                $this->outbox->record(new OrderPaid($order->id, $order->public_id, $order->order_number)); // in this transaction: announced once, and only if the change happened
+            }
 
             if ($axis === 'status' && $to === OrderStatus::Cancelled->value) {
                 $this->stock->releaseForOrder($order->public_id); // in the same transaction: a cancelled order never keeps stock

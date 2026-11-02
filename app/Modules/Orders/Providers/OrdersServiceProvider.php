@@ -8,15 +8,18 @@ use App\Modules\Orders\Console\AccountProbeCommand;
 use App\Modules\Orders\Console\OrderProbeCommand;
 use App\Modules\Orders\Console\PlaceOrderProbeCommand;
 use App\Modules\Orders\Contracts\CodOrders;
+use App\Modules\Orders\Contracts\DigitalOrderLines;
 use App\Modules\Orders\Contracts\OrderDirectory;
 use App\Modules\Orders\Contracts\OrderFulfilment;
 use App\Modules\Orders\Contracts\OrderPayables;
+use App\Modules\Orders\Events\OrderPaid;
 use App\Modules\Orders\Events\OrderPlaced;
 use App\Modules\Orders\Listeners\ApplyPaymentEvent;
 use App\Modules\Orders\Listeners\ApplyShipmentEvent;
 use App\Modules\Orders\Listeners\SendOrderConfirmation;
 use App\Modules\Orders\Services\CodPaymentInitiator;
 use App\Modules\Orders\Services\DatabaseCodOrders;
+use App\Modules\Orders\Services\DatabaseDigitalOrderLines;
 use App\Modules\Orders\Services\DatabaseOrderDirectory;
 use App\Modules\Orders\Services\DatabaseOrderFulfilment;
 use App\Modules\Orders\Services\DatabaseOrderPayables;
@@ -51,6 +54,7 @@ class OrdersServiceProvider extends ModuleServiceProvider
         $this->app->bind(CodOrders::class, DatabaseCodOrders::class);
         $this->app->bind(OrderFulfilment::class, DatabaseOrderFulfilment::class);
         $this->app->bind(OrderDirectory::class, DatabaseOrderDirectory::class);
+        $this->app->bind(DigitalOrderLines::class, DatabaseDigitalOrderLines::class);
     }
 
     public function boot(): void
@@ -59,6 +63,7 @@ class OrdersServiceProvider extends ModuleServiceProvider
 
         $this->commands([OrderProbeCommand::class, PlaceOrderProbeCommand::class, AccountProbeCommand::class]);
         $this->app->make(OutboxRegistry::class)->register(OrderPlaced::class);
+        $this->app->make(OutboxRegistry::class)->register(OrderPaid::class);
         Event::listen(OrderPlaced::class, SendOrderConfirmation::class);
         Event::listen(PaymentInitiated::class, [ApplyPaymentEvent::class, 'initiated']);
         Event::listen(PaymentSucceeded::class, [ApplyPaymentEvent::class, 'succeeded']);

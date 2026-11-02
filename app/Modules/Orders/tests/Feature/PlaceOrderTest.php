@@ -90,19 +90,18 @@ describe('a successful order', function () {
     it('turns the cart into an order, holds the stock, empties the cart and announces it', function () {
         ($this->addToCart)($this->tee, 2);
         ($this->addToCart)($this->mug, 1);
-        ($this->addToCart)($this->ebook, 1);
 
-        // the ebook makes this a mixed cart: ৳1,300 + ৳350 + ৳200 + ৳60 delivery
+        // ৳1,300 + ৳350 + ৳60 delivery
         $order = ($this->place)();
 
-        expect($order->order_number)->toMatch('/^VM-\d{4}-\d{6}$/')->and($order->status)->toBe(OrderStatus::Pending)->and($order->grand_total_minor)->toBe(185000 + 6000)
+        expect($order->order_number)->toMatch('/^VM-\d{4}-\d{6}$/')->and($order->status)->toBe(OrderStatus::Pending)->and($order->grand_total_minor)->toBe(165000 + 6000)
             ->and($order->contact_phone)->toBe('+8801712345678')->and($order->contact_email)->toBe('rahim@example.com')->and($order->user_id)->toBeNull()
             ->and($order->payment_method_code)->toBe('cod')->and($order->shipping_method_code)->toBe('standard')->and($order->shipping_minor)->toBe(6000)
-            ->and($order->items)->toHaveCount(3)->and($order->items[0]->name('bn'))->toBe('সুতির টি-শার্ট')->and($order->items[0]->name('en'))->toBe('Cotton Tee')
+            ->and($order->items)->toHaveCount(2)->and($order->items[0]->name('bn'))->toBe('সুতির টি-শার্ট')->and($order->items[0]->name('en'))->toBe('Cotton Tee')
             ->and($order->addresses[0]->recipient_name)->toBe('Rahim Uddin')->and($order->addresses[0]->phone)->toBe('+8801712345678')->and($order->addresses[0]->delivery_note)->toBe('Call before delivery')
             ->and($order->addresses[0]->locationLine('bn'))->toContain('ঢাকা')->and($order->addresses[0]->postal_code)->toBe('1205');
 
-        // 2 tees and 1 mug held for this order, with no expiry; the e-book is not stock-tracked
+        // 2 tees and 1 mug held for this order, with no expiry
         $held = DB::table('stock_reservations')->where('owner_type', 'order')->where('owner_ref', $order->public_id)->get();
         expect($held)->toHaveCount(2)->and($held->every(fn ($r) => $r->expires_at === null && $r->status === 'active'))->toBeTrue()
             ->and((int) DB::table('stock_levels')->where('variant_id', $this->tee['variantId'])->value('reserved'))->toBe(2)
@@ -112,6 +111,25 @@ describe('a successful order', function () {
             ->and(DB::table('outbox_messages')->where('event_name', 'orders.placed')->count())->toBe(1)
             ->and(json_decode((string) DB::table('outbox_messages')->where('event_name', 'orders.placed')->value('payload'), true)['order_number'])->toBe($order->order_number)
             ->and($order->history->map(fn ($h) => $h->axis.':'.$h->to_state)->all())->toBe(['status:pending', 'payment:unpaid', 'fulfillment:unfulfilled']);
+    });
+
+    it('places a cart with a download for online payment, holding stock for the physical lines only', function () {
+        // Phase 8: cash is never for a download, so a mixed cart is paid online (the e-book is not stock-tracked and holds nothing)
+        DB::table('payment_methods')->where('code', 'online')->update(['provider' => 'fake', 'is_enabled' => true]);
+        ($this->addToCart)($this->tee, 2);
+        ($this->addToCart)($this->ebook, 1);   // ৳1,300 + ৳200 + ৳60 delivery
+
+        $order = ($this->place)(['paymentMethodCode' => 'online', 'expectedTotalMinor' => ($this->total)(null, 'standard', 'online')]);
+
+        expect($order->payment_method_code)->toBe('online')->and($order->items)->toHaveCount(2)->and($order->grand_total_minor)->toBe(150000 + 6000)
+            ->and(DB::table('stock_reservations')->where('owner_ref', $order->public_id)->count())->toBe(1)->and((int) DB::table('stock_levels')->where('variant_id', $this->tee['variantId'])->value('reserved'))->toBe(2);
+    });
+
+    it('refuses cash for a cart with a download, and writes nothing', function () {
+        ($this->addToCart)($this->tee, 1);
+        ($this->addToCart)($this->ebook, 1);
+
+        ($this->expectFailure)('payment_method_invalid');
     });
 
     it('uses the coupon, spreads the discount over the lines, and charges the discounted total', function () {

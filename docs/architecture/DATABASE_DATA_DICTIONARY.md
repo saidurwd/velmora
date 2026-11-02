@@ -141,7 +141,7 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 | digital_assets | **As built (Phase 8, slice 1):** id, public_id, variant_id FK UNIQUE (one asset per variant), download_limit NULL (NULL = shop default), access_days NULL (NULL = no expiry), created_by; CHECKs ≥1 |
 | digital_asset_versions | **As built:** asset_id FK, version (UNIQUE with asset_id; newest = current), storage_key UNIQUE (random, private bucket), original_filename, mime (from the file's bytes), size_bytes CHECK≥1, sha256, uploaded_by, created_at; never changed or deleted | **AO** |
 | license_key_pools / license_keys | pool_id, key_encrypted, status (available/allocated/revoked), allocated_to_item_id NULL, allocated_at; idx(pool_id,status) |
-| entitlements | STD; order_item_id FK, customer_id NULL, guest_email/phone NULL, asset_id FK, status (active/revoked/expired), download_limit NULL, downloads_used DEFAULT 0 CHECK(≥0), expires_at |
+| entitlements | **As built (Phase 8, slice 2):** public_id, order_id FK, order_item_id FK UNIQUE (one right per order line), variant_id FK, status (active/revoked; trigger: active → revoked only; "expired" is derived from expires_at, never stored), download_limit NULL (unlimited), downloads_used CHECK ≤ limit, expires_at NULL, granted_at, revoked_at (required when revoked), revoked_reason. No owner column: the owner is the order's owner, resolved through Orders |
 | download_logs | entitlement_id, asset_id, ip, user_agent, at | **AO** |
 | refund_policies (+translations) | scope, rule j, text per locale |
 
