@@ -8,6 +8,7 @@ use App\Modules\Catalog\DTOs\ProductData;
 use App\Modules\Catalog\DTOs\TranslationInput;
 use App\Modules\Catalog\DTOs\VariantData;
 use App\Modules\Catalog\Enums\ProductType;
+use App\Modules\DigitalProducts\Actions\UploadDigitalAsset;
 use App\Modules\IdentityAccess\Models\User;
 use App\Modules\Inventory\Contracts\StockInitialiser;
 use App\Modules\Inventory\Contracts\StockReservations;
@@ -20,9 +21,11 @@ use App\Modules\Orders\DTOs\NewOrderLine;
 use App\Modules\Orders\Enums\OrderChannel;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Enums\PaymentStatus;
+use App\Modules\Payments\Database\Seeders\PaymentMethodSeeder;
 use App\Modules\Platform\Database\Seeders\LanguageSeeder;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\Enums\ActorType;
+use App\Modules\Platform\Outbox\OutboxDispatcher;
 use App\Modules\Pricing\Database\Seeders\TaxClassSeeder;
 use App\Modules\Pricing\Services\BreakdownCalculator;
 use App\Modules\Shipping\Actions\CreateShipment;
@@ -32,6 +35,7 @@ use App\Modules\Shipping\Database\Seeders\CourierSeeder;
 use App\Modules\Shipping\DTOs\CourierEvent;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Spatie\Permission\PermissionRegistrar;
@@ -144,4 +148,52 @@ function shippingWorld(object $t): void
     $t->say = fn (object $shipment, string $word, string $at, ?string $note = null) => app(RecordCourierEvent::class)->handle('fake', new CourierEvent((string) $shipment->courier_consignment_id, $word, CarbonImmutable::parse($at, 'UTC'), $note), 'webhook');
     $t->state = fn (int $orderId) => DB::table('orders')->where('id', $orderId)->first(['status', 'fulfillment_status', 'payment_status', 'delivered_at']);
     $t->shipmentRow = fn (string $publicId) => DB::table('shipments')->where('public_id', $publicId)->first();
+}
+
+/**
+ * Digital goods: three products (BOOK-1, BOOK-2 digital; TEE-1 physical), a fake private disk that can sign addresses, and helpers.
+ *   $t->place([variant id => qty], ?int $userId, string $phone)  an online order (not paid)       $t->pay($orderId)   paid, and the rights granted
+ *   $t->upload('BOOK-1', 'Cooking.pdf')                          puts a file in                     $t->rights()        every entitlement
+ */
+function digitalWorld(object $t): void
+{
+    $t->seed([LanguageSeeder::class, TaxClassSeeder::class, PaymentMethodSeeder::class]);
+    Storage::fake('private');
+    config(['digital.disk' => 'private']);
+    Storage::disk('private')->buildTemporaryUrlsUsing(fn (string $path, $expiration, array $options) => 'https://files.test/'.$path.'?exp='.$expiration->getTimestamp().'&disp='.rawurlencode((string) ($options['ResponseContentDisposition'] ?? '')));
+
+    $system = Actor::system('t');
+    $category = app(SaveCategory::class)->handle($system, null, null, [new TranslationInput('en', 'General')]);
+    $make = fn (string $sku, string $en, string $bn, ProductType $type): int => (int) app(SaveProduct::class)->handle($system, null, new ProductData($type, [new TranslationInput('en', $en), new TranslationInput('bn', $bn)], categoryIds: [$category->id], defaultVariant: new VariantData($sku)))->variants()->value('id');
+    $t->book = $make('BOOK-1', 'Cooking e-book', 'রান্নার বই', ProductType::Digital);
+    $t->book2 = $make('BOOK-2', 'Garden e-book', 'বাগানের বই', ProductType::Digital);
+    $t->tee = $make('TEE-1', 'Cotton Tee', 'টি-শার্ট', ProductType::Physical);
+    $t->types = [$t->book => 'digital', $t->book2 => 'digital', $t->tee => 'physical'];
+
+    $t->place = function (array $lines, ?int $userId = null, string $phone = '+8801712345678') use ($t): object {
+        $calc = [];
+        $newLines = [];
+        foreach ($lines as $variantId => $qty) {
+            $calc[] = ['variantId' => $variantId, 'quantity' => $qty, 'unitMinor' => 35000, 'lineDiscountMinor' => 0, 'taxRateBp' => 0];
+            $newLines[] = new NewOrderLine($variantId, $t->types[$variantId], ['en' => 'Item', 'bn' => 'পণ্য'], 'SKU-'.$variantId);
+        }
+        $physical = in_array('physical', array_map(fn ($v) => $t->types[$v], array_keys($lines)), true);
+        $addresses = $physical ? [new NewOrderAddress('shipping', 'Rahim', $phone, 3, 30, 300, ['division' => ['en' => 'Dhaka', 'bn' => 'ঢাকা'], 'district' => ['en' => 'Dhaka', 'bn' => 'ঢাকা'], 'upazila' => ['en' => 'D', 'bn' => 'ড']], 'House 5', '1205', 'D', null)] : [];
+
+        return app(CreateOrder::class)->handle(new NewOrder(Actor::guest('t'), $userId, 'Rahim', $phone, null, OrderChannel::Web, 'en', 'online', $physical ? 'standard' : null, (new BreakdownCalculator)->calculate($calc, false, 0, 0, 0), $newLines, $addresses));
+    };
+    $t->pay = function (int $orderId): void {
+        app(TransitionOrder::class)->status(Actor::system('t'), $orderId, OrderStatus::Confirmed, 'test');
+        app(TransitionOrder::class)->payment(Actor::system('t'), $orderId, PaymentStatus::Paid, 'test');
+        app(OutboxDispatcher::class)->dispatchDue();   // what the scheduler / after-commit job does: the rights are made
+    };
+    $t->upload = function (string $sku, string $name = 'Book.pdf', string $body = "%PDF-1.4\n1 0 obj<<>>endobj\n%%EOF\n") {
+        $path = tempnam(sys_get_temp_dir(), 'dg');
+        file_put_contents($path, $body);
+        $version = app(UploadDigitalAsset::class)->handle(new Actor(ActorType::Staff, catalogStaff([])->id, null, 'Amina'), $sku, $path, $name);
+        @unlink($path);
+
+        return $version;
+    };
+    $t->rights = fn () => DB::table('entitlements')->orderBy('id')->get();
 }

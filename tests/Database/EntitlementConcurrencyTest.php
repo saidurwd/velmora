@@ -20,6 +20,7 @@ use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Pricing\Database\Seeders\TaxClassSeeder;
 use App\Modules\Pricing\Services\BreakdownCalculator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Symfony\Component\Process\Process;
 
 /*
@@ -97,4 +98,22 @@ it('makes nothing for an order that is not paid, even when many ask at once', fu
     $results = runDigitalProbes(array_fill(0, 4, ['digital:probe', ['grant', "--order={$orderId}"]]));
 
     expect(array_sum(array_column($results, 'made')))->toBe(0)->and(DB::table('entitlements')->count())->toBe(0);
+});
+
+it('never passes the download limit when ten people press download at the same instant: exactly the limit is granted, the rest are refused', function () {
+    config(['digital.disk' => 'local']);
+    $orderId = ($this->paidOrder)();
+    $right = DB::table('entitlements')->where('order_id', $orderId)->orderBy('id')->first();
+    DB::table('entitlements')->where('id', $right->id)->update(['download_limit' => 3]);
+    $asset = DB::table('digital_assets')->insertGetId(['public_id' => strtolower((string) Str::ulid()), 'variant_id' => $right->variant_id, 'created_at' => now(), 'updated_at' => now()]);
+    DB::table('digital_asset_versions')->insert(['asset_id' => $asset, 'version' => 1, 'storage_key' => 'digital/test/'.bin2hex(random_bytes(6)), 'original_filename' => 'a.pdf', 'mime' => 'application/pdf', 'size_bytes' => 10, 'sha256' => str_repeat('a', 64), 'created_at' => now()]);
+
+    $results = runDigitalProbes(array_fill(0, 10, ['digital:probe', ['download', "--entitlement={$right->public_id}"]]));
+
+    expect(array_column($results, 'ok'))->each->toBeTrue()
+        ->and(count(array_filter(array_column($results, 'granted'))))->toBe(3)
+        ->and(array_count_values(array_filter(array_column($results, 'reason'))))->toBe(['download_limit_reached' => 7])
+        ->and((int) DB::table('entitlements')->where('id', $right->id)->value('downloads_used'))->toBe(3)
+        ->and(DB::table('download_logs')->where('entitlement_id', $right->id)->where('outcome', 'granted')->count())->toBe(3)
+        ->and(DB::table('download_logs')->where('entitlement_id', $right->id)->where('outcome', 'limit_reached')->count())->toBe(7);
 });

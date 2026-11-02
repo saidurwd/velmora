@@ -14,13 +14,13 @@ final class CheckoutPhoneConfirmation implements PhoneConfirmation
 {
     public function __construct(private readonly OtpService $otp) {}
 
-    public function send(PhoneNumber $phone, ?string $ip, ?string $locale): OtpIssueStatus
+    public function send(PhoneNumber $phone, ?string $ip, ?string $locale, OtpPurpose $purpose = OtpPurpose::CheckoutCod): OtpIssueStatus
     {
-        return $this->otp->issue($phone, OtpPurpose::CheckoutCod, $ip, $locale);
+        return $this->otp->issue($phone, $purpose, $ip, $locale);
     }
 
-    public function check(PhoneNumber $phone, string $code): OtpVerifyResult
+    public function check(PhoneNumber $phone, string $code, OtpPurpose $purpose = OtpPurpose::CheckoutCod): OtpVerifyResult
     {
-        return $this->otp->verify($phone, OtpPurpose::CheckoutCod, $code);
+        return $this->otp->verify($phone, $purpose, $code);
     }
 }

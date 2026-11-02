@@ -47,6 +47,7 @@
     @if ($online)<p class="text-sm text-muted">{{ __('orders::checkout.paid_with', ['method' => $methodLabel]) }}</p>@endif
 
     @if ($trackUrl)<p><x-platform::btn :href="$trackUrl" variant="secondary">{{ __('orders::account.track_link') }}</x-platform::btn></p>@endif
+    @if ($libraryUrl)<p><x-platform::btn :href="$libraryUrl">{{ __('orders::account.library_link') }}</x-platform::btn></p>@endif
     <p><x-platform::btn :href="$receiptUrl" variant="secondary">{{ __('orders::account.receipt_link') }}</x-platform::btn></p>
 
     <section aria-labelledby="items-h" class="space-y-2">

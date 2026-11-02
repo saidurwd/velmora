@@ -21,6 +21,9 @@ interface OrderDirectory
      */
     public function itemLabels(array $orderItemIds, string $locale): array;
 
+    /** @return array{id: int, number: string, public_id: string, phone: string, user_id: int|null}|null the order with this public id, with the phone it was placed with and its owner (null for a guest order) */
+    public function findByPublicId(string $publicId): ?array;
+
     /** @return array{id: int, number: string, public_id: string}|null the order with this order number (as printed, any case) */
     public function findByNumber(string $orderNumber): ?array;
 }

@@ -23,4 +23,7 @@ return [
     // Defaults for a new entitlement (settings digital.download_limit / digital.link_ttl_seconds override them; a product may set its own).
     'download_limit' => (int) env('DIGITAL_DOWNLOAD_LIMIT', 5),
     'link_ttl_seconds' => (int) env('DIGITAL_LINK_TTL_SECONDS', 60),
+
+    // How long a guest who proved the order's phone may use that order's downloads.
+    'guest_minutes' => (int) env('DIGITAL_GUEST_MINUTES', 30),
 ];

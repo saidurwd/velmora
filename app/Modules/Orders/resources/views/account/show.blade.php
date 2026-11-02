@@ -16,6 +16,7 @@
 @error('cancel')<x-platform::alert type="error">{{ $message }}</x-platform::alert>@enderror
 
 @if ($trackUrl)<p><x-platform::btn :href="$trackUrl" variant="secondary">{{ __('orders::account.track_link') }}</x-platform::btn></p>@endif
+@if ($libraryUrl)<p><x-platform::btn :href="$libraryUrl">{{ __('orders::account.library_link') }}</x-platform::btn></p>@endif
 <p><x-platform::btn :href="$receiptUrl" variant="secondary">{{ __('orders::account.receipt_link') }}</x-platform::btn></p>
 
 @if ($payUrl)

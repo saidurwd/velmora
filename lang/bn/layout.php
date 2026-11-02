@@ -11,5 +11,6 @@ return [
     'account_addresses' => 'ঠিকানা',
     'account_profile' => 'প্রোফাইল',
     'account_orders' => 'আমার অর্ডার',
+    'account_library' => 'আমার ডাউনলোড',
     'account_security' => 'সাইন-ইন ও নিরাপত্তা',
 ];

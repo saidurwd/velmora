@@ -57,4 +57,5 @@ return [
     'mine_link' => 'See this order in My orders',
     'track_link' => 'Track this order',
     'receipt_link' => 'Print your receipt',
+    'library_link' => 'Your downloads',
 ];

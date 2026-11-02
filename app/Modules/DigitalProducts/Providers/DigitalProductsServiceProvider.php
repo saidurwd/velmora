@@ -6,12 +6,15 @@ namespace App\Modules\DigitalProducts\Providers;
 
 use App\Modules\DigitalProducts\Console\DigitalProbeCommand;
 use App\Modules\DigitalProducts\Listeners\GrantEntitlementsForPaidOrder;
+use App\Modules\DigitalProducts\Models\Entitlement;
+use App\Modules\DigitalProducts\Policies\EntitlementPolicy;
 use App\Modules\Orders\Events\OrderPaid;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 
 class DigitalProductsServiceProvider extends ModuleServiceProvider
@@ -26,6 +29,8 @@ class DigitalProductsServiceProvider extends ModuleServiceProvider
         parent::boot();
 
         $this->commands([DigitalProbeCommand::class]);
+        Gate::policy(Entitlement::class, EntitlementPolicy::class);
+        RateLimiter::for('digital-download', fn (Request $r) => Limit::perMinute(20)->by('digital-download|'.($r->user('web')?->getAuthIdentifier() ?? $r->ip()).'|'.($r->route('order') ?? '')));
         Event::listen(OrderPaid::class, GrantEntitlementsForPaidOrder::class);
 
         // per person and route, not shared with anything else

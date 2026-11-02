@@ -8,6 +8,7 @@ use App\Modules\Orders\Console\AccountProbeCommand;
 use App\Modules\Orders\Console\OrderProbeCommand;
 use App\Modules\Orders\Console\PlaceOrderProbeCommand;
 use App\Modules\Orders\Contracts\CodOrders;
+use App\Modules\Orders\Contracts\CustomerOrders;
 use App\Modules\Orders\Contracts\DigitalOrderLines;
 use App\Modules\Orders\Contracts\OrderDirectory;
 use App\Modules\Orders\Contracts\OrderFulfilment;
@@ -19,6 +20,7 @@ use App\Modules\Orders\Listeners\ApplyShipmentEvent;
 use App\Modules\Orders\Listeners\SendOrderConfirmation;
 use App\Modules\Orders\Services\CodPaymentInitiator;
 use App\Modules\Orders\Services\DatabaseCodOrders;
+use App\Modules\Orders\Services\DatabaseCustomerOrders;
 use App\Modules\Orders\Services\DatabaseDigitalOrderLines;
 use App\Modules\Orders\Services\DatabaseOrderDirectory;
 use App\Modules\Orders\Services\DatabaseOrderFulfilment;
@@ -55,6 +57,7 @@ class OrdersServiceProvider extends ModuleServiceProvider
         $this->app->bind(OrderFulfilment::class, DatabaseOrderFulfilment::class);
         $this->app->bind(OrderDirectory::class, DatabaseOrderDirectory::class);
         $this->app->bind(DigitalOrderLines::class, DatabaseDigitalOrderLines::class);
+        $this->app->bind(CustomerOrders::class, DatabaseCustomerOrders::class);
     }
 
     public function boot(): void

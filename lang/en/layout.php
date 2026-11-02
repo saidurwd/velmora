@@ -11,5 +11,6 @@ return [
     'account_profile' => 'Profile',
     'account_addresses' => 'Addresses',
     'account_orders' => 'My orders',
+    'account_library' => 'My downloads',
     'account_security' => 'Sign-in & security',
 ];

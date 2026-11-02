@@ -14,6 +14,7 @@ use App\Modules\IdentityAccess\Enums\OtpIssueStatus;
 use App\Modules\Orders\Actions\ConfirmCheckoutPhone;
 use App\Modules\Orders\Actions\PlaceOrder;
 use App\Modules\Orders\Actions\ReviewCheckout;
+use App\Modules\Orders\Contracts\DigitalOrderLines;
 use App\Modules\Orders\DTOs\PlaceOrderCommand;
 use App\Modules\Orders\Exceptions\CheckoutException;
 use App\Modules\Orders\Http\Requests\CheckoutChoicesRequest;
@@ -258,6 +259,7 @@ class CheckoutController
         };
 
         return view('orders::checkout.thanks', [
+            'libraryUrl' => $this->libraryUrl($model, $locale),
             'receiptUrl' => URL::temporarySignedRoute('orders.receipt', now()->addDays((int) config('orders.confirmation_link_days')), ['locale' => $locale, 'order' => $model->public_id]),
             'trackUrl' => $model->fulfillment_status->hasShipped() && Route::has('orders.track') ? URL::temporarySignedRoute('orders.track', now()->addDays((int) config('orders.confirmation_link_days')), ['locale' => $locale, 'order' => $model->public_id]) : null,
             'accountPanel' => $panel,
@@ -283,5 +285,15 @@ class CheckoutController
         $user = $request->user('web');
 
         return $user === null ? Actor::guest('checkout') : new Actor(ActorType::Customer, (int) $user->getAuthIdentifier(), $user->public_id);
+    }
+
+    /** Where the buyer finds their downloads: their own library when the order is theirs, else a link we sign (a code to the order's phone follows). Null when the order has nothing digital that is paid. */
+    private function libraryUrl(Order $order, string $locale): ?string
+    {
+        if (! Route::has('digital.library') || app(DigitalOrderLines::class)->paidLinesFor($order->id) === []) {
+            return null;
+        }
+
+        return $order->user_id !== null ? route('digital.library', ['locale' => $locale]) : URL::temporarySignedRoute('digital.guest.library', now()->addDays((int) config('orders.confirmation_link_days')), ['locale' => $locale, 'order' => $order->public_id]);
     }
 }
