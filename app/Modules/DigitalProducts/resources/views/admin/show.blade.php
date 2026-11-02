@@ -19,6 +19,21 @@
     </form>
     @endif
 
+    <section aria-labelledby="k-h" class="space-y-3">
+        <h2 id="k-h" class="text-lg font-semibold">{{ __('digital-products::admin.keys.title') }}</h2>
+        <p class="text-sm text-muted">{{ __('digital-products::admin.keys.help', ['max' => \App\Modules\DigitalProducts\Actions\ImportLicenseKeys::MAX_LINES]) }}</p>
+        @if ($keys['waiting'] > $keys['available'])<x-platform::alert type="error">{{ __('digital-products::admin.keys.short', ['waiting' => $keys['waiting'], 'available' => $keys['available']]) }}</x-platform::alert>@endif
+        <dl class="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+            @foreach (['available', 'allocated', 'revoked', 'waiting'] as $k)<div class="rounded-md border border-line p-3"><dt class="text-muted">{{ __('digital-products::admin.keys.'.$k) }}</dt><dd class="text-xl font-semibold">{{ $keys[$k] }}</dd></div>@endforeach
+        </dl>
+        @if ($can)
+        <form method="POST" action="{{ route('admin.digital.assets.keys.import', $variant->sku) }}" enctype="multipart/form-data" class="space-y-3 rounded-lg border border-line p-4">@csrf
+            <div><label for="keys-file" class="block text-sm font-medium">{{ __('digital-products::admin.keys.file') }}</label><input id="keys-file" type="file" name="file" accept=".txt,.csv,text/plain,text/csv" required class="block w-full text-sm"></div>
+            <x-platform::btn type="submit" size="sm">{{ __('digital-products::admin.keys.import_btn') }}</x-platform::btn>
+        </form>
+        @endif
+    </section>
+
     <section aria-labelledby="v-h" class="space-y-2">
         <h2 id="v-h" class="text-lg font-semibold">{{ __('digital-products::admin.versions') }}</h2>
         @if ($versions->isEmpty())

@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\DigitalProducts\Console;
 
+use App\Modules\DigitalProducts\Actions\AllocateLicenseKeys;
 use App\Modules\DigitalProducts\Actions\DownloadDigitalFile;
 use App\Modules\DigitalProducts\Actions\GrantEntitlements;
+use App\Modules\DigitalProducts\Actions\ImportLicenseKeys;
 use App\Modules\DigitalProducts\Exceptions\DigitalException;
 use App\Modules\DigitalProducts\Models\Entitlement;
+use App\Modules\Platform\DTOs\Actor;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
@@ -18,13 +21,13 @@ use Throwable;
  */
 class DigitalProbeCommand extends Command
 {
-    protected $signature = 'digital:probe {action : grant|download} {--order=} {--entitlement=} {--start-at=}';
+    protected $signature = 'digital:probe {action : grant|download|allocate|import} {--order=} {--entitlement=} {--sku=} {--file=} {--start-at=}';
 
     protected $description = 'Grant the rights to download for one paid order, or download once, and print the outcome as JSON (concurrency testing only)';
 
     protected $hidden = true;
 
-    public function handle(GrantEntitlements $grant, DownloadDigitalFile $download): int
+    public function handle(GrantEntitlements $grant, DownloadDigitalFile $download, AllocateLicenseKeys $allocate, ImportLicenseKeys $import): int
     {
         if (app()->environment('production')) {
             $this->error('Not available in production.');
@@ -39,6 +42,19 @@ class DigitalProbeCommand extends Command
         }
 
         try {
+            if ($this->argument('action') === 'allocate') {
+                $this->line(json_encode(['ok' => true, 'given' => $allocate->forEntitlement((int) Entitlement::query()->where('public_id', (string) $this->option('entitlement'))->value('id'))], JSON_THROW_ON_ERROR));
+
+                return self::SUCCESS;
+            }
+
+            if ($this->argument('action') === 'import') {
+                $result = $import->handle(Actor::system('probe'), (string) $this->option('sku'), (string) file_get_contents((string) $this->option('file')));
+                $this->line(json_encode(['ok' => true, 'added' => $result->added, 'duplicates' => $result->duplicates, 'filled' => $result->filled], JSON_THROW_ON_ERROR));
+
+                return self::SUCCESS;
+            }
+
             if ($this->argument('action') === 'download') {
                 // no storage service is needed to prove the counter: the address is signed locally, with a stand-in signer
                 Storage::disk((string) config('digital.disk'))->buildTemporaryUrlsUsing(fn (string $path, $expiration) => 'https://files.test/'.$path.'?exp='.$expiration->getTimestamp());

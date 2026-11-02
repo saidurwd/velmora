@@ -20,7 +20,7 @@ use Illuminate\Support\Str;
  */
 final class GrantEntitlements
 {
-    public function __construct(private readonly DigitalOrderLines $lines, private readonly Settings $settings, private readonly Clock $clock, private readonly AuditLogger $audit) {}
+    public function __construct(private readonly DigitalOrderLines $lines, private readonly Settings $settings, private readonly Clock $clock, private readonly AuditLogger $audit, private readonly AllocateLicenseKeys $keys) {}
 
     /** @return int how many rights were made now (0 when they already existed, or the order has nothing digital or is not paid) */
     public function handle(int $orderId): int
@@ -35,6 +35,7 @@ final class GrantEntitlements
         foreach (DigitalAsset::query()->whereIn('variant_id', array_map(fn ($l) => $l->variantId, $lines))->get() as $asset) {
             $rules[$asset->variant_id] = $asset;
         }
+        $pools = DB::table('license_key_pools')->whereIn('variant_id', array_map(fn ($l) => $l->variantId, $lines))->pluck('id', 'variant_id');   // products that sell keys
         $defaultLimit = $this->settings->int('digital.download_limit', (int) config('digital.download_limit'));
         $made = 0;
 
@@ -48,11 +49,14 @@ final class GrantEntitlements
             }
             $created = DB::table('entitlements')->insertOrIgnore([
                 'public_id' => strtolower((string) Str::ulid()), 'order_id' => $orderId, 'order_item_id' => $line->orderItemId, 'variant_id' => $line->variantId, 'status' => 'active',
-                'download_limit' => $limit < 1 ? null : $limit, 'downloads_used' => 0, 'expires_at' => $days === null ? null : $now->addDays($days),
+                'download_limit' => $limit < 1 ? null : $limit, 'downloads_used' => 0, 'keys_needed' => isset($pools[$line->variantId]) ? $line->quantity : 0, 'expires_at' => $days === null ? null : $now->addDays($days),
                 'granted_at' => $now, 'created_at' => $now, 'updated_at' => $now,
             ]);
             if ($created === 1) {
                 $made++;
+                if (isset($pools[$line->variantId])) {
+                    $this->keys->forEntitlement((int) DB::table('entitlements')->where('order_item_id', $line->orderItemId)->value('id'));   // what is there goes now; the rest waits for more keys
+                }
                 $this->audit->record('digital.entitlement_granted', 'entitlement', [], ['order_id' => $orderId, 'order_item_id' => $line->orderItemId, 'limit' => $limit], Actor::system('digital'), $line->orderItemId);
             }
         }

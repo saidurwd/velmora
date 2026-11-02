@@ -6,6 +6,7 @@ namespace App\Modules\DigitalProducts\Http\Controllers\Web;
 
 use App\Modules\DigitalProducts\Actions\ConfirmGuestDownloadAccess;
 use App\Modules\DigitalProducts\Actions\DownloadDigitalFile;
+use App\Modules\DigitalProducts\Actions\RevealLicenseKeys;
 use App\Modules\DigitalProducts\Exceptions\DigitalException;
 use App\Modules\DigitalProducts\Http\Concerns\RedirectsToDownload;
 use App\Modules\DigitalProducts\Models\Entitlement;
@@ -16,6 +17,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\URL;
 
 /**
@@ -36,7 +38,7 @@ class GuestLibraryController
             ]);
         }
 
-        $rows = array_map(fn (array $r): array => $r + ['action' => route('digital.guest.download', ['locale' => app()->getLocale(), 'order' => $order, 'entitlement' => $r['id']])], $reader->forOrders([$found['id']], app()->getLocale()));
+        $rows = array_map(fn (array $r): array => $r + ['action' => route('digital.guest.download', ['locale' => app()->getLocale(), 'order' => $order, 'entitlement' => $r['id']]), 'keysAction' => route('digital.guest.keys', ['locale' => app()->getLocale(), 'order' => $order, 'entitlement' => $r['id']])], $reader->forOrders([$found['id']], app()->getLocale()));
 
         return view('digital-products::library.index', ['rows' => $rows])->with('guest', true)->with('number', $found['number']);
     }
@@ -74,6 +76,25 @@ class GuestLibraryController
 
         try {
             return $this->toDownload($download->handle($right, null, $request->ip(), $request->userAgent()));
+        } catch (DigitalException $e) {
+            return back()->withErrors(['download' => __('digital-products::library.errors.'.$e->reason)]);
+        }
+    }
+
+    public function keys(Request $request, ConfirmGuestDownloadAccess $confirm, GuestDownloadAccess $access, DownloadDigitalFile $download, RevealLicenseKeys $reveal, string $order, string $entitlement): Response|RedirectResponse
+    {
+        $found = $confirm->order($order) ?? abort(404);
+        abort_unless($access->has($order), 403);
+        $right = Entitlement::query()->where('public_id', $entitlement)->firstOrFail();
+
+        if ($right->order_id !== $found['id']) {
+            $download->logNotOwner($right, null, $request->ip(), $request->userAgent());
+
+            abort(404);
+        }
+
+        try {
+            return response()->view('digital-products::library.keys', ['keys' => $reveal->handle($right, null), 'guest' => true, 'back' => null])->header('Cache-Control', 'no-store, private');
         } catch (DigitalException $e) {
             return back()->withErrors(['download' => __('digital-products::library.errors.'.$e->reason)]);
         }

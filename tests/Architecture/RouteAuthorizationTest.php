@@ -41,6 +41,7 @@ const PUBLIC_WEB = [
     '{locale}/orders/{order}/downloads/code' => 'asks for that SMS code: signed link, rate limited by the code service and by throttle:otp',
     '{locale}/orders/{order}/downloads/verify' => 'checks that SMS code (yes or no only): signed link, rate limited',
     '{locale}/orders/{order}/downloads/{entitlement}' => 'a guest\'s download: needs the short session the code opened for that one order, refuses a download of another order, throttled, logged',
+    '{locale}/orders/{order}/downloads/{entitlement}/keys' => 'a guest\'s licence keys: needs the short session the code opened for that one order, refuses keys of another order (not found, logged), page is never cached, throttled, each showing audited without the key',
     '{locale}/orders/{order}/account' => 'sign-up from the order confirmation page: signed, expiring URL that only the shopper received (the proof of ownership); creates an account and adds that one order to it; same answer whether or not the address already has an account',
     'api/v1/webhooks/couriers/{courier}' => 'courier messages about parcels: cannot log in; the adapter authenticates each request as that courier\'s documents describe (a failing request is refused and stored nowhere), events are stored once, throttled',
     'api/v1/webhooks/payments/{provider}' => 'payment gateway notifications: cannot log in; stored raw, never trusted, verified server to server, throttled',

@@ -7,6 +7,7 @@ use App\Modules\Cart\Jobs\PurgeExpiredCarts;
 use App\Modules\Catalog\Jobs\PublishScheduledProducts;
 use App\Modules\Catalog\Jobs\ReconcileListing;
 use App\Modules\Cms\Jobs\GenerateSitemaps;
+use App\Modules\DigitalProducts\Jobs\CheckKeyStockJob;
 use App\Modules\IdentityAccess\Jobs\PurgeExpiredOtpChallenges;
 use App\Modules\Inventory\Jobs\ExpireReservationsJob;
 use App\Modules\Inventory\Jobs\VerifyStockLedger;
@@ -40,6 +41,7 @@ Schedule::job(new CancelStalePendingOrdersJob)->hourly()->name('orders:cancel-st
 Schedule::job(new ReconcilePendingPaymentsJob)->everyTenMinutes()->name('payments:reconcile-pending')->withoutOverlapping();
 Schedule::job(new CheckPaymentHealthJob)->everyFiveMinutes()->name('payments:check-health')->withoutOverlapping();
 Schedule::job(new PollCourierShipmentsJob)->everyTenMinutes()->name('shipping:poll-couriers')->withoutOverlapping();
+Schedule::job(new CheckKeyStockJob)->everyFifteenMinutes()->name('digital:check-keys')->withoutOverlapping();
 Schedule::job(new CheckShippingHealthJob)->everyFifteenMinutes()->name('shipping:check-health')->withoutOverlapping();
 Schedule::job(new PollRefundsJob)->everyFiveMinutes()->name('payments:poll-refunds')->withoutOverlapping();
 Schedule::job(new PurgeExpiredCarts)->dailyAt('03:40')->name('cart:purge-expired');

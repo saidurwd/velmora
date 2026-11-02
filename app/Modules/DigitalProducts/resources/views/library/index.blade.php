@@ -20,10 +20,17 @@
                 <x-platform::badge :tone="$r['state'] === 'available' ? 'success' : ($r['state'] === 'not_ready' ? 'neutral' : 'danger')">{{ __('digital-products::library.state.'.$r['state']) }}</x-platform::badge>
             </div>
             <p class="text-sm">{{ $r['unlimited'] ? __('digital-products::library.unlimited') : __('digital-products::library.left', ['n' => $r['left']]) }}@if ($r['expires_at']) · {{ __('digital-products::library.until', ['date' => $fmtDate($r['expires_at'])]) }}@endif</p>
-            @if ($r['state'] === 'available')
+            @if ($r['state'] === 'available' && $r['file'])
             <form method="POST" action="{{ $r['action'] }}">@csrf<x-platform::btn type="submit" size="sm">{{ __('digital-products::library.download') }}<span class="sr-only"> {{ $r['product'] }}</span></x-platform::btn></form>
             @elseif ($r['state'] === 'not_ready')
             <p class="text-sm text-muted">{{ __('digital-products::library.not_ready') }}</p>
+            @endif
+            @if ($r['keys_needed'] > 0 && $r['state'] !== 'revoked')
+            <div class="space-y-1 border-t border-line pt-2">
+                <p class="text-sm">{{ __('digital-products::library.keys_status', ['ready' => $r['keys_ready'], 'total' => $r['keys_needed']]) }}</p>
+                @if ($r['keys_ready'] < $r['keys_needed'])<p class="text-sm text-muted">{{ __('digital-products::library.keys_preparing') }}</p>@endif
+                @if ($r['keys_ready'] > 0)<form method="POST" action="{{ $r['keysAction'] }}">@csrf<x-platform::btn type="submit" size="sm" variant="secondary">{{ __('digital-products::library.show_keys') }}<span class="sr-only"> {{ $r['product'] }}</span></x-platform::btn></form>@endif
+            </div>
             @endif
         </li>
         @endforeach

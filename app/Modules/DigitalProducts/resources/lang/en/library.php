@@ -8,7 +8,7 @@ return [
     'unlimited' => 'Download as often as you need.', 'left' => ':n downloads left.', 'until' => 'Available until :date', 'download' => 'Download', 'not_ready' => 'The file is not ready yet. We will have it here soon; nothing has been used up.',
     'errors' => [
         'download_no_file' => 'The file is not ready yet. Nothing was used up; please try again later.', 'download_revoked' => 'This download is no longer available. Please contact us if you think this is a mistake.',
-        'download_expired' => 'The time to download this has passed. Please contact us.', 'download_limit_reached' => 'You have used all the downloads for this product. Please contact us if you need another.',
+        'download_expired' => 'The time to download this has passed. Please contact us.', 'keys_waiting' => 'Your keys are not ready yet. They will appear here as soon as they are.', 'download_limit_reached' => 'You have used all the downloads for this product. Please contact us if you need another.',
     ],
     'guest_intro' => 'Order :number. To open your downloads, we will text a code to the phone you ordered with (ending in :end).', 'send_code' => 'Send me a code', 'code_label' => 'Code from the SMS', 'open' => 'Open my downloads',
     'code' => [
@@ -16,5 +16,7 @@ return [
         'send_cooling_down' => 'Please wait a minute before asking for another code.', 'send_target_limited' => 'Too many codes were sent to this number. Please try again later.', 'send_ip_limited' => 'Too many requests. Please try again later.',
         'send_daily_cap_reached' => 'We cannot send codes right now. Please try again later or contact us.', 'send_delivery_failed' => 'We could not send the SMS. Please try again later.',
     ],
+    'keys_status' => ':ready of :total licence keys are ready.', 'keys_preparing' => 'The rest are being prepared. They will appear here as soon as they are ready; you do not need to do anything.', 'show_keys' => 'Show my keys',
+    'keys_title' => 'Your licence keys', 'keys_help' => 'Keep these safe. They are shown only to you, and this page is not saved by your browser.', 'back' => 'Back to my downloads',
     'order_link' => 'Your downloads',
 ];

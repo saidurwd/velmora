@@ -16,7 +16,7 @@ final class LibraryReader
 
     /**
      * @param  list<int>  $orderIds
-     * @return list<array{id: string, order: string, product: string, sku: string, file: string|null, version: int|null, left: int|null, unlimited: bool, expires_at: CarbonImmutable|null, state: string}>
+     * @return list<array{id: string, order: string, product: string, sku: string, file: string|null, version: int|null, left: int|null, unlimited: bool, expires_at: CarbonImmutable|null, state: string, keys_needed: int, keys_ready: int}>
      */
     public function forOrders(array $orderIds, string $locale): array
     {
@@ -33,6 +33,8 @@ final class LibraryReader
             $current[(int) $v->variant_id] = $v;   // ascending, so the newest version is the last one kept
         }
 
+        $ready = DB::table('license_keys')->whereIn('entitlement_id', $rights->pluck('id')->map(fn ($v): int => (int) $v)->all())->where('status', 'allocated')->groupBy('entitlement_id')->selectRaw('entitlement_id, COUNT(*) as n')->pluck('n', 'entitlement_id');   // index entitlement_id
+
         $now = CarbonImmutable::now('UTC');
         $rows = [];
         foreach ($rights as $r) {
@@ -41,6 +43,7 @@ final class LibraryReader
             $file = $current[(int) $r->variant_id] ?? null;
             $state = match (true) {
                 $r->status !== 'active' => 'revoked',
+                $file === null && (int) $r->keys_needed > 0 => 'available',   // a product that is only keys has no file to run out of
                 $expires !== null && $expires->lessThanOrEqualTo($now) => 'expired',
                 $left === 0 => 'limit_reached',
                 $file === null => 'not_ready',
@@ -48,7 +51,7 @@ final class LibraryReader
             };
             $rows[] = [
                 'id' => (string) $r->public_id, 'order' => $refs[(int) $r->order_id]['number'] ?? '', 'product' => $names[(int) $r->variant_id]->productName ?? '', 'sku' => $names[(int) $r->variant_id]->sku ?? '',
-                'file' => $file === null ? null : (string) $file->original_filename, 'version' => $file === null ? null : (int) $file->version, 'left' => $left, 'unlimited' => $r->download_limit === null, 'expires_at' => $expires, 'state' => $state,
+                'file' => $file === null ? null : (string) $file->original_filename, 'version' => $file === null ? null : (int) $file->version, 'left' => $left, 'unlimited' => $r->download_limit === null, 'expires_at' => $expires, 'state' => $state, 'keys_needed' => (int) $r->keys_needed, 'keys_ready' => (int) ($ready[(int) $r->id] ?? 0),
             ];
         }
 
