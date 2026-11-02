@@ -8,6 +8,7 @@ use App\Modules\DigitalProducts\Actions\AllocateLicenseKeys;
 use App\Modules\DigitalProducts\Actions\DownloadDigitalFile;
 use App\Modules\DigitalProducts\Actions\GrantEntitlements;
 use App\Modules\DigitalProducts\Actions\ImportLicenseKeys;
+use App\Modules\DigitalProducts\Actions\RevokeEntitlements;
 use App\Modules\DigitalProducts\Exceptions\DigitalException;
 use App\Modules\DigitalProducts\Models\Entitlement;
 use App\Modules\Platform\DTOs\Actor;
@@ -21,13 +22,13 @@ use Throwable;
  */
 class DigitalProbeCommand extends Command
 {
-    protected $signature = 'digital:probe {action : grant|download|allocate|import} {--order=} {--entitlement=} {--sku=} {--file=} {--start-at=}';
+    protected $signature = 'digital:probe {action : grant|download|allocate|import|refund} {--order=} {--entitlement=} {--sku=} {--file=} {--start-at=}';
 
     protected $description = 'Grant the rights to download for one paid order, or download once, and print the outcome as JSON (concurrency testing only)';
 
     protected $hidden = true;
 
-    public function handle(GrantEntitlements $grant, DownloadDigitalFile $download, AllocateLicenseKeys $allocate, ImportLicenseKeys $import): int
+    public function handle(GrantEntitlements $grant, DownloadDigitalFile $download, AllocateLicenseKeys $allocate, ImportLicenseKeys $import, RevokeEntitlements $revoke): int
     {
         if (app()->environment('production')) {
             $this->error('Not available in production.');
@@ -42,6 +43,12 @@ class DigitalProbeCommand extends Command
         }
 
         try {
+            if ($this->argument('action') === 'refund') {
+                $this->line(json_encode(['ok' => true, 'revoked' => $revoke->forRefundedOrder((int) $this->option('order'))], JSON_THROW_ON_ERROR));
+
+                return self::SUCCESS;
+            }
+
             if ($this->argument('action') === 'allocate') {
                 $this->line(json_encode(['ok' => true, 'given' => $allocate->forEntitlement((int) Entitlement::query()->where('public_id', (string) $this->option('entitlement'))->value('id'))], JSON_THROW_ON_ERROR));
 

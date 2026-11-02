@@ -91,6 +91,8 @@
         </section>
     </div>
 
+    @if ($page->type === 'digital')@include('digital-products::partials.refund-policy', ['skus' => [$page->sku]])@endif
+
     @if ($page->descriptionHtml)
         <section aria-labelledby="desc-h" class="max-w-3xl space-y-3">
             <h2 id="desc-h" class="text-xl font-semibold">{{ __('catalog::storefront.description') }}</h2>

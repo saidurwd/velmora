@@ -177,3 +177,28 @@ it('loses and doubles no key when files of keys are imported while customers are
         ->and($allocated)->toHaveCount(8)->and($allocated->unique())->toHaveCount(8)   // ten customers, eight keys: eight different customers hold one each
         ->and(DB::table('license_keys')->where('status', 'available')->count())->toBe(0);
 });
+
+it('never lets a download slip through after a refund took the right away: the count of downloads always equals the downloads granted, and the right ends taken away', function () {
+    config(['digital.disk' => 'local']);
+    foreach (range(1, 3) as $round) {
+        $orderId = ($this->paidOrder)();
+        $right = DB::table('entitlements')->where('order_id', $orderId)->orderBy('id')->first();
+        $asset = DB::table('digital_assets')->where('variant_id', $right->variant_id)->value('id') ?? DB::table('digital_assets')->insertGetId(['public_id' => strtolower((string) Str::ulid()), 'variant_id' => $right->variant_id, 'created_at' => now(), 'updated_at' => now()]);
+        if (! DB::table('digital_asset_versions')->where('asset_id', $asset)->exists()) {
+            DB::table('digital_asset_versions')->insert(['asset_id' => $asset, 'version' => 1, 'storage_key' => 'digital/test/'.bin2hex(random_bytes(6)), 'original_filename' => 'a.pdf', 'mime' => 'application/pdf', 'size_bytes' => 10, 'sha256' => str_repeat('a', 64), 'created_at' => now()]);
+        }
+        DB::table('entitlements')->where('id', $right->id)->update(['download_limit' => 50]);
+
+        $jobs = array_fill(0, 8, ['digital:probe', ['download', "--entitlement={$right->public_id}"]]);
+        $jobs[] = ['digital:probe', ['refund', "--order={$orderId}"]];
+        $results = runDigitalProbes($jobs);
+
+        $row = DB::table('entitlements')->where('id', $right->id)->first();
+        $granted = DB::table('download_logs')->where('entitlement_id', $right->id)->where('outcome', 'granted')->count();
+        $refused = DB::table('download_logs')->where('entitlement_id', $right->id)->where('outcome', 'revoked')->count();
+        expect(array_column($results, 'ok'))->each->toBeTrue()
+            ->and($row->status)->toBe('revoked')->and((int) $row->downloads_used)->toBe($granted)   // no download was counted without being logged, or logged without being counted
+            ->and($granted + $refused)->toBe(8)   // each download either went through before the refund or was refused after it
+            ->and(DB::table('audit_events')->where('action', 'digital.entitlement_revoked')->where('subject_id', (string) $right->id)->count())->toBe(1);
+    }
+});

@@ -19,6 +19,15 @@
     </form>
     @endif
 
+    <section aria-labelledby="p-h" class="space-y-2">
+        <h2 id="p-h" class="text-lg font-semibold">{{ __('digital-products::admin.policies.for_product') }}</h2>
+        <form method="POST" action="{{ route('admin.digital.assets.policy', $variant->sku) }}" class="flex flex-wrap items-end gap-3">@csrf
+            <div><label for="policy" class="block text-sm font-medium">{{ __('digital-products::admin.policies.choose') }}</label>
+                <select id="policy" name="policy" @disabled(! $can) class="mt-1 rounded-md border border-line px-3 py-2"><option value="">{{ __('digital-products::admin.policies.use_default') }}</option>@foreach ($policies as $p)<option value="{{ $p->public_id }}" @selected($chosenPolicy === $p->id)>{{ $p->words(app()->getLocale())['title'] ?? $p->code }}</option>@endforeach</select></div>
+            @if ($can)<x-platform::btn type="submit" size="sm" variant="secondary">{{ __('digital-products::admin.policies.apply') }}</x-platform::btn>@endif
+        </form>
+    </section>
+
     <section aria-labelledby="k-h" class="space-y-3">
         <h2 id="k-h" class="text-lg font-semibold">{{ __('digital-products::admin.keys.title') }}</h2>
         <p class="text-sm text-muted">{{ __('digital-products::admin.keys.help', ['max' => \App\Modules\DigitalProducts\Actions\ImportLicenseKeys::MAX_LINES]) }}</p>

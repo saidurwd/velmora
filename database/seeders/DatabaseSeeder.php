@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Modules\Customers\Database\Seeders\GeographySeeder;
+use App\Modules\DigitalProducts\Database\Seeders\RefundPolicySeeder;
 use App\Modules\IdentityAccess\Database\Seeders\RolesAndPermissionsSeeder;
 use App\Modules\Inventory\Database\Seeders\StockLocationSeeder;
 use App\Modules\Payments\Database\Seeders\PaymentMethodSeeder;
@@ -34,6 +35,7 @@ class DatabaseSeeder extends Seeder
             ShippingSeeder::class,
             CourierSeeder::class,
             PaymentMethodSeeder::class,
+            RefundPolicySeeder::class,
             SearchSynonymSeeder::class,
         ]);
     }

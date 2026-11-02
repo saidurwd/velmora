@@ -9,6 +9,7 @@ use App\Modules\Catalog\DTOs\TranslationInput;
 use App\Modules\Catalog\DTOs\VariantData;
 use App\Modules\Catalog\Enums\ProductType;
 use App\Modules\DigitalProducts\Actions\UploadDigitalAsset;
+use App\Modules\DigitalProducts\Database\Seeders\RefundPolicySeeder;
 use App\Modules\IdentityAccess\Models\User;
 use App\Modules\Inventory\Contracts\StockInitialiser;
 use App\Modules\Inventory\Contracts\StockReservations;
@@ -157,7 +158,7 @@ function shippingWorld(object $t): void
  */
 function digitalWorld(object $t): void
 {
-    $t->seed([LanguageSeeder::class, TaxClassSeeder::class, PaymentMethodSeeder::class]);
+    $t->seed([LanguageSeeder::class, TaxClassSeeder::class, PaymentMethodSeeder::class, RefundPolicySeeder::class]);
     Storage::fake('private');
     config(['digital.disk' => 'private']);
     Storage::disk('private')->buildTemporaryUrlsUsing(fn (string $path, $expiration, array $options) => 'https://files.test/'.$path.'?exp='.$expiration->getTimestamp().'&disp='.rawurlencode((string) ($options['ResponseContentDisposition'] ?? '')));
@@ -170,7 +171,7 @@ function digitalWorld(object $t): void
     $t->tee = $make('TEE-1', 'Cotton Tee', 'টি-শার্ট', ProductType::Physical);
     $t->types = [$t->book => 'digital', $t->book2 => 'digital', $t->tee => 'physical'];
 
-    $t->place = function (array $lines, ?int $userId = null, string $phone = '+8801712345678') use ($t): object {
+    $t->place = function (array $lines, ?int $userId = null, string $phone = '+8801712345678', ?string $email = null) use ($t): object {
         $calc = [];
         $newLines = [];
         foreach ($lines as $variantId => $qty) {
@@ -180,7 +181,7 @@ function digitalWorld(object $t): void
         $physical = in_array('physical', array_map(fn ($v) => $t->types[$v], array_keys($lines)), true);
         $addresses = $physical ? [new NewOrderAddress('shipping', 'Rahim', $phone, 3, 30, 300, ['division' => ['en' => 'Dhaka', 'bn' => 'ঢাকা'], 'district' => ['en' => 'Dhaka', 'bn' => 'ঢাকা'], 'upazila' => ['en' => 'D', 'bn' => 'ড']], 'House 5', '1205', 'D', null)] : [];
 
-        return app(CreateOrder::class)->handle(new NewOrder(Actor::guest('t'), $userId, 'Rahim', $phone, null, OrderChannel::Web, 'en', 'online', $physical ? 'standard' : null, (new BreakdownCalculator)->calculate($calc, false, 0, 0, 0), $newLines, $addresses));
+        return app(CreateOrder::class)->handle(new NewOrder(Actor::guest('t'), $userId, 'Rahim', $phone, $email, OrderChannel::Web, 'en', 'online', $physical ? 'standard' : null, (new BreakdownCalculator)->calculate($calc, false, 0, 0, 0), $newLines, $addresses));
     };
     $t->pay = function (int $orderId): void {
         app(TransitionOrder::class)->status(Actor::system('t'), $orderId, OrderStatus::Confirmed, 'test');

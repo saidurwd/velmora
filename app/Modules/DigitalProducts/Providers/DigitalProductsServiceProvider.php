@@ -5,10 +5,17 @@ declare(strict_types=1);
 namespace App\Modules\DigitalProducts\Providers;
 
 use App\Modules\DigitalProducts\Console\DigitalProbeCommand;
+use App\Modules\DigitalProducts\Contracts\RefundPolicyTexts;
+use App\Modules\DigitalProducts\Events\DigitalAssetVersionPublished;
 use App\Modules\DigitalProducts\Listeners\GrantEntitlementsForPaidOrder;
+use App\Modules\DigitalProducts\Listeners\NotifyOwnersOfNewVersion;
+use App\Modules\DigitalProducts\Listeners\RevokeForRefundedOrder;
 use App\Modules\DigitalProducts\Models\Entitlement;
 use App\Modules\DigitalProducts\Policies\EntitlementPolicy;
+use App\Modules\DigitalProducts\Services\DatabaseRefundPolicyTexts;
 use App\Modules\Orders\Events\OrderPaid;
+use App\Modules\Orders\Events\OrderRefunded;
+use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -24,6 +31,11 @@ class DigitalProductsServiceProvider extends ModuleServiceProvider
         return 'DigitalProducts';
     }
 
+    public function register(): void
+    {
+        $this->app->bind(RefundPolicyTexts::class, DatabaseRefundPolicyTexts::class);
+    }
+
     public function boot(): void
     {
         parent::boot();
@@ -32,10 +44,16 @@ class DigitalProductsServiceProvider extends ModuleServiceProvider
         Gate::policy(Entitlement::class, EntitlementPolicy::class);
         RateLimiter::for('digital-download', fn (Request $r) => Limit::perMinute(20)->by('digital-download|'.($r->user('web')?->getAuthIdentifier() ?? $r->ip()).'|'.($r->route('order') ?? '')));
         Event::listen(OrderPaid::class, GrantEntitlementsForPaidOrder::class);
+        Event::listen(OrderRefunded::class, RevokeForRefundedOrder::class);
+        $this->app->make(OutboxRegistry::class)->register(DigitalAssetVersionPublished::class);
+        Event::listen(DigitalAssetVersionPublished::class, NotifyOwnersOfNewVersion::class);
 
         // per person and route, not shared with anything else
         RateLimiter::for('digital-actions', fn (Request $r) => Limit::perMinute(30)->by('digital-actions|'.$r->route()?->getName().'|'.($r->user('admin')?->getAuthIdentifier() ?? $r->ip())));
 
-        $this->app->make(AdminMenu::class)->add('digital-products::admin.menu.assets', 'admin.digital.assets.index', 'digital.view', 55);
+        $menu = $this->app->make(AdminMenu::class);
+        $menu->add('digital-products::admin.menu.assets', 'admin.digital.assets.index', 'digital.view', 55);
+        $menu->add('digital-products::admin.menu.entitlements', 'admin.digital.entitlements.index', 'digital.view', 56);
+        $menu->add('digital-products::admin.menu.policies', 'admin.digital.policies.index', 'digital.view', 57);
     }
 }

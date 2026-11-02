@@ -49,6 +49,7 @@ final class DownloadDigitalFile
                 return null;   // refused: nothing was used
             }
 
+            DB::table('entitlements')->where('id', $entitlement->id)->whereNull('first_used_at')->update(['first_used_at' => $now]);   // the first download is the first use (set once)
             $validUntil = $now->addSeconds($ttl);
             $url = Storage::disk((string) config('digital.disk'))->temporaryUrl((string) $version->storage_key, $validUntil, [
                 'ResponseContentDisposition' => $this->disposition((string) $version->original_filename),

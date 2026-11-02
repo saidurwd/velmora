@@ -15,6 +15,7 @@ use App\Modules\Orders\Contracts\OrderFulfilment;
 use App\Modules\Orders\Contracts\OrderPayables;
 use App\Modules\Orders\Events\OrderPaid;
 use App\Modules\Orders\Events\OrderPlaced;
+use App\Modules\Orders\Events\OrderRefunded;
 use App\Modules\Orders\Listeners\ApplyPaymentEvent;
 use App\Modules\Orders\Listeners\ApplyShipmentEvent;
 use App\Modules\Orders\Listeners\SendOrderConfirmation;
@@ -67,6 +68,7 @@ class OrdersServiceProvider extends ModuleServiceProvider
         $this->commands([OrderProbeCommand::class, PlaceOrderProbeCommand::class, AccountProbeCommand::class]);
         $this->app->make(OutboxRegistry::class)->register(OrderPlaced::class);
         $this->app->make(OutboxRegistry::class)->register(OrderPaid::class);
+        $this->app->make(OutboxRegistry::class)->register(OrderRefunded::class);
         Event::listen(OrderPlaced::class, SendOrderConfirmation::class);
         Event::listen(PaymentInitiated::class, [ApplyPaymentEvent::class, 'initiated']);
         Event::listen(PaymentSucceeded::class, [ApplyPaymentEvent::class, 'succeeded']);

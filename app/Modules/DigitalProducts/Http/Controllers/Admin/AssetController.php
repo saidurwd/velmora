@@ -6,12 +6,15 @@ namespace App\Modules\DigitalProducts\Http\Controllers\Admin;
 
 use App\Modules\Catalog\Contracts\VariantDirectory;
 use App\Modules\DigitalProducts\Actions\ImportLicenseKeys;
+use App\Modules\DigitalProducts\Actions\SetAssetRefundPolicy;
 use App\Modules\DigitalProducts\Actions\UploadDigitalAsset;
 use App\Modules\DigitalProducts\Exceptions\DigitalException;
 use App\Modules\DigitalProducts\Http\Concerns\ActsAsStaff;
 use App\Modules\DigitalProducts\Http\Requests\ImportKeysRequest;
+use App\Modules\DigitalProducts\Http\Requests\SetAssetPolicyRequest;
 use App\Modules\DigitalProducts\Http\Requests\UploadAssetRequest;
 use App\Modules\DigitalProducts\Models\DigitalAsset;
+use App\Modules\DigitalProducts\Models\RefundPolicy;
 use App\Modules\DigitalProducts\Services\KeyPoolReader;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -38,7 +41,7 @@ class AssetController
         $asset = DigitalAsset::query()->where('variant_id', $variant->id)->first();
 
         return view('digital-products::admin.show', [
-            'variant' => $variant, 'keys' => $pools->forVariant($variant->id), 'asset' => $asset, 'versions' => $asset?->versions()->get() ?? collect(),
+            'variant' => $variant, 'policies' => RefundPolicy::query()->with('translations')->orderByDesc('is_default')->orderBy('id')->get(), 'chosenPolicy' => $asset === null ? null : $asset->refund_policy_id, 'keys' => $pools->forVariant($variant->id), 'asset' => $asset, 'versions' => $asset?->versions()->get() ?? collect(),
             'can' => $request->user('admin')?->can('digital.manage') === true, 'max' => (int) config('digital.max_upload_mb'), 'types' => implode(', ', array_keys((array) config('digital.allowed'))),
         ]);
     }
@@ -69,5 +72,16 @@ class AssetController
         }
 
         return back()->with('status', __('digital-products::admin.keys.imported', ['added' => $result->added, 'duplicates' => $result->duplicates, 'invalid' => $result->invalid, 'filled' => $result->filled]));
+    }
+
+    public function setPolicy(SetAssetPolicyRequest $request, SetAssetRefundPolicy $set, string $sku): RedirectResponse
+    {
+        try {
+            $set->handle($this->actor($request), $sku, $request->validated('policy'));
+        } catch (DigitalException $e) {
+            return back()->withErrors(['asset' => __('digital-products::errors.'.$e->reason, $e->params)]);
+        }
+
+        return back()->with('status', __('digital-products::admin.policies.chosen'));
     }
 }

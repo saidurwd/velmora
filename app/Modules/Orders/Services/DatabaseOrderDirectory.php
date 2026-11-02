@@ -16,6 +16,20 @@ final class DatabaseOrderDirectory implements OrderDirectory
         return $row === null ? null : ['id' => (int) $row->id, 'number' => (string) $row->order_number, 'public_id' => (string) $row->public_id, 'phone' => (string) $row->contact_phone, 'user_id' => $row->user_id === null ? null : (int) $row->user_id];
     }
 
+    public function contacts(array $orderIds): array
+    {
+        if ($orderIds === []) {
+            return [];
+        }
+
+        $out = [];
+        foreach (DB::table('orders')->whereIn('id', $orderIds)->get(['id', 'public_id', 'order_number', 'contact_email', 'contact_phone', 'locale', 'user_id']) as $r) {
+            $out[(int) $r->id] = ['public_id' => (string) $r->public_id, 'number' => (string) $r->order_number, 'email' => $r->contact_email === null ? null : (string) $r->contact_email, 'phone' => (string) $r->contact_phone, 'locale' => (string) $r->locale, 'user_id' => $r->user_id === null ? null : (int) $r->user_id];
+        }
+
+        return $out;
+    }
+
     public function findByNumber(string $orderNumber): ?array
     {
         $row = DB::table('orders')->where('order_number', strtoupper(trim($orderNumber)))->first(['id', 'order_number', 'public_id']);

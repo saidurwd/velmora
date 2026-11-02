@@ -144,7 +144,11 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 | license_keys | **As built:** pool_id FK, key_encrypted (app-key encryption; never in the clear), fingerprint (HMAC; UNIQUE with pool_id), status (available/allocated/revoked; trigger: available → allocated/revoked, allocated → revoked), entitlement_id NULL FK (set once), allocated_at (set once), created_at; the key, fingerprint and pool never change and no row is deleted; idx(pool_id,status,id), idx(entitlement_id). Also `entitlements.keys_needed` (keys owed, one per unit) |
 | entitlements | **As built (Phase 8, slice 2):** public_id, order_id FK, order_item_id FK UNIQUE (one right per order line), variant_id FK, status (active/revoked; trigger: active → revoked only; "expired" is derived from expires_at, never stored), download_limit NULL (unlimited), downloads_used CHECK ≤ limit, expires_at NULL, granted_at, revoked_at (required when revoked), revoked_reason. No owner column: the owner is the order's owner, resolved through Orders |
 | download_logs | **As built (Phase 8, slice 3):** entitlement_id FK, version_id NULL FK (set when granted), user_id NULL (NULL = a guest), outcome (granted/not_owner/revoked/expired/limit_reached/no_file; granted needs a version), ip, user_agent (≤255), created_at(6); idx(entitlement_id, created_at), idx(created_at); never changed or deleted. The signed address is never stored | **AO** |
-| refund_policies (+translations) | scope, rule j, text per locale |
+| refund_policies | **As built (Phase 8, slice 5):** public_id, code UNIQUE, rule (non_refundable/until_first_use/within_days; CHECK days ≥ 1 only for within_days), days, revoke_on_full_refund, is_default (generated marker UNIQUE: at most one default), created_by |
+| refund_policy_translations | policy_id FK, locale FK languages, title, text; UNIQUE(policy_id, locale) |
+| (digital_assets) | also `refund_policy_id` NULL FK (NULL = the default policy) |
+| (entitlements) | also `first_used_at` (set once: first download or first look at the keys) |
+| entitlement_version_notices | entitlement_id FK, version_id FK, created_at; UNIQUE(entitlement_id, version_id): one message per customer and version |
 
 ## Services & Bookings
 | Table | Columns / constraints |

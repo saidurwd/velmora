@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $downloads_used
  * @property CarbonImmutable|null $expires_at
  * @property CarbonImmutable $granted_at
+ * @property CarbonImmutable|null $first_used_at
  * @property CarbonImmutable|null $revoked_at
  * @property string|null $revoked_reason
  */
@@ -31,6 +32,6 @@ class Entitlement extends Model
 
     protected function casts(): array
     {
-        return ['status' => EntitlementStatus::class, 'expires_at' => 'immutable_datetime', 'granted_at' => 'immutable_datetime', 'revoked_at' => 'immutable_datetime', 'created_at' => 'immutable_datetime', 'updated_at' => 'immutable_datetime'];
+        return ['status' => EntitlementStatus::class, 'expires_at' => 'immutable_datetime', 'granted_at' => 'immutable_datetime', 'first_used_at' => 'immutable_datetime', 'revoked_at' => 'immutable_datetime', 'created_at' => 'immutable_datetime', 'updated_at' => 'immutable_datetime'];
     }
 }

@@ -9,6 +9,7 @@ use App\Modules\Orders\Enums\FulfillmentStatus;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Enums\PaymentStatus;
 use App\Modules\Orders\Events\OrderPaid;
+use App\Modules\Orders\Events\OrderRefunded;
 use App\Modules\Orders\Exceptions\OrderException;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Platform\Contracts\Clock;
@@ -120,6 +121,10 @@ final class TransitionOrder
 
             if ($axis === 'payment' && $to === PaymentStatus::Paid->value) {
                 $this->outbox->record(new OrderPaid($order->id, $order->public_id, $order->order_number)); // in this transaction: announced once, and only if the change happened
+            }
+
+            if ($axis === 'payment' && in_array($to, [PaymentStatus::Refunded->value, PaymentStatus::PartiallyRefunded->value], true)) {
+                $this->outbox->record(new OrderRefunded($order->id, $order->public_id, $order->order_number, $to === PaymentStatus::Refunded->value)); // in this transaction: announced once
             }
 
             if ($axis === 'status' && $to === OrderStatus::Cancelled->value) {

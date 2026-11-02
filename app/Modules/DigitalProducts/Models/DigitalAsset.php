@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $variant_id
  * @property int|null $download_limit
  * @property int|null $access_days
+ * @property int|null $refund_policy_id
  * @property int|null $created_by
  */
 class DigitalAsset extends Model

@@ -4,6 +4,7 @@ Digital goods (Phase 8, ADR P8-1..P8-4): files in the private bucket (versioned,
 Cross-module use is limited to Contracts, DTOs, Enums and Events (BD-11). Responsibilities and owned tables: docs/architecture/DOMAIN_MODEL_AND_MODULE_BOUNDARIES.md.
 
 ## Built so far
+* Slice 5: refund policies (`/admin/digital/policies`, words on the product page and checkout), revocation on a full refund (`OrderRefunded`), staff screen for a customer's downloads (`/admin/digital/entitlements`), new-version emails (`DigitalAssetVersionPublished`).
 * Slice 4: licence keys (pools, encrypted keys, `ImportLicenseKeys`, `AllocateLicenseKeys`, `RevealLicenseKeys`, `CheckKeyStock` every 15 minutes). **Back up `APP_KEY` with the database: the keys cannot be read without it.**
 * Slice 3: My downloads (`/account/library`), guest access (signed link + SMS code), `DownloadDigitalFile`, `download_logs`; probe `digital:probe download` for the limit race; opt-in end-to-end test against the real local bucket (`tests/Database/DigitalObjectStorageTest.php`).
 * Slice 2: `OrderPaid` → one entitlement per digital order line (`GrantEntitlements`); defaults in `config/digital.php` / setting `digital.download_limit`; probe `digital:probe` for concurrency tests.

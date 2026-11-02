@@ -15,6 +15,7 @@ use App\Modules\Catalog\Enums\ProductType;
 use App\Modules\Customers\Contracts\AddressBook;
 use App\Modules\Customers\Database\Seeders\GeographySeeder;
 use App\Modules\Customers\DTOs\AddressInput;
+use App\Modules\DigitalProducts\Database\Seeders\RefundPolicySeeder;
 use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
 use App\Modules\IdentityAccess\Models\User;
 use App\Modules\Inventory\Database\Seeders\StockLocationSeeder;
@@ -37,7 +38,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 beforeEach(function () {
-    $this->seed([LanguageSeeder::class, TaxClassSeeder::class, PriceListSeeder::class, StockLocationSeeder::class, GeographySeeder::class, ShippingSeeder::class, PaymentMethodSeeder::class]);
+    $this->seed([LanguageSeeder::class, TaxClassSeeder::class, PriceListSeeder::class, StockLocationSeeder::class, GeographySeeder::class, ShippingSeeder::class, PaymentMethodSeeder::class, RefundPolicySeeder::class]);
     $this->withoutMiddleware(EnforceSessionPolicy::class);
     $actor = Actor::system('t');
     $category = app(SaveCategory::class)->handle($actor, null, null, [new TranslationInput('en', 'General')]);
@@ -88,7 +89,7 @@ describe('guest checkout', function () {
         ($this->as)()->get('/en/checkout')->assertOk()->assertSee('Checkout')->assertSee('Deliver to')->assertSee('Cotton Tee');
         ($this->goToReview)();
 
-        $review = ($this->as)()->get('/en/checkout/review')->assertOk()->assertSee('Review your order')->assertSee('Standard delivery')->assertSee('Cash on delivery')->assertSee('Rahim Uddin')->assertSee('rahim@example.com')->assertSee('1,360');   // ৳1,300 + ৳60
+        $review = ($this->as)()->get('/en/checkout/review')->assertOk()->assertDontSee('Refunds for digital products')->assertSee('Review your order')->assertSee('Standard delivery')->assertSee('Cash on delivery')->assertSee('Rahim Uddin')->assertSee('rahim@example.com')->assertSee('1,360');   // ৳1,300 + ৳60
         $form = ($this->placeForm)();
         $response = ($this->as)()->post('/en/checkout/place', $form)->assertRedirect();
 
@@ -271,7 +272,7 @@ describe('carts with only a download or a service', function () {
 
         ($this->as)()->get('/en/checkout')->assertOk()->assertSee('Your details')->assertDontSee('Division');
         ($this->as)()->post('/en/checkout', ['contact_name' => 'Rahim', 'contact_phone' => '01712345678'])->assertRedirect('/en/checkout/review');
-        ($this->as)()->get('/en/checkout/review')->assertOk()->assertSee('There is no way to pay for this order right now')->assertSee('disabled', false);
+        ($this->as)()->get('/en/checkout/review')->assertOk()->assertSee('There is no way to pay for this order right now')->assertSee('disabled', false)->assertSee('Refunds for digital products')->assertSee('until you first download the file');   // the refund words are shown before buying a download
         ($this->as)()->post('/en/checkout', ['contact_name' => '', 'contact_phone' => '01712345678'])->assertSessionHasErrors('contact_name');
     });
 });

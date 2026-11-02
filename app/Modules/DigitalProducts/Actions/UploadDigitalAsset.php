@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Modules\DigitalProducts\Actions;
 
 use App\Modules\Catalog\Contracts\VariantDirectory;
+use App\Modules\DigitalProducts\Events\DigitalAssetVersionPublished;
 use App\Modules\DigitalProducts\Exceptions\DigitalException;
 use App\Modules\DigitalProducts\Models\DigitalAsset;
 use App\Modules\DigitalProducts\Models\DigitalAssetVersion;
 use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\DTOs\Actor;
+use App\Modules\Platform\Outbox\Outbox;
 use App\Modules\Platform\Support\AuditLogger;
 use App\Modules\Platform\Support\Transactions;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +26,7 @@ use Throwable;
  */
 final class UploadDigitalAsset
 {
-    public function __construct(private readonly VariantDirectory $variants, private readonly AuditLogger $audit, private readonly Clock $clock) {}
+    public function __construct(private readonly VariantDirectory $variants, private readonly AuditLogger $audit, private readonly Clock $clock, private readonly Outbox $outbox) {}
 
     /** @throws DigitalException */
     public function handle(Actor $actor, string $sku, string $path, string $originalName): DigitalAssetVersion
@@ -73,6 +75,7 @@ final class UploadDigitalAsset
                     'asset_id' => $asset->id, 'version' => $number, 'storage_key' => $key, 'original_filename' => $name, 'mime' => $mime, 'size_bytes' => $size,
                     'sha256' => hash_file('sha256', $path), 'uploaded_by' => $actor->id, 'created_at' => $this->clock->now(),
                 ]);
+                $this->outbox->record(new DigitalAssetVersionPublished($version->id, $variant->id, $number));   // in this transaction: announced once, and only if the upload happened
                 $this->audit->record('digital.asset_uploaded', $asset, [], ['version' => $number, 'sku' => $variant->sku, 'sha256' => $version->sha256, 'size_bytes' => $size], $actor);
 
                 return $version;

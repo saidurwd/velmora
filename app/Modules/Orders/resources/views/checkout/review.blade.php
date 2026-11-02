@@ -84,6 +84,8 @@
                     @endif
                 </section>
             @endif
+            @php $digitalSkus = collect($review->cart->lines)->where('productType', 'digital')->pluck('sku')->values()->all(); @endphp
+            @if ($digitalSkus !== [])@include('digital-products::partials.refund-policy', ['skus' => $digitalSkus])@endif
             <div class="space-y-2 border-t border-line pt-4">
                 <p class="text-sm text-muted">{{ __('orders::checkout.place_note') }}</p>
                 <button type="submit" form="place-form" @disabled(! $canPlace || ($review->needsPhoneConfirmation && ! $phoneConfirmed)) class="inline-flex min-h-11 items-center rounded-md bg-brand-600 px-6 py-2 font-medium text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60">{{ __('orders::checkout.place_order', ['total' => $fmt($b->grandTotalMinor)]) }}</button>
