@@ -31,6 +31,7 @@ final class PermissionCatalogue
         'pricing' => ['view', 'update'],
         'inventory' => ['view', 'adjust', 'transfer', 'count'],
         'digital' => ['view', 'manage'],
+        'bookings' => ['view', 'manage'],
         'orders' => ['view', 'update', 'cancel', 'export'],
         'payments' => ['view', 'refund', 'reconcile'],
         'shipping' => ['view', 'manage', 'create_shipment'],

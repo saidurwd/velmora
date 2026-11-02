@@ -16,5 +16,6 @@ final readonly class VariantSummary
         public string $taxClassCode,
         public string $status,
         public bool $trackInventory,
+        public int $productId = 0,
     ) {}
 }

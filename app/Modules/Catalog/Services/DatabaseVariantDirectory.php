@@ -50,12 +50,12 @@ final class DatabaseVariantDirectory implements VariantDirectory
             ->join('products', 'products.id', '=', 'product_variants.product_id')
             ->leftJoin('product_translations as pt', fn ($j) => $j->on('pt.product_id', '=', 'products.id')->where('pt.locale', $default))
             ->whereNull('product_variants.deleted_at')->whereNull('products.deleted_at')
-            ->select('product_variants.id', 'product_variants.sku', 'product_variants.status', 'product_variants.track_inventory', 'products.public_id as product_public_id', 'products.product_type', 'products.tax_class_code', 'pt.name as product_name');
+            ->select('product_variants.id', 'product_variants.sku', 'product_variants.status', 'product_variants.track_inventory', 'products.id as product_id', 'products.public_id as product_public_id', 'products.product_type', 'products.tax_class_code', 'pt.name as product_name');
     }
 
     /** @return list<VariantSummary> */
     private function summaries(Builder $query): array
     {
-        return array_values($query->get()->map(fn ($r) => new VariantSummary((int) $r->id, (string) $r->sku, (string) ($r->product_name ?? ''), (string) $r->product_public_id, (string) $r->product_type, (string) $r->tax_class_code, (string) $r->status, (bool) $r->track_inventory))->all());
+        return array_values($query->get()->map(fn ($r) => new VariantSummary((int) $r->id, (string) $r->sku, (string) ($r->product_name ?? ''), (string) $r->product_public_id, (string) $r->product_type, (string) $r->tax_class_code, (string) $r->status, (bool) $r->track_inventory, (int) $r->product_id))->all());
     }
 }

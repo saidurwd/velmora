@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Modules\Bookings\Actions\SaveServiceDefinition;
+use App\Modules\Bookings\Actions\SaveServicePackage;
+use App\Modules\Bookings\Actions\SaveServiceResource;
 use App\Modules\Catalog\Actions\SaveCategory;
 use App\Modules\Catalog\Actions\SaveProduct;
 use App\Modules\Catalog\DTOs\ProductData;
@@ -197,4 +200,40 @@ function digitalWorld(object $t): void
         return $version;
     };
     $t->rights = fn () => DB::table('entitlements')->orderBy('id')->get();
+}
+
+/**
+ * Bookings: two bookable services (SVC-30: 30 minutes with 10 minutes kept free after; SVC-60: 60 minutes), a room and a person who serve them, and helpers.
+ *   $t->book($resourceId, $packageId, 'confirmed', '2026-12-01 10:00', 60)   inserts a booking straight into the table (UTC), blocked time includes the buffers
+ */
+function bookingsWorld(object $t): void
+{
+    $t->seed([LanguageSeeder::class, TaxClassSeeder::class]);
+    $system = Actor::system('t');
+    $category = app(SaveCategory::class)->handle($system, null, null, [new TranslationInput('en', 'General')]);
+    $make = fn (string $sku, ProductType $type): int => (int) app(SaveProduct::class)->handle($system, null, new ProductData($type, [new TranslationInput('en', $sku), new TranslationInput('bn', $sku)], categoryIds: [$category->id], defaultVariant: new VariantData($sku)))->variants()->value('id');
+    $t->variant30 = $make('SVC-30', ProductType::Service);
+    $t->variant60 = $make('SVC-60', ProductType::Service);
+    $t->tee = $make('TEE-1', ProductType::Physical);
+    $t->staff = new Actor(ActorType::Staff, catalogStaff([])->id, null, 'Amina');
+
+    $t->service30 = app(SaveServiceDefinition::class)->handle($t->staff, 'SVC-30', 'at_provider', 60, 60, 15, true);
+    $t->service60 = app(SaveServiceDefinition::class)->handle($t->staff, 'SVC-60', 'online', 120, 30, 20, true);
+    $t->package30 = app(SaveServicePackage::class)->handle($t->staff, 'SVC-30', 30, 0, 10, true);
+    $t->package60 = app(SaveServicePackage::class)->handle($t->staff, 'SVC-60', 60, 5, 5, true);
+    $t->room = app(SaveServiceResource::class)->handle($t->staff, null, 'Fitting room', 'room', true, ['SVC-30', 'SVC-60']);
+    $t->tailor = app(SaveServiceResource::class)->handle($t->staff, null, 'Rahim (tailor)', 'staff', true, ['SVC-30']);
+
+    $t->book = function (int $resourceId, int $packageId, string $status, string $startUtc, int $minutes) {
+        $package = DB::table('service_packages')->where('id', $packageId)->first();
+        $start = CarbonImmutable::parse($startUtc, 'UTC');
+        $end = $start->addMinutes($minutes);
+        $row = [
+            'public_id' => strtolower((string) Str::ulid()), 'package_id' => $packageId, 'resource_id' => $resourceId, 'status' => $status, 'starts_at' => $start, 'ends_at' => $end,
+            'blocks_from' => $start->subMinutes((int) $package->buffer_before_min), 'blocks_until' => $end->addMinutes((int) $package->buffer_after_min),
+            'hold_expires_at' => $status === 'held' ? now()->addMinutes(15) : null, 'created_at' => now(), 'updated_at' => now(),
+        ];
+
+        return DB::table('service_bookings')->insertGetId($row);
+    };
 }

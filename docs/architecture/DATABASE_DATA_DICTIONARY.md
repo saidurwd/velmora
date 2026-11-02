@@ -153,11 +153,11 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 ## Services & Bookings
 | Table | Columns / constraints |
 |---|---|
-| service_definitions | STD; product_id UNIQUE FK, location_type (on_site/at_provider/online), lead_time_min, max_horizon_days, requires_deposit b |
-| service_packages | service_id, variant_id FK, duration_min, buffer_before_min, buffer_after_min, capacity DEFAULT 1 |
+| service_definitions | **As built (Phase 8, slice 6):** public_id, product_id UNIQUE FK, location_type (at_provider/online), lead_time_min, max_horizon_days (1–365), hold_minutes (5–120), is_active, created_by; no deposit, no on-site (later) |
+| service_packages | **As built:** service_id FK, variant_id UNIQUE FK (a package is a variant), duration_min (5–1440), buffer_before_min / buffer_after_min (0–240), is_active; no capacity column (groups later) |
 | service_resources | STD; name, type (staff/room/vehicle), is_active; service_resource_links(service_id, resource_id) |
 | availability_rules | resource_id, weekday 0–6, start_time, end_time, valid_from, valid_to; availability_exceptions(resource_id, date, is_closed, start/end) |
-| service_bookings | STD; order_item_id FK, package_id FK, resource_id FK, customer_id, status (held/confirmed/in_progress/completed/cancelled/no_show/rescheduled), starts_at, ends_at CHECK(ends_at>starts_at), hold_expires_at NULL, active_resource_id AS (IF(status IN('held','confirmed'),resource_id,NULL)) PERSISTENT, `PERIOD FOR slot(starts_at,ends_at)`, **UNIQUE(active_resource_id, slot WITHOUT OVERLAPS)**, location_address_id NULL, meeting_url NULL |
+| service_bookings | **As built:** public_id, package_id FK, resource_id FK, order_item_id NULL UNIQUE FK, user_id NULL, status (held/confirmed/in_progress/completed/cancelled/no_show; trigger-enforced moves), starts_at/ends_at, **blocks_from/blocks_until (service plus buffers)**, hold_expires_at (required while held), active_resource_id (generated PERSISTENT), `PERIOD FOR slot(blocks_from, blocks_until)` + `UNIQUE(active_resource_id, slot WITHOUT OVERLAPS)`; CHECKs on times and status. Earlier draft follows: order_item_id FK, package_id FK, resource_id FK, customer_id, status (held/confirmed/in_progress/completed/cancelled/no_show/rescheduled), starts_at, ends_at CHECK(ends_at>starts_at), hold_expires_at NULL, active_resource_id AS (IF(status IN('held','confirmed'),resource_id,NULL)) PERSISTENT, `PERIOD FOR slot(starts_at,ends_at)`, **UNIQUE(active_resource_id, slot WITHOUT OVERLAPS)**, location_address_id NULL, meeting_url NULL |
 | booking_requirements | booking_id, field_key, value, attachment_path |
 | booking_events | booking_id, event, actor, at, note | **AO** |
 | cancellation_policies | service_id, hours_before, fee_percent, refund_percent (+translations) |
