@@ -30,6 +30,7 @@ final class PermissionCatalogue
         'catalog' => ['view', 'create', 'update', 'publish', 'delete'],
         'pricing' => ['view', 'update'],
         'inventory' => ['view', 'adjust', 'transfer', 'count'],
+        'digital' => ['view', 'manage'],
         'orders' => ['view', 'update', 'cancel', 'export'],
         'payments' => ['view', 'refund', 'reconcile'],
         'shipping' => ['view', 'manage', 'create_shipment'],
@@ -48,7 +49,7 @@ final class PermissionCatalogue
     private const ROLES = [
         self::SUPER_ADMIN => ['*'],
         'Admin' => ['*', '!roles.manage'],
-        'Catalog Manager' => ['dashboard.view', 'catalog.*', 'pricing.*', 'inventory.view', 'cms.view', 'reviews.moderate'],
+        'Catalog Manager' => ['dashboard.view', 'catalog.*', 'pricing.*', 'digital.*', 'inventory.view', 'cms.view', 'reviews.moderate'],
         'Order Manager' => ['dashboard.view', 'orders.view', 'orders.update', 'orders.cancel', 'orders.export', 'customers.view', 'shipping.view', 'shipping.create_shipment', 'payments.view', 'support.view'],
         'Warehouse' => ['dashboard.view', 'inventory.*', 'orders.view', 'shipping.view', 'shipping.create_shipment', 'catalog.view'],
         'Finance' => ['dashboard.view', 'payments.*', 'orders.view', 'orders.export', 'reports.view', 'reports.export', 'reports.finance.view', 'customers.view'],

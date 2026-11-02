@@ -154,3 +154,12 @@ Owner-approved on 2026-10-30 ("go with recommendations") unless noted.
 | P7-14 | **Printable HTML, no PDF library** (agreed in the Phase 7 plan): an order receipt, a packing slip per parcel and a pick list are built; **invoices, credit notes, bulk create and bulk label printing are not** (see the backlog) | a PDF library needs a Bangla font decision and a written reason (ADR-001) |
 | P7-15 | **The receipt is titled "Order receipt" and says it is not a VAT invoice** until a tax adviser confirms the format; it is built from stored figures and refused to customers if they do not add up; customers reach it only through a signed, expiring link | the owner is not VAT-registered; a wrong figure on a paper is worse than no paper |
 
+### Phase 8 decisions (digital products and service bookings)
+
+| # | Decision | Why / consequence |
+|---|---|---|
+| P8-1 | **Two new modules: `DigitalProducts` and `Bookings`** (the brief said "Services"; that name would collide with the `Services/` folder every module has). Services never touch `stock_*` tables; digital goods never create shipments | boundaries stay readable; both rules have tests |
+| P8-2 | **Digital goods are prepaid only, services are prepaid in full at booking**; cash on delivery is never offered when the cart has a digital or service line. Deposits and "pay on the day" are backlog | Q12 assumption; the online payment method must be switched on (sandbox credentials needed) |
+| P8-3 | **A digital file is stored only in the private bucket, under a random key made by us; every upload is a new immutable version** with its content type read from the file's own bytes, size and SHA-256; allowed kinds are an allow-list (pdf, epub, zip, mp3, png, jpg), at most 200 MB (setting `DIGITAL_MAX_UPLOAD_MB`), with a virus-scan hook only | the name and the browser's claim are not trusted; nothing from the upload is in the stored name |
+| P8-4 | **No code path exposes a permanent public URL for a digital file**; customers get short-lived signed addresses only after an entitlement check | acceptance criterion; tested |
+

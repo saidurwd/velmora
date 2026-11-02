@@ -28,6 +28,8 @@ Default grants for the seeded roles. Roles are created once; administrators may 
 | `inventory.adjust` ⚠ | ✔ | ✔ |  |  | ✔ |  |  |  |  |
 | `inventory.transfer` | ✔ | ✔ |  |  | ✔ |  |  |  |  |
 | `inventory.count` | ✔ | ✔ |  |  | ✔ |  |  |  |  |
+| `digital.view` | ✔ | ✔ | ✔ |  |  |  |  |  |  |
+| `digital.manage` | ✔ | ✔ | ✔ |  |  |  |  |  |  |
 | `orders.view` | ✔ | ✔ |  | ✔ | ✔ | ✔ | ✔ |  | ✔ |
 | `orders.update` | ✔ | ✔ |  | ✔ |  |  |  |  |  |
 | `orders.cancel` | ✔ | ✔ |  | ✔ |  |  |  |  |  |
