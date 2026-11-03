@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $variant_id
  * @property int $quantity
  * @property int $added_price_minor
+ * @property string|null $hold_ref
  */
 class CartItem extends Model
 {

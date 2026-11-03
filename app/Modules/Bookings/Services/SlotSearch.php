@@ -43,6 +43,22 @@ final class SlotSearch
     }
 
     /**
+     * Whether this exact start is one the search would offer on this resource right now. Used to refuse a made-up time before anything is held.
+     */
+    public function offers(ServicePackage $package, string $resourcePublicId, CarbonImmutable $start): bool
+    {
+        $day = $start->setTimezone((string) config('bookings.timezone'))->format('Y-m-d');
+
+        foreach ($this->forPackage($package, $day, $day, $resourcePublicId) as $slot) {
+            if ($slot->startsAt->equalTo($start->utc())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @return list<Slot>
      *
      * @throws BookingException range_invalid | range_too_long

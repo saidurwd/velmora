@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Modules\Bookings\Console;
 
+use App\Modules\Bookings\Actions\HoldSlot;
+use App\Modules\Bookings\Exceptions\BookingException;
+use App\Modules\Cart\DTOs\CartOwner;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * Concurrency-test entry point: each OS process (its own database connection) tries to take ONE slot and prints a JSON line. It writes the row exactly as
@@ -16,13 +20,13 @@ use Illuminate\Support\Str;
  */
 class BookingProbeCommand extends Command
 {
-    protected $signature = 'bookings:probe {action : hold} {--resource=} {--package=} {--start=} {--minutes=60} {--start-at=}';
+    protected $signature = 'bookings:probe {action : hold|hold-slot} {--resource=} {--package=} {--start=} {--minutes=60} {--sku=} {--resource-public=} {--token=} {--start-at=}';
 
     protected $description = 'Try to hold one slot and print the outcome as JSON (concurrency testing only)';
 
     protected $hidden = true;
 
-    public function handle(): int
+    public function handle(HoldSlot $holdSlot): int
     {
         if (app()->environment('production')) {
             $this->error('Not available in production.');
@@ -34,6 +38,20 @@ class BookingProbeCommand extends Command
             while (microtime(true) < $at) {
                 usleep(200);
             }
+        }
+
+        if ($this->argument('action') === 'hold-slot') {
+            // the real thing: the same action the "Book" button runs, as one visitor with their own cart
+            try {
+                $booking = $holdSlot->handle(CartOwner::guest((string) $this->option('token')), (string) $this->option('sku'), (string) $this->option('resource-public'), (string) $this->option('start'));
+                $this->line(json_encode(['ok' => true, 'held' => true, 'booking' => $booking->public_id], JSON_THROW_ON_ERROR));
+            } catch (BookingException $e) {
+                $this->line(json_encode(['ok' => true, 'held' => false, 'reason' => $e->reason], JSON_THROW_ON_ERROR));
+            } catch (Throwable $e) {
+                $this->line(json_encode(['ok' => false, 'class' => $e::class, 'message' => $e->getMessage()], JSON_THROW_ON_ERROR));
+            }
+
+            return self::SUCCESS;
         }
 
         $package = DB::table('service_packages')->where('id', (int) $this->option('package'))->first();

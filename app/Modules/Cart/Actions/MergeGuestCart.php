@@ -32,6 +32,14 @@ final class MergeGuestCart
 
                 foreach ($guestItems as $g) {
                     $mine = CartItem::query()->where('cart_id', $user->id)->where('variant_id', $g->variant_id)->first();
+                    if ($g->hold_ref !== null) {
+                        // a booking: one slot, never added up. The signed-in customer's own choice wins if they already have one; otherwise the guest's slot comes with them
+                        if ($mine === null && CartItem::query()->where('cart_id', $user->id)->count() < CartRules::MAX_LINES) {
+                            CartItem::query()->create(['cart_id' => $user->id, 'variant_id' => $g->variant_id, 'quantity' => 1, 'added_price_minor' => $g->added_price_minor, 'hold_ref' => $g->hold_ref]);
+                        }
+
+                        continue;
+                    }
                     if ($mine === null) {
                         if (CartItem::query()->where('cart_id', $user->id)->count() >= CartRules::MAX_LINES) {
                             continue;

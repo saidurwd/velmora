@@ -73,7 +73,9 @@
                 <p class="text-sm text-muted">{{ __('catalog::storefront.sku') }}: {{ $page->sku }}</p>
                 <p class="text-sm text-muted">{{ __('catalog::storefront.note_'.$page->type) }}</p>
                 @error('cart')<x-platform::alert type="error">{{ $message }}</x-platform::alert>@enderror
-                @if ($page->stockState === 'out_of_stock')
+                @if ($page->type === 'service' && \Illuminate\Support\Facades\Route::has('bookings.book'))
+                    <x-platform::btn :href="route('bookings.book', ['locale' => app()->getLocale(), 'sku' => $page->sku])" class="w-full">{{ __('bookings::book.choose_time') }}</x-platform::btn>
+                @elseif ($page->stockState === 'out_of_stock')
                     <x-platform::btn type="button" disabled aria-disabled="true" class="w-full cursor-not-allowed opacity-60">{{ __('platform::ui.out_of_stock') }}</x-platform::btn>
                 @else
                     <form method="POST" action="{{ route('cart.add', ['locale' => app()->getLocale()]) }}" class="flex items-end gap-3" novalidate>

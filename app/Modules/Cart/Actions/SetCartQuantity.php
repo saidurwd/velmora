@@ -40,6 +40,9 @@ final class SetCartQuantity
             $cart = $this->carts->find($owner) ?? throw new CartException('not_in_cart');
             $item = CartItem::query()->where('cart_id', $cart->id)->where('variant_id', $variantId)->lockForUpdate()->first() ?? throw new CartException('not_in_cart');
 
+            if ($item->hold_ref !== null && $quantity !== 1) {
+                throw new CartException('one_booking'); // a booking is one slot: to book another, choose another time
+            }
             $this->rules->assertQuantity($variant, $quantity, $available);
             $item->forceFill(['quantity' => $quantity])->save();
             $this->carts->touch($cart);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Bookings\Actions\SaveServiceDefinition;
 use App\Modules\Bookings\Actions\SaveServicePackage;
 use App\Modules\Bookings\Actions\SaveServiceResource;
+use App\Modules\Bookings\Actions\SetWeeklyAvailability;
 use App\Modules\Catalog\Actions\SaveCategory;
 use App\Modules\Catalog\Actions\SaveProduct;
 use App\Modules\Catalog\DTOs\ProductData;
@@ -13,7 +14,11 @@ use App\Modules\Catalog\DTOs\VariantData;
 use App\Modules\Catalog\Enums\ProductType;
 use App\Modules\Platform\Database\Seeders\LanguageSeeder;
 use App\Modules\Platform\DTOs\Actor;
+use App\Modules\Platform\DTOs\Money;
+use App\Modules\Pricing\Actions\SetRegularPrice;
+use App\Modules\Pricing\Database\Seeders\PriceListSeeder;
 use App\Modules\Pricing\Database\Seeders\TaxClassSeeder;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Process\Process;
 
@@ -47,7 +52,8 @@ function runBookingProbes(array $jobs): array
         foreach ($options as $name => $value) {
             $args[] = "--{$name}={$value}";
         }
-        $p = new Process([PHP_BINARY, 'artisan', 'bookings:probe', 'hold', ...$args, '--start-at='.$startAt], base_path(), $env);
+        $action = isset($options['sku']) ? 'hold-slot' : 'hold';
+        $p = new Process([PHP_BINARY, 'artisan', 'bookings:probe', $action, ...$args, '--start-at='.$startAt], base_path(), $env);
         $p->setTimeout(180)->start();
 
         return $p;
@@ -101,4 +107,23 @@ it('never leaves two overlapping bookings, whatever mix of overlapping times is 
     for ($i = 1; $i < $held->count(); $i++) {
         expect($held[$i]->blocks_from >= $held[$i - 1]->blocks_until)->toBeTrue();   // every booking starts after the previous one's blocked time ends
     }
+});
+
+it('lets exactly one of twenty different visitors hold the same time through the real hold, each with their own cart', function () {
+    $system = Actor::system('t');
+    $this->seed(PriceListSeeder::class);
+    app(SetRegularPrice::class)->handle($system, (int) DB::table('product_variants')->where('sku', 'SVC-60')->value('id'), Money::of(80000));
+    app(SaveServiceDefinition::class)->handle($system, 'SVC-60', 'at_provider', 0, 60, 15, true);
+    app(SetWeeklyAvailability::class)->handle($system, $this->roomA, array_map(fn ($d) => ['weekday' => $d, 'start' => '09:00', 'end' => '17:00'], [1, 2, 3, 4, 5, 6, 7]));
+    $start = CarbonImmutable::now('Asia/Dhaka')->addDays(3)->setTime(10, 0)->utc()->format('Y-m-d H:i:s');
+
+    $jobs = array_map(fn (int $i) => ['sku' => 'SVC-60', 'resource-public' => $this->roomA->public_id, 'start' => $start, 'token' => str_repeat(dechex($i + 16), 20)], range(1, 20));
+    $results = runBookingProbes($jobs);
+
+    expect(array_values(array_filter($results, fn (array $r) => ! $r['ok'])))->toBe([])   // no probe crashed
+        ->and(count(array_filter(array_column($results, 'held'))))->toBe(1)
+        ->and(array_unique(array_filter(array_column($results, 'reason'))))->each->toBeIn(['slot_taken', 'slot_unavailable'])
+        ->and(DB::table('service_bookings')->where('resource_id', $this->roomA->id)->where('status', 'held')->count())->toBe(1)
+        ->and(DB::table('cart_items')->whereNotNull('hold_ref')->count())->toBe(1)   // only the winner has the booking in a cart
+        ->and(DB::table('booking_events')->where('event', 'held')->count())->toBe(1);
 });

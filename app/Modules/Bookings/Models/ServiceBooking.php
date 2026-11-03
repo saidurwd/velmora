@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $resource_id
  * @property int|null $order_item_id
  * @property int|null $user_id
+ * @property string|null $holder_key
  * @property BookingStatus $status
  * @property CarbonImmutable $starts_at
  * @property CarbonImmutable $ends_at

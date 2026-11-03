@@ -30,6 +30,9 @@ final class AddToCart
     public function handle(CartOwner $owner, int $variantId, int $quantity): void
     {
         $variant = $this->variants->details([$variantId], app()->getLocale())[$variantId] ?? throw new CartException('unavailable');
+        if ($variant->productType === 'service') {
+            throw new CartException('needs_booking'); // a service is only ever in a cart with a slot held for it
+        }
         $available = $variant->trackInventory ? $this->availability->forVariant($variantId) : null;
 
         try {

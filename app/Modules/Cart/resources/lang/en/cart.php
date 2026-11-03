@@ -13,6 +13,7 @@ return [
     'discount' => 'Discount', 'free_delivery' => 'Free delivery', 'goods_total' => 'Items after discount', 'code_not_valid' => 'This code no longer works, so it is not applied:',
     'add' => 'Add to cart', 'out_of_stock' => 'Out of stock',
     'errors' => [
+        'needs_booking' => 'Choose a time first: services are booked from the service page.', 'one_booking' => 'A booking is one time slot. To book another, choose another time.',
         'unavailable' => 'Sorry, this item cannot be bought right now.', 'min_qty' => 'The smallest quantity you can order is :min.', 'qty_step' => 'This item is sold in steps of :step, starting from :min.',
         'max_qty' => 'You can order at most :max of this item.', 'insufficient_stock' => 'Sorry, only :available left in stock.', 'too_many_lines' => 'A cart can hold up to :max different items.',
         'coupon' => ':message', 'quantity_invalid' => 'Enter a whole number for the quantity.', 'not_in_cart' => 'That item is not in your cart.',

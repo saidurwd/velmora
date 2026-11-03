@@ -10,4 +10,6 @@ return [
     'weekday_invalid' => 'Choose a day of the week.', 'time_invalid' => 'Enter a time like 09:30.', 'date_invalid' => 'Enter a date like 2026-12-25.', 'window_end_before_start' => 'The end must be after the start.',
     'validity_invalid' => 'The “until” date must not be before the “from” date.', 'windows_overlap' => 'Two working times on the same day overlap.',
     'range_invalid' => 'Choose a start day and an end day that is the same or later.', 'range_too_long' => 'Look at at most :days days at a time.', 'package_unavailable' => 'That cannot be booked right now.',
+    'slot_unavailable' => 'That time is no longer available. Please choose another.', 'slot_taken' => 'Sorry, somebody just took that time. Please choose another.', 'too_many_holds' => 'You are already holding :max times. Finish one first, or wait a few minutes.',
+    'not_for_sale' => 'This service cannot be booked online right now.',
 ];

@@ -11,4 +11,7 @@ use Illuminate\Http\Request;
 interface CartOwnerResolver
 {
     public function fromRequest(Request $request): CartOwner;
+
+    /** Like `fromRequest`, but a first-time guest is given a cart cookie so what they put in it is theirs. */
+    public function forWrite(Request $request): CartOwner;
 }
