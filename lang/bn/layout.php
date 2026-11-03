@@ -12,5 +12,6 @@ return [
     'account_profile' => 'প্রোফাইল',
     'account_orders' => 'আমার অর্ডার',
     'account_library' => 'আমার ডাউনলোড',
+    'account_bookings' => 'আমার বুকিং',
     'account_security' => 'সাইন-ইন ও নিরাপত্তা',
 ];

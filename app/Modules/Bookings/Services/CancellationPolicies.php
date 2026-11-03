@@ -68,6 +68,21 @@ final class CancellationPolicies
         return $terms['late_fee_bp'];
     }
 
+    /**
+     * What ending a booking costs and what is then due back, for this moment: the one calculation used both to show a customer the outcome before they confirm
+     * and to record it when it happens.
+     *
+     * @param  Terms  $terms
+     * @return array{fee_bp: int, fee_minor: int, refund_due_minor: int}
+     */
+    public function outcome(array $terms, bool $noShow, int $minutesBefore, int $paidMinor, bool $waive = false, bool $alreadyRefunded = false): array
+    {
+        $feeBp = $noShow ? $terms['no_show_fee_bp'] : $this->cancelFeeBp($terms, $minutesBefore);
+        $fee = $waive ? 0 : $this->feeOn($paidMinor, $feeBp);
+
+        return ['fee_bp' => $feeBp, 'fee_minor' => $fee, 'refund_due_minor' => $alreadyRefunded ? 0 : $paidMinor - $fee];
+    }
+
     /** The fee on an amount, rounded down to a whole minor unit. */
     public function feeOn(int $paidMinor, int $feeBp): int
     {

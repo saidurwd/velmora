@@ -9,6 +9,7 @@ use App\Modules\Bookings\Services\BookingAccess;
 use App\Modules\Bookings\Services\BookingEvents;
 use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\DTOs\Actor;
+use App\Modules\Platform\Enums\ActorType;
 use App\Modules\Platform\Support\AuditLogger;
 use App\Modules\Platform\Support\Transactions;
 use Illuminate\Support\Facades\DB;
@@ -30,7 +31,7 @@ final class CompleteBooking
             if (strtotime((string) $b->starts_at.' UTC') > $now->getTimestamp()) {
                 throw new BookingException('not_started');
             }
-            $changed = DB::table('service_bookings')->where('id', $b->id)->where('status', $b->status)->update(['status' => 'completed', 'completed_at' => $now, 'completed_by' => $actor->type->value, 'updated_at' => $now]);
+            $changed = DB::table('service_bookings')->where('id', $b->id)->where('status', $b->status)->update(['status' => 'completed', 'completed_at' => $now, 'completed_by' => $actor->type === ActorType::Guest ? 'customer' : $actor->type->value, 'updated_at' => $now]);
             if ($changed !== 1) {
                 throw new BookingException('not_completable');
             }

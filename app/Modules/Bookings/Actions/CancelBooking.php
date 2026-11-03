@@ -28,7 +28,7 @@ final class CancelBooking
      */
     public function handle(Actor $actor, string $bookingPublicId, ?string $reason = null, bool $waiveFee = false): \stdClass
     {
-        $customer = $actor->type === ActorType::Customer;
+        $customer = in_array($actor->type, [ActorType::Customer, ActorType::Guest], true);   // a guest who proved the order's phone is the customer
         if ($waiveFee && $customer) {
             throw new BookingException('waive_staff_only');
         }

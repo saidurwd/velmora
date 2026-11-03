@@ -47,6 +47,7 @@ class BookingsServiceProvider extends ModuleServiceProvider
         Event::listen(OrderRefunded::class, EndBookingsOfRefundedOrder::class);
         $this->app->make(OutboxRegistry::class)->register(BookingEnded::class);
         $this->app->make(OutboxRegistry::class)->register(BookingRescheduled::class);
+        RateLimiter::for('booking-manage', fn (Request $r) => Limit::perMinute(20)->by('booking-manage|'.($r->user('web')?->getAuthIdentifier() ?? $r->ip())));
         // per visitor, not shared with anything else
         RateLimiter::for('booking-hold', fn (Request $r) => Limit::perMinute(20)->by('booking-hold|'.($r->user('web')?->getAuthIdentifier() ?? $r->ip())));
     }

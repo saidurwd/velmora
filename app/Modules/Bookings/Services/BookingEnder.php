@@ -9,6 +9,7 @@ use App\Modules\Bookings\Exceptions\BookingException;
 use App\Modules\Orders\Contracts\ServiceOrderLines;
 use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\DTOs\Actor;
+use App\Modules\Platform\Enums\ActorType;
 use App\Modules\Platform\Outbox\Outbox;
 use App\Modules\Platform\Support\AuditLogger;
 use Illuminate\Support\Facades\DB;
@@ -43,10 +44,8 @@ final class BookingEnder
 
         $minutes = (int) floor((strtotime((string) $booking->starts_at.' UTC') - $now->getTimestamp()) / 60);
         $terms = $this->policies->termsOf($booking);
-        $feeBp = $kind === 'no_show' ? $terms['no_show_fee_bp'] : $this->policies->cancelFeeBp($terms, $minutes);
         $paid = $line->paidMinor;
-        $fee = $waive ? 0 : $this->policies->feeOn($paid, $feeBp);
-        $refundDue = $alreadyRefunded ? 0 : $paid - $fee;
+        ['fee_bp' => $feeBp, 'fee_minor' => $fee, 'refund_due_minor' => $refundDue] = $this->policies->outcome($terms, $kind === 'no_show', $minutes, $paid, $waive, $alreadyRefunded);
 
         $changed = DB::table('service_bookings')->where('id', $booking->id)->where('status', $booking->status)->update(['status' => $kind === 'no_show' ? 'no_show' : 'cancelled', 'updated_at' => $now]);
         if ($changed !== 1) {
@@ -55,7 +54,7 @@ final class BookingEnder
 
         $reason = $reason === null || trim($reason) === '' ? null : mb_substr(trim($reason), 0, 255);
         DB::table('booking_cancellations')->insert([
-            'booking_id' => $booking->id, 'kind' => $kind, 'by_type' => $actor->type->value, 'by_id' => $actor->id, 'minutes_before' => $minutes, 'paid_minor' => $paid, 'fee_bp' => $feeBp,
+            'booking_id' => $booking->id, 'kind' => $kind, 'by_type' => $actor->type === ActorType::Guest ? 'customer' : $actor->type->value, 'by_id' => $actor->id, 'minutes_before' => $minutes, 'paid_minor' => $paid, 'fee_bp' => $feeBp,
             'fee_waived' => $waive, 'fee_minor' => $fee, 'refund_due_minor' => $refundDue, 'reason' => $reason, 'created_at' => $now,
         ]);
         $this->events->add((int) $booking->id, $kind === 'no_show' ? 'no_show' : 'cancelled', $actor->type->value, $actor->id, $reason);

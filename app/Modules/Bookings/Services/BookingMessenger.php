@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use RuntimeException;
 use Throwable;
 
@@ -68,7 +69,11 @@ final class BookingMessenger
             $service = $variant->productName ?? '';
             $when = $this->format->dateTime(CarbonImmutable::parse((string) $booking->starts_at, 'UTC'));
             $where = __('bookings::notify.where_'.$this->locationType((int) $booking->package_id));
-            $link = $kind === 'review' && $variant !== null ? route('storefront.product', ['locale' => $contact['locale'], 'slug' => $variant->productSlug]) : null;
+            $link = match (true) {
+                $kind === 'review' && $variant !== null => route('storefront.product', ['locale' => $contact['locale'], 'slug' => $variant->productSlug]),
+                $kind !== 'review' => $this->manageLink($booking, $contact),   // where to see, move or cancel it
+                default => null,
+            };
             $params = ['shop' => (string) config('app.name'), 'service' => $service, 'when' => $when, 'where' => $where, 'link' => (string) $link];
 
             if ($channel === 'sms') {
@@ -77,11 +82,22 @@ final class BookingMessenger
                     throw new RuntimeException('sms_not_accepted');
                 }
             } else {
-                Mail::to((string) $contact['email'])->send(new BookingMail(__('bookings::notify.subject_'.$kind, $params), __('bookings::notify.heading_'.$kind, $params), __('bookings::notify.body_'.$kind, $params), $link, $contact['locale']));
+                Mail::to((string) $contact['email'])->send(new BookingMail(__('bookings::notify.subject_'.$kind, $params), __('bookings::notify.heading_'.$kind, $params), __('bookings::notify.body_'.$kind, $params), $link, $contact['locale'], __('bookings::notify.link_'.$kind)));
             }
         } finally {
             App::setLocale($previous);
         }
+    }
+
+    /** @param  array{public_id: string, number: string, email: string|null, phone: string, locale: string, user_id: int|null}  $contact */
+    private function manageLink(\stdClass $booking, array $contact): string
+    {
+        if ($contact['user_id'] !== null) {
+            return route('bookings.mine.show', ['locale' => $contact['locale'], 'booking' => $booking->public_id]);
+        }
+
+        // a guest has no account: a link we sign (it expires), then a code sent to the order's phone
+        return URL::temporarySignedRoute('bookings.guest', now()->addDays((int) config('orders.confirmation_link_days')), ['locale' => $contact['locale'], 'order' => $contact['public_id']]);
     }
 
     private function locationType(int $packageId): string

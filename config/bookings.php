@@ -25,6 +25,9 @@ return [
     // The review prompt is only sent for bookings completed within this many days (never a flood of old ones).
     'review_prompt_days' => 7,
 
+    // A guest who proved the order's phone may manage that order's bookings for this many minutes.
+    'guest_minutes' => 30,
+
     // One search covers at most this many days and returns at most this many slots, so a page can never ask for a whole year.
     'max_search_days' => 31,
     'max_slots' => 500,

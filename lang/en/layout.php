@@ -12,5 +12,6 @@ return [
     'account_addresses' => 'Addresses',
     'account_orders' => 'My orders',
     'account_library' => 'My downloads',
+    'account_bookings' => 'My bookings',
     'account_security' => 'Sign-in & security',
 ];
