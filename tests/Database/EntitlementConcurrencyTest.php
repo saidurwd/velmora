@@ -172,7 +172,7 @@ it('loses and doubles no key when files of keys are imported while customers are
     app(AllocateLicenseKeys::class)->fillWaiting();   // what the next scheduled check would do, so nothing is left owed that could be given
 
     $allocated = DB::table('license_keys')->where('status', 'allocated')->pluck('entitlement_id');
-    expect(array_column($results, 'ok'))->each->toBeTrue()
+    expect(array_values(array_filter($results, fn (array $r) => ! $r['ok'])))->toBe([])   // a probe that failed says why
         ->and(DB::table('license_keys')->count())->toBe(8)   // the overlaps were skipped, never doubled
         ->and($allocated)->toHaveCount(8)->and($allocated->unique())->toHaveCount(8)   // ten customers, eight keys: eight different customers hold one each
         ->and(DB::table('license_keys')->where('status', 'available')->count())->toBe(0);

@@ -51,6 +51,15 @@ describe('the database refuses a double booking', function () {
         }
     });
 
+    it('keeps a booking that is under way in the way of anyone else, until it is finished', function () {
+        $id = ($this->book)($this->room->id, $this->package60->id, 'confirmed', ($this->at)('10:00'), 60);
+        DB::table('service_bookings')->where('id', $id)->update(['status' => 'in_progress']);
+
+        ($this->fails)(fn () => ($this->book)($this->room->id, $this->package60->id, 'held', ($this->at)('10:30'), 60));
+        DB::table('service_bookings')->where('id', $id)->update(['status' => 'completed']);
+        expect(($this->book)($this->room->id, $this->package60->id, 'held', ($this->at)('10:30'), 60))->toBeInt();
+    });
+
     it('counts the buffers as taken time, so a booking cannot start inside the buffer of the one before', function () {
         ($this->book)($this->room->id, $this->package30->id, 'confirmed', ($this->at)('10:00'), 30);   // service until 10:30, kept free until 10:40
 

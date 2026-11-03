@@ -10,6 +10,7 @@ use App\Modules\DigitalProducts\Exceptions\DigitalException;
 use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\Support\AuditLogger;
+use App\Modules\Platform\Support\Transactions;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -72,7 +73,7 @@ final class ImportLicenseKeys
             foreach ($chunk as $key) {
                 $rows[] = ['pool_id' => $pool, 'key_encrypted' => Crypt::encryptString((string) $key), 'fingerprint' => self::fingerprint((string) $key), 'status' => 'available', 'created_at' => $this->clock->now()];
             }
-            $added += DB::table('license_keys')->insertOrIgnore($rows);
+            $added += (int) Transactions::run(fn () => DB::table('license_keys')->insertOrIgnore($rows));   // retried a few times if the database picks this insert as a deadlock victim
         }
         $duplicates = count($keys) - $added + max(0, $repeatedInFile);
         $filled = $this->allocate->fillWaiting($variant->id);

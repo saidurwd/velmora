@@ -30,9 +30,9 @@ enum BookingStatus: string
         return in_array($to, $this->next(), true);
     }
 
-    /** The resource is taken for this booking's time (held or confirmed). The database lets nobody else book it. */
+    /** The resource is taken for this booking's time (held, confirmed or under way). The database lets nobody else book it. */
     public function holdsTheSlot(): bool
     {
-        return in_array($this, [self::Held, self::Confirmed], true);
+        return in_array($this, [self::Held, self::Confirmed, self::InProgress], true);
     }
 }
