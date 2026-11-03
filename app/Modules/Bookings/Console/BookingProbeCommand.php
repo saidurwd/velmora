@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\Bookings\Console;
 
+use App\Modules\Bookings\Actions\ClaimBookingHold;
 use App\Modules\Bookings\Actions\HoldSlot;
 use App\Modules\Bookings\Exceptions\BookingException;
 use App\Modules\Cart\DTOs\CartOwner;
+use App\Modules\Platform\Support\Transactions;
 use Carbon\CarbonImmutable;
+use DomainException;
 use Illuminate\Console\Command;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -20,13 +23,13 @@ use Throwable;
  */
 class BookingProbeCommand extends Command
 {
-    protected $signature = 'bookings:probe {action : hold|hold-slot} {--resource=} {--package=} {--start=} {--minutes=60} {--sku=} {--resource-public=} {--token=} {--start-at=}';
+    protected $signature = 'bookings:probe {action : hold|hold-slot|claim} {--hold-ref=} {--variant=} {--order-item=} {--resource=} {--package=} {--start=} {--minutes=60} {--sku=} {--resource-public=} {--token=} {--start-at=}';
 
     protected $description = 'Try to hold one slot and print the outcome as JSON (concurrency testing only)';
 
     protected $hidden = true;
 
-    public function handle(HoldSlot $holdSlot): int
+    public function handle(HoldSlot $holdSlot, ClaimBookingHold $claim): int
     {
         if (app()->environment('production')) {
             $this->error('Not available in production.');
@@ -38,6 +41,20 @@ class BookingProbeCommand extends Command
             while (microtime(true) < $at) {
                 usleep(200);
             }
+        }
+
+        if ($this->argument('action') === 'claim') {
+            // the real claim checkout makes, in its own transaction, as one order trying to take a visitor's hold
+            try {
+                Transactions::run(fn () => $claim->claim((string) $this->option('hold-ref'), (int) $this->option('variant'), (int) $this->option('order-item')));
+                $this->line(json_encode(['ok' => true, 'claimed' => true], JSON_THROW_ON_ERROR));
+            } catch (DomainException $e) {
+                $this->line(json_encode(['ok' => true, 'claimed' => false, 'reason' => $e->getMessage()], JSON_THROW_ON_ERROR));
+            } catch (Throwable $e) {
+                $this->line(json_encode(['ok' => false, 'class' => $e::class, 'message' => $e->getMessage()], JSON_THROW_ON_ERROR));
+            }
+
+            return self::SUCCESS;
         }
 
         if ($this->argument('action') === 'hold-slot') {

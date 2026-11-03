@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Orders\Actions;
 
+use App\Modules\Bookings\Contracts\BookingHolds;
 use App\Modules\Cart\Contracts\CartReader;
 use App\Modules\Cart\Contracts\CartWriter;
 use App\Modules\Cart\DTOs\CartLineView;
@@ -52,6 +53,7 @@ final class PlaceOrder
         private readonly Outbox $outbox,
         private readonly CodRiskAssessor $risk,
         private readonly PhoneLock $phoneLock,
+        private readonly BookingHolds $bookings,
     ) {}
 
     /** @throws CheckoutException */
@@ -165,6 +167,19 @@ final class PlaceOrder
             $this->stock->holdForOrder($tracked, $order->public_id);
         } catch (DomainException) {
             throw new CheckoutException('insufficient_stock');
+        }
+
+        // the booked times: each service line takes over the visitor's hold in this same transaction, or the order is not placed
+        $held = array_filter($buy, fn (CartLineView $l) => $l->productType === 'service');
+        if ($held !== []) {
+            $items = $order->items()->pluck('id', 'variant_id');
+            foreach ($held as $l) {
+                try {
+                    $this->bookings->claim((string) $l->holdRef, $l->variantId, (int) $items[$l->variantId]);
+                } catch (DomainException) {
+                    throw new CheckoutException('booking_lost');
+                }
+            }
         }
 
         // the coupons: each use is one conditional UPDATE; the per-customer limit is checked as the shopper is now known

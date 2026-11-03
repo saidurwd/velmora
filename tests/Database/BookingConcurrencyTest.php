@@ -12,14 +12,20 @@ use App\Modules\Catalog\DTOs\ProductData;
 use App\Modules\Catalog\DTOs\TranslationInput;
 use App\Modules\Catalog\DTOs\VariantData;
 use App\Modules\Catalog\Enums\ProductType;
+use App\Modules\Orders\Actions\CreateOrder;
+use App\Modules\Orders\DTOs\NewOrder;
+use App\Modules\Orders\DTOs\NewOrderLine;
+use App\Modules\Orders\Enums\OrderChannel;
 use App\Modules\Platform\Database\Seeders\LanguageSeeder;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\DTOs\Money;
 use App\Modules\Pricing\Actions\SetRegularPrice;
 use App\Modules\Pricing\Database\Seeders\PriceListSeeder;
 use App\Modules\Pricing\Database\Seeders\TaxClassSeeder;
+use App\Modules\Pricing\Services\BreakdownCalculator;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Symfony\Component\Process\Process;
 
 /*
@@ -52,7 +58,7 @@ function runBookingProbes(array $jobs): array
         foreach ($options as $name => $value) {
             $args[] = "--{$name}={$value}";
         }
-        $action = isset($options['sku']) ? 'hold-slot' : 'hold';
+        $action = isset($options['hold-ref']) ? 'claim' : (isset($options['sku']) ? 'hold-slot' : 'hold');
         $p = new Process([PHP_BINARY, 'artisan', 'bookings:probe', $action, ...$args, '--start-at='.$startAt], base_path(), $env);
         $p->setTimeout(180)->start();
 
@@ -126,4 +132,26 @@ it('lets exactly one of twenty different visitors hold the same time through the
         ->and(DB::table('service_bookings')->where('resource_id', $this->roomA->id)->where('status', 'held')->count())->toBe(1)
         ->and(DB::table('cart_items')->whereNotNull('hold_ref')->count())->toBe(1)   // only the winner has the booking in a cart
         ->and(DB::table('booking_events')->where('event', 'held')->count())->toBe(1);
+});
+
+it('lets exactly one of several orders claim one held time, however many try at the same instant', function () {
+    $variantId = (int) DB::table('product_variants')->where('sku', 'SVC-60')->value('id');
+    $order = fn (): int => (int) DB::table('order_items')->where('order_id', app(CreateOrder::class)->handle(new NewOrder(
+        Actor::guest('t'), null, 'Rahim', '+8801712345678', null, OrderChannel::Web, 'en', 'online', null,
+        (new BreakdownCalculator)->calculate([['variantId' => $variantId, 'quantity' => 1, 'unitMinor' => 35000, 'lineDiscountMinor' => 0, 'taxRateBp' => 0]], false, 0, 0, 0),
+        [new NewOrderLine($variantId, 'service', ['en' => 'Fitting', 'bn' => 'ফিটিং'], 'SVC-60')], [],
+    ))->id)->value('id');
+    [$a, $b] = [$order(), $order()];
+    $held = DB::table('service_bookings')->insertGetId([
+        'public_id' => $ref = strtolower((string) Str::ulid()), 'package_id' => $this->package->id, 'resource_id' => $this->roomA->id, 'status' => 'held', 'starts_at' => '2026-12-01 04:00:00', 'ends_at' => '2026-12-01 05:00:00',
+        'blocks_from' => '2026-12-01 03:55:00', 'blocks_until' => '2026-12-01 05:05:00', 'hold_expires_at' => now()->addMinutes(15), 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    $results = runBookingProbes(array_map(fn (int $i) => ['hold-ref' => $ref, 'variant' => (string) $variantId, 'order-item' => (string) ($i % 2 === 0 ? $a : $b)], range(0, 7)));
+
+    expect(array_values(array_filter($results, fn (array $r) => ! $r['ok'])))->toBe([])
+        ->and(count(array_filter(array_column($results, 'claimed'))))->toBe(1)
+        ->and(array_unique(array_filter(array_column($results, 'reason'))))->toBe(['hold_lost'])
+        ->and(DB::table('service_bookings')->where('id', $held)->whereIn('order_item_id', [$a, $b])->count())->toBe(1)
+        ->and(DB::table('booking_events')->where('booking_id', $held)->where('event', 'ordered')->count())->toBe(1);
 });

@@ -8,6 +8,7 @@ use App\Modules\Inventory\Contracts\StockReservations;
 use App\Modules\Orders\Enums\FulfillmentStatus;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Enums\PaymentStatus;
+use App\Modules\Orders\Events\OrderCancelled;
 use App\Modules\Orders\Events\OrderPaid;
 use App\Modules\Orders\Events\OrderRefunded;
 use App\Modules\Orders\Exceptions\OrderException;
@@ -129,6 +130,7 @@ final class TransitionOrder
 
             if ($axis === 'status' && $to === OrderStatus::Cancelled->value) {
                 $this->stock->releaseForOrder($order->public_id); // in the same transaction: a cancelled order never keeps stock
+                $this->outbox->record(new OrderCancelled($order->id, $order->public_id, $order->order_number)); // so booked times and the like are given back, once
             }
 
             return $order->refresh();

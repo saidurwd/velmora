@@ -9,6 +9,9 @@ return [
     // Slot start times follow each working window in steps of this many minutes (setting bookings.slot_step_minutes overrides it).
     'slot_step_minutes' => (int) env('BOOKINGS_SLOT_STEP_MINUTES', 15),
 
+    // Once a held time goes to checkout it is kept this long for payment (30 minutes to pay, 5 of margin); the minute sweeper ends it if nobody paid.
+    'payment_hold_minutes' => (int) env('BOOKINGS_PAYMENT_HOLD_MINUTES', 35),
+
     // One search covers at most this many days and returns at most this many slots, so a page can never ask for a whole year.
     'max_search_days' => 31,
     'max_slots' => 500,

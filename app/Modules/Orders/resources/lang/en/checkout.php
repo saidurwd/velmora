@@ -31,6 +31,7 @@ return [
         'totals_changed' => 'A price or discount changed while you were checking out. The new total is shown below. Please review it and place your order again.',
         'not_accepted' => 'Sorry, we cannot accept this order online. Please contact us and we will help.', 'too_many_open_cod' => 'You already have :max cash-on-delivery orders on the way. Please wait for them to arrive, or cancel one, before ordering again.',
         'phone_confirmation_required' => 'For a large cash order we need to confirm your phone number first. Please enter the code we send you.', 'busy' => 'We are finishing another order for this phone number. Please try again in a moment.',
+        'booking_lost' => 'Sorry, the time you chose is no longer held for you. Please choose a time again.',
         'insufficient_stock' => 'Sorry, something in your cart just went out of stock. Please review your cart.', 'coupon_failed' => 'A discount code could not be used, so your order was not placed. Please review your cart.',
     ],
 ];

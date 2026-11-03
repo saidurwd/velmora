@@ -32,5 +32,6 @@ final readonly class CartLineView
         public ?int $available,
         public int $weightG = 0,
         public string $taxClassCode = 'standard',
+        public ?string $holdRef = null,   // the booking this line stands for, when it is a booked service
     ) {}
 }
