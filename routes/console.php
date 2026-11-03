@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Analytics\Jobs\PruneAnalyticsEvents;
 use App\Modules\Bookings\Jobs\ExpireStaleHoldsJob;
+use App\Modules\Bookings\Jobs\RunBookingLifecycleJob;
 use App\Modules\Cart\Jobs\PurgeExpiredCarts;
 use App\Modules\Catalog\Jobs\PublishScheduledProducts;
 use App\Modules\Catalog\Jobs\ReconcileListing;
@@ -43,6 +44,7 @@ Schedule::job(new ReconcilePendingPaymentsJob)->everyTenMinutes()->name('payment
 Schedule::job(new CheckPaymentHealthJob)->everyFiveMinutes()->name('payments:check-health')->withoutOverlapping();
 Schedule::job(new PollCourierShipmentsJob)->everyTenMinutes()->name('shipping:poll-couriers')->withoutOverlapping();
 Schedule::job(new ExpireStaleHoldsJob)->everyMinute()->name('bookings:expire-holds')->withoutOverlapping();
+Schedule::job(new RunBookingLifecycleJob)->everyFiveMinutes()->name('bookings:lifecycle')->withoutOverlapping();
 Schedule::job(new CheckKeyStockJob)->everyFifteenMinutes()->name('digital:check-keys')->withoutOverlapping();
 Schedule::job(new CheckShippingHealthJob)->everyFifteenMinutes()->name('shipping:check-health')->withoutOverlapping();
 Schedule::job(new PollRefundsJob)->everyFiveMinutes()->name('payments:poll-refunds')->withoutOverlapping();

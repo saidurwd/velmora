@@ -206,3 +206,17 @@ it('lets exactly one of two bookings move onto the same free time, however many 
         ->and(DB::table('service_bookings')->where('resource_id', $this->roomA->id)->where('starts_at', $target)->count())->toBe(1)
         ->and(DB::table('booking_events')->where('event', 'rescheduled')->count())->toBe(1);
 });
+
+it('sends a reminder once when six scheduler runs start at the same instant', function () {
+    $variantId = (int) DB::table('product_variants')->where('sku', 'SVC-60')->value('id');
+    [, $ref] = confirmedServiceBooking($this, CarbonImmutable::now()->addHours(5)->format('Y-m-d H:i:s'), $variantId, $this->roomA->id);
+
+    $results = runBookingProbes(array_fill(0, 6, ['action' => 'remind']));
+
+    expect(array_values(array_filter($results, fn (array $r) => ! $r['ok'])))->toBe([])
+        ->and(array_sum(array_column($results, 'sent')))->toBe(1)   // the one text message (this order has no email address)
+        ->and(DB::table('booking_notices')->count())->toBe(1)
+        ->and(DB::table('booking_notices')->value('status'))->toBe('sent')
+        ->and((int) DB::table('booking_notices')->value('attempts'))->toBe(1)
+        ->and(DB::table('service_bookings')->where('public_id', $ref)->value('status'))->toBe('confirmed');
+});

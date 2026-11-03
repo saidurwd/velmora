@@ -8,6 +8,7 @@ use App\Modules\Bookings\Actions\CancelBooking;
 use App\Modules\Bookings\Actions\ClaimBookingHold;
 use App\Modules\Bookings\Actions\HoldSlot;
 use App\Modules\Bookings\Actions\RescheduleBooking;
+use App\Modules\Bookings\Actions\SendBookingReminders;
 use App\Modules\Bookings\Exceptions\BookingException;
 use App\Modules\Cart\DTOs\CartOwner;
 use App\Modules\Platform\DTOs\Actor;
@@ -27,13 +28,13 @@ use Throwable;
  */
 class BookingProbeCommand extends Command
 {
-    protected $signature = 'bookings:probe {action : hold|hold-slot|claim|cancel|reschedule} {--booking=} {--hold-ref=} {--variant=} {--order-item=} {--resource=} {--package=} {--start=} {--minutes=60} {--sku=} {--resource-public=} {--token=} {--start-at=}';
+    protected $signature = 'bookings:probe {action : hold|hold-slot|claim|cancel|reschedule|remind} {--booking=} {--hold-ref=} {--variant=} {--order-item=} {--resource=} {--package=} {--start=} {--minutes=60} {--sku=} {--resource-public=} {--token=} {--start-at=}';
 
     protected $description = 'Try to hold one slot and print the outcome as JSON (concurrency testing only)';
 
     protected $hidden = true;
 
-    public function handle(HoldSlot $holdSlot, ClaimBookingHold $claim, CancelBooking $cancel, RescheduleBooking $reschedule): int
+    public function handle(HoldSlot $holdSlot, ClaimBookingHold $claim, CancelBooking $cancel, RescheduleBooking $reschedule, SendBookingReminders $reminders): int
     {
         if (app()->environment('production')) {
             $this->error('Not available in production.');
@@ -45,6 +46,17 @@ class BookingProbeCommand extends Command
             while (microtime(true) < $at) {
                 usleep(200);
             }
+        }
+
+        if ($this->argument('action') === 'remind') {
+            // one scheduler run, as the lifecycle job does it
+            try {
+                $this->line(json_encode(['ok' => true, 'sent' => $reminders->handle()], JSON_THROW_ON_ERROR));
+            } catch (Throwable $e) {
+                $this->line(json_encode(['ok' => false, 'class' => $e::class, 'message' => $e->getMessage()], JSON_THROW_ON_ERROR));
+            }
+
+            return self::SUCCESS;
         }
 
         if (in_array($this->argument('action'), ['cancel', 'reschedule'], true)) {

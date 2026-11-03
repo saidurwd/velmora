@@ -14,6 +14,7 @@ return [
     'not_found' => 'That booking was not found.', 'not_cancellable' => 'This booking can no longer be cancelled.', 'already_started' => 'This booking has already started.', 'reason_required' => 'Please give a reason.',
     'waive_staff_only' => 'Only staff can waive the fee.', 'not_reschedulable' => 'This booking can no longer be moved.', 'reschedule_too_late' => 'It is too late to move this booking. It can be moved at least :hours hours before it starts.',
     'reschedule_limit' => 'This booking has already been moved :max times, which is the most allowed.', 'same_time' => 'That is the time it already has.', 'no_show_too_early' => 'A no-show can be recorded only once the booking has started.',
+    'not_completable' => 'This booking cannot be marked as done.', 'not_started' => 'This booking has not started yet.',
     'resource_invalid' => 'That person or room cannot do this service.',
     'not_for_sale' => 'This service cannot be booked online right now.',
 ];

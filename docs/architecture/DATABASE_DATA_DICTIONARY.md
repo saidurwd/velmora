@@ -165,6 +165,8 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 | cancellation_policy_translations | policy_id FK, locale FK, title, text, UNIQUE (policy_id, locale) |
 | (service_definitions) | also `cancellation_policy_id` NULL FK (NULL = the default policy) |
 | booking_cancellations | booking_id UNIQUE FK, kind (cancelled/no_show), by_type/by_id, minutes_before, paid_minor, fee_bp, fee_waived, fee_minor, refund_due_minor (advice only), reason, created_at; CHECKs: fee ≤ paid, refund_due ≤ paid − fee, waived ⇒ fee 0 | **AO** |
+| (service_bookings) | also `completed_at`, `completed_by` (customer/staff/system); idx(status, starts_at), idx(status, ends_at) for the lifecycle job |
+| booking_notices | booking_id FK, kind (reminder_long/reminder_short/review), channel (sms/email), for_starts_at, status (claimed/sent/failed/gave_up), attempts, last_error (class name only), created_at/updated_at; UNIQUE (booking_id, kind, channel, for_starts_at); **AO** except the outcome columns |
 | (cart_items) | also `hold_ref` (the held slot a booking line stands for; NULL for products) |
 | booking_requirements | booking_id, field_key, value, attachment_path |
 | booking_events | booking_id, event, actor, at, note | **AO** |
