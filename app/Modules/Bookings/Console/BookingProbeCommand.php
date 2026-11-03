@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace App\Modules\Bookings\Console;
 
+use App\Modules\Bookings\Actions\CancelBooking;
 use App\Modules\Bookings\Actions\ClaimBookingHold;
 use App\Modules\Bookings\Actions\HoldSlot;
+use App\Modules\Bookings\Actions\RescheduleBooking;
 use App\Modules\Bookings\Exceptions\BookingException;
 use App\Modules\Cart\DTOs\CartOwner;
+use App\Modules\Platform\DTOs\Actor;
+use App\Modules\Platform\Enums\ActorType;
 use App\Modules\Platform\Support\Transactions;
 use Carbon\CarbonImmutable;
 use DomainException;
@@ -23,13 +27,13 @@ use Throwable;
  */
 class BookingProbeCommand extends Command
 {
-    protected $signature = 'bookings:probe {action : hold|hold-slot|claim} {--hold-ref=} {--variant=} {--order-item=} {--resource=} {--package=} {--start=} {--minutes=60} {--sku=} {--resource-public=} {--token=} {--start-at=}';
+    protected $signature = 'bookings:probe {action : hold|hold-slot|claim|cancel|reschedule} {--booking=} {--hold-ref=} {--variant=} {--order-item=} {--resource=} {--package=} {--start=} {--minutes=60} {--sku=} {--resource-public=} {--token=} {--start-at=}';
 
     protected $description = 'Try to hold one slot and print the outcome as JSON (concurrency testing only)';
 
     protected $hidden = true;
 
-    public function handle(HoldSlot $holdSlot, ClaimBookingHold $claim): int
+    public function handle(HoldSlot $holdSlot, ClaimBookingHold $claim, CancelBooking $cancel, RescheduleBooking $reschedule): int
     {
         if (app()->environment('production')) {
             $this->error('Not available in production.');
@@ -41,6 +45,26 @@ class BookingProbeCommand extends Command
             while (microtime(true) < $at) {
                 usleep(200);
             }
+        }
+
+        if (in_array($this->argument('action'), ['cancel', 'reschedule'], true)) {
+            // staff cancel or move one booking, exactly as the real actions do
+            $staff = new Actor(ActorType::Staff, 1, null, 'probe');
+            try {
+                if ($this->argument('action') === 'cancel') {
+                    $r = $cancel->handle($staff, (string) $this->option('booking'), 'probe');
+                    $this->line(json_encode(['ok' => true, 'done' => true, 'fee_minor' => $r->fee_minor], JSON_THROW_ON_ERROR));
+                } else {
+                    $reschedule->handle($staff, (string) $this->option('booking'), (string) $this->option('start'), true, 'probe');
+                    $this->line(json_encode(['ok' => true, 'done' => true], JSON_THROW_ON_ERROR));
+                }
+            } catch (BookingException $e) {
+                $this->line(json_encode(['ok' => true, 'done' => false, 'reason' => $e->reason], JSON_THROW_ON_ERROR));
+            } catch (Throwable $e) {
+                $this->line(json_encode(['ok' => false, 'class' => $e::class, 'message' => $e->getMessage()], JSON_THROW_ON_ERROR));
+            }
+
+            return self::SUCCESS;
         }
 
         if ($this->argument('action') === 'claim') {

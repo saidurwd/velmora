@@ -94,6 +94,7 @@
     </div>
 
     @if ($page->type === 'digital')@include('digital-products::partials.refund-policy', ['skus' => [$page->sku]])@endif
+    @if ($page->type === 'service')@include('bookings::partials.cancellation-policy', ['skus' => [$page->sku]])@endif
 
     @if ($page->descriptionHtml)
         <section aria-labelledby="desc-h" class="max-w-3xl space-y-3">

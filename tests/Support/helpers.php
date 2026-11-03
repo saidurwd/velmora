@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Bookings\Actions\SaveServiceDefinition;
 use App\Modules\Bookings\Actions\SaveServicePackage;
 use App\Modules\Bookings\Actions\SaveServiceResource;
+use App\Modules\Bookings\Database\Seeders\CancellationPolicySeeder;
 use App\Modules\Catalog\Actions\SaveCategory;
 use App\Modules\Catalog\Actions\SaveProduct;
 use App\Modules\Catalog\DTOs\ProductData;
@@ -208,7 +209,7 @@ function digitalWorld(object $t): void
  */
 function bookingsWorld(object $t): void
 {
-    $t->seed([LanguageSeeder::class, TaxClassSeeder::class]);
+    $t->seed([LanguageSeeder::class, TaxClassSeeder::class, CancellationPolicySeeder::class]);
     $system = Actor::system('t');
     $category = app(SaveCategory::class)->handle($system, null, null, [new TranslationInput('en', 'General')]);
     $make = fn (string $sku, ProductType $type): int => (int) app(SaveProduct::class)->handle($system, null, new ProductData($type, [new TranslationInput('en', $sku), new TranslationInput('bn', $sku)], categoryIds: [$category->id], defaultVariant: new VariantData($sku)))->variants()->value('id');

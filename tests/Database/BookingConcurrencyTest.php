@@ -54,11 +54,12 @@ function runBookingProbes(array $jobs): array
     $env = ['APP_ENV' => 'testing', 'DB_DATABASE' => 'velmora_test', 'CACHE_STORE' => 'array', 'QUEUE_CONNECTION' => 'null', 'SESSION_DRIVER' => 'array', 'APP_DEBUG' => 'false'];
 
     $processes = array_map(function (array $options) use ($env, $startAt) {
+        $action = $options['action'] ?? (isset($options['hold-ref']) ? 'claim' : (isset($options['sku']) ? 'hold-slot' : 'hold'));
+        unset($options['action']);
         $args = [];
         foreach ($options as $name => $value) {
             $args[] = "--{$name}={$value}";
         }
-        $action = isset($options['hold-ref']) ? 'claim' : (isset($options['sku']) ? 'hold-slot' : 'hold');
         $p = new Process([PHP_BINARY, 'artisan', 'bookings:probe', $action, ...$args, '--start-at='.$startAt], base_path(), $env);
         $p->setTimeout(180)->start();
 
@@ -154,4 +155,54 @@ it('lets exactly one of several orders claim one held time, however many try at 
         ->and(array_unique(array_filter(array_column($results, 'reason'))))->toBe(['hold_lost'])
         ->and(DB::table('service_bookings')->where('id', $held)->whereIn('order_item_id', [$a, $b])->count())->toBe(1)
         ->and(DB::table('booking_events')->where('booking_id', $held)->where('event', 'ordered')->count())->toBe(1);
+});
+
+/** @return array{0: int, 1: string} an order line with a confirmed booking on the Rooms A at the given start: its order item id and the booking's public id */
+function confirmedServiceBooking(object $t, string $start, int $variantId, int $resourceId): array
+{
+    $orderId = app(CreateOrder::class)->handle(new NewOrder(
+        Actor::guest('t'), null, 'Rahim', '+8801712345678', null, OrderChannel::Web, 'en', 'online', null,
+        (new BreakdownCalculator)->calculate([['variantId' => $variantId, 'quantity' => 1, 'unitMinor' => 35000, 'lineDiscountMinor' => 0, 'taxRateBp' => 0]], false, 0, 0, 0),
+        [new NewOrderLine($variantId, 'service', ['en' => 'Fitting', 'bn' => 'ফিটিং'], 'SVC-60')], [],
+    ))->id;
+    $itemId = (int) DB::table('order_items')->where('order_id', $orderId)->value('id');
+    $from = CarbonImmutable::parse($start, 'UTC');
+    $id = DB::table('service_bookings')->insertGetId([
+        'public_id' => $ref = strtolower((string) Str::ulid()), 'order_item_id' => $itemId, 'package_id' => $t->package->id, 'resource_id' => $resourceId, 'status' => 'confirmed', 'starts_at' => $from, 'ends_at' => $from->addHour(),
+        'blocks_from' => $from->subMinutes(5), 'blocks_until' => $from->addMinutes(65), 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    return [$itemId, $ref];
+}
+
+it('ends a booking once when eight people cancel it at the same instant', function () {
+    $variantId = (int) DB::table('product_variants')->where('sku', 'SVC-60')->value('id');
+    [, $ref] = confirmedServiceBooking($this, CarbonImmutable::now()->addDays(3)->setTime(5, 0)->format('Y-m-d H:i:s'), $variantId, $this->roomA->id);
+
+    $results = runBookingProbes(array_fill(0, 8, ['action' => 'cancel', 'booking' => $ref]));
+
+    expect(array_values(array_filter($results, fn (array $r) => ! $r['ok'])))->toBe([])
+        ->and(count(array_filter(array_column($results, 'done'))))->toBe(1)
+        ->and(array_unique(array_filter(array_column($results, 'reason'))))->toBe(['not_cancellable'])
+        ->and(DB::table('booking_cancellations')->count())->toBe(1)
+        ->and(DB::table('booking_events')->where('event', 'cancelled')->count())->toBe(1)
+        ->and(DB::table('outbox_messages')->where('event_name', 'bookings.ended')->count())->toBe(1)
+        ->and(DB::table('service_bookings')->where('public_id', $ref)->value('status'))->toBe('cancelled');
+});
+
+it('lets exactly one of two bookings move onto the same free time, however many try at once', function () {
+    $variantId = (int) DB::table('product_variants')->where('sku', 'SVC-60')->value('id');
+    $day = CarbonImmutable::now()->addDays(3);
+    [, $a] = confirmedServiceBooking($this, $day->setTime(5, 0)->format('Y-m-d H:i:s'), $variantId, $this->roomA->id);
+    [, $b] = confirmedServiceBooking($this, $day->setTime(8, 0)->format('Y-m-d H:i:s'), $variantId, $this->roomA->id);
+    $target = $day->setTime(6, 30)->format('Y-m-d H:i:s');   // between them: only one of them can fit there
+    app(SetWeeklyAvailability::class)->handle(Actor::system('t'), $this->roomA, array_map(fn ($d) => ['weekday' => $d, 'start' => '00:00', 'end' => '23:59'], [1, 2, 3, 4, 5, 6, 7]));
+
+    $results = runBookingProbes(array_map(fn (int $i) => ['action' => 'reschedule', 'booking' => $i % 2 === 0 ? $a : $b, 'start' => $target], range(0, 5)));
+
+    expect(array_values(array_filter($results, fn (array $r) => ! $r['ok'])))->toBe([])
+        ->and(count(array_filter(array_column($results, 'done'))))->toBe(1)
+        ->and(array_unique(array_filter(array_column($results, 'reason'))))->each->toBeIn(['slot_unavailable', 'slot_taken', 'same_time'])   // same_time: the winner's own repeats
+        ->and(DB::table('service_bookings')->where('resource_id', $this->roomA->id)->where('starts_at', $target)->count())->toBe(1)
+        ->and(DB::table('booking_events')->where('event', 'rescheduled')->count())->toBe(1);
 });

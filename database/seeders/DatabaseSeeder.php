@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Modules\Bookings\Database\Seeders\CancellationPolicySeeder;
 use App\Modules\Customers\Database\Seeders\GeographySeeder;
 use App\Modules\DigitalProducts\Database\Seeders\RefundPolicySeeder;
 use App\Modules\IdentityAccess\Database\Seeders\RolesAndPermissionsSeeder;
@@ -36,6 +37,7 @@ class DatabaseSeeder extends Seeder
             CourierSeeder::class,
             PaymentMethodSeeder::class,
             RefundPolicySeeder::class,
+            CancellationPolicySeeder::class,
             SearchSynonymSeeder::class,
         ]);
     }

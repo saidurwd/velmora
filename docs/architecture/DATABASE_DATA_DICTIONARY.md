@@ -159,6 +159,12 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 | availability_rules | resource_id, weekday 0–6, start_time, end_time, valid_from, valid_to; availability_exceptions(resource_id, date, is_closed, start/end) |
 | service_bookings | **As built:** public_id, package_id FK, resource_id FK, order_item_id NULL UNIQUE FK, user_id NULL, status (held/confirmed/in_progress/completed/cancelled/no_show; trigger-enforced moves), starts_at/ends_at, **blocks_from/blocks_until (service plus buffers)**, hold_expires_at (required while held), active_resource_id (generated PERSISTENT), `PERIOD FOR slot(blocks_from, blocks_until)` + `UNIQUE(active_resource_id, slot WITHOUT OVERLAPS)`; CHECKs on times and status. Earlier draft follows: order_item_id FK, package_id FK, resource_id FK, customer_id, status (held/confirmed/in_progress/completed/cancelled/no_show/rescheduled), starts_at, ends_at CHECK(ends_at>starts_at), hold_expires_at NULL, active_resource_id AS (IF(status IN('held','confirmed'),resource_id,NULL)) PERSISTENT, `PERIOD FOR slot(starts_at,ends_at)`, **UNIQUE(active_resource_id, slot WITHOUT OVERLAPS)**, location_address_id NULL, meeting_url NULL |
 | (service_bookings) | also `holder_key` (the visitor who holds the slot before an order exists; never shown; idx(holder_key, status)) |
+| (service_bookings) | also `policy_terms` (JSON copy of the cancellation terms at confirmation; CHECK JSON_VALID) and `reschedule_count` |
+| cancellation_policies | public_id, code UNIQUE, late_fee_bp, no_show_fee_bp (CHECK ≤ 10000), reschedule_hours, max_reschedules, is_default (one default: generated marker UNIQUE), created_by |
+| cancellation_policy_windows | policy_id FK, hours_before, fee_bp (CHECK ≤ 10000), UNIQUE (policy_id, hours_before): "cancel at least N hours before → fee X" |
+| cancellation_policy_translations | policy_id FK, locale FK, title, text, UNIQUE (policy_id, locale) |
+| (service_definitions) | also `cancellation_policy_id` NULL FK (NULL = the default policy) |
+| booking_cancellations | booking_id UNIQUE FK, kind (cancelled/no_show), by_type/by_id, minutes_before, paid_minor, fee_bp, fee_waived, fee_minor, refund_due_minor (advice only), reason, created_at; CHECKs: fee ≤ paid, refund_due ≤ paid − fee, waived ⇒ fee 0 | **AO** |
 | (cart_items) | also `hold_ref` (the held slot a booking line stands for; NULL for products) |
 | booking_requirements | booking_id, field_key, value, attachment_path |
 | booking_events | booking_id, event, actor, at, note | **AO** |

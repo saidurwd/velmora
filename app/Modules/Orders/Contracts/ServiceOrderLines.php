@@ -14,4 +14,7 @@ interface ServiceOrderLines
 
     /** @return list<ServiceOrderLine> in line order, whatever the order's payment state */
     public function linesFor(int $orderId): array;
+
+    /** One booked-service line by its id; null when there is no such service line. */
+    public function lineFor(int $orderItemId): ?ServiceOrderLine;
 }

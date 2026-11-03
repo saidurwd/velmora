@@ -45,11 +45,11 @@ final class SlotSearch
     /**
      * Whether this exact start is one the search would offer on this resource right now. Used to refuse a made-up time before anything is held.
      */
-    public function offers(ServicePackage $package, string $resourcePublicId, CarbonImmutable $start): bool
+    public function offers(ServicePackage $package, string $resourcePublicId, CarbonImmutable $start, ?int $ignoreBookingId = null): bool
     {
         $day = $start->setTimezone((string) config('bookings.timezone'))->format('Y-m-d');
 
-        foreach ($this->forPackage($package, $day, $day, $resourcePublicId) as $slot) {
+        foreach ($this->forPackage($package, $day, $day, $resourcePublicId, $ignoreBookingId) as $slot) {
             if ($slot->startsAt->equalTo($start->utc())) {
                 return true;
             }
@@ -63,7 +63,7 @@ final class SlotSearch
      *
      * @throws BookingException range_invalid | range_too_long
      */
-    public function forPackage(ServicePackage $package, string $fromDate, string $toDate, ?string $resourcePublicId = null): array
+    public function forPackage(ServicePackage $package, string $fromDate, string $toDate, ?string $resourcePublicId = null, ?int $ignoreBookingId = null): array
     {
         $zone = (string) config('bookings.timezone');
         $from = $this->day($fromDate, $zone);
@@ -110,7 +110,7 @@ final class SlotSearch
         $holidays = array_flip(array_map('strval', DB::table('holidays')->whereBetween('on_date', [$firstDay, $lastDay])->pluck('on_date')->all()));   // unique on_date
 
         $taken = [];   // resource id => list of [blocked from, blocked until] as UTC timestamps in microseconds precision strings
-        foreach (DB::table('service_bookings')->whereIn('resource_id', $ids)->where('blocks_until', '>', $rangeStart->subDay())->where('blocks_from', '<', $rangeEnd->addDay())
+        foreach (DB::table('service_bookings')->when($ignoreBookingId !== null, fn ($q) => $q->where('id', '!=', $ignoreBookingId))->whereIn('resource_id', $ids)->where('blocks_until', '>', $rangeStart->subDay())->where('blocks_from', '<', $rangeEnd->addDay())
             ->where(fn ($q) => $q->whereIn('status', ['confirmed', 'in_progress'])->orWhere(fn ($h) => $h->where('status', 'held')->where('hold_expires_at', '>', $now)))   // index (resource_id, starts_at)
             ->get(['resource_id', 'blocks_from', 'blocks_until']) as $b) {
             $taken[(int) $b->resource_id][] = [CarbonImmutable::parse((string) $b->blocks_from, 'UTC'), CarbonImmutable::parse((string) $b->blocks_until, 'UTC')];
