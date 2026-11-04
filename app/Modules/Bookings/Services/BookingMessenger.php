@@ -68,7 +68,8 @@ final class BookingMessenger
             $variant = $this->variants->details([$variantId], $contact['locale'])[$variantId] ?? null;
             $service = $variant->productName ?? '';
             $when = $this->format->dateTime(CarbonImmutable::parse((string) $booking->starts_at, 'UTC'));
-            $where = __('bookings::notify.where_'.$this->locationType((int) $booking->package_id));
+            [$location, $meeting] = $this->location((int) $booking->package_id);
+            $where = __('bookings::notify.where_'.$location).($location === 'online' && $meeting !== null ? ' — '.$meeting : '');   // an online service: where to join
             $link = match (true) {
                 $kind === 'review' && $variant !== null => route('storefront.product', ['locale' => $contact['locale'], 'slug' => $variant->productSlug]),
                 $kind !== 'review' => $this->manageLink($booking, $contact),   // where to see, move or cancel it
@@ -100,9 +101,12 @@ final class BookingMessenger
         return URL::temporarySignedRoute('bookings.guest', now()->addDays((int) config('orders.confirmation_link_days')), ['locale' => $contact['locale'], 'order' => $contact['public_id']]);
     }
 
-    private function locationType(int $packageId): string
+    /** @return array{0: string, 1: string|null} where it happens, and (for an online service) the address to join */
+    private function location(int $packageId): array
     {
-        return (string) DB::table('service_packages as p')->join('service_definitions as s', 's.id', '=', 'p.service_id')->where('p.id', $packageId)->value('s.location_type');   // primary keys
+        $s = DB::table('service_packages as p')->join('service_definitions as s', 's.id', '=', 'p.service_id')->where('p.id', $packageId)->first(['s.location_type', 's.meeting_url']);   // primary keys
+
+        return [(string) ($s->location_type ?? ''), $s->meeting_url ?? null];
     }
 
     private function claim(int $bookingId, string $kind, string $channel, string $startsAt): bool

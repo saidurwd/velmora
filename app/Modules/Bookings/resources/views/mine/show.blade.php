@@ -14,6 +14,7 @@
         <h1 class="text-2xl font-bold">{{ $row['service'] }}</h1>
         <p><x-platform::badge :tone="in_array($row['status'], ['confirmed', 'in_progress', 'completed'], true) ? 'success' : ($row['status'] === 'held' ? 'neutral' : 'danger')">{{ __('bookings::mine.status.'.$row['status']) }}</x-platform::badge></p>
         <p>{{ $fmtDate($row['starts_at']) }} – {{ $fmtDate($row['ends_at']) }}</p>
+        @if ($row['meeting_url'])<p><a href="{{ $row['meeting_url'] }}" rel="noopener noreferrer" class="inline-flex min-h-11 items-center underline">{{ __('bookings::mine.join') }}</a></p>@endif
         <p class="text-sm text-muted">{{ __('bookings::mine.with') }} {{ $row['resource'] }} · {{ __('bookings::mine.order') }} {{ $row['order_number'] }} · {{ $money($row['paid']) }}</p>
         @if ($urls['list'])<p><a href="{{ $urls['list'] }}" class="inline-flex min-h-11 items-center underline">{{ __('bookings::mine.back') }}</a></p>@endif
     </header>

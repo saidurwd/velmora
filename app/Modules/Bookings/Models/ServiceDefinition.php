@@ -16,6 +16,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $lead_time_min
  * @property int $max_horizon_days
  * @property int $hold_minutes
+ * @property int|null $cancellation_policy_id
+ * @property string|null $meeting_url
  * @property bool $is_active
  */
 class ServiceDefinition extends Model

@@ -53,6 +53,7 @@ class BookingsServiceProvider extends ModuleServiceProvider
         $menu = $this->app->make(AdminMenu::class);
         $menu->add('bookings::admin.menu.bookings', 'admin.bookings.index', 'bookings.view', 60);
         $menu->add('bookings::admin.menu.calendar', 'admin.bookings.calendar', 'bookings.view', 61);
+        $menu->add('bookings::admin.menu.setup', 'admin.bookings.setup.services', 'bookings.view', 62);
         // per visitor, not shared with anything else
         RateLimiter::for('booking-hold', fn (Request $r) => Limit::perMinute(20)->by('booking-hold|'.($r->user('web')?->getAuthIdentifier() ?? $r->ip())));
     }

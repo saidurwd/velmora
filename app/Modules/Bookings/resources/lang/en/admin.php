@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 return [
-    'menu' => ['bookings' => 'Bookings', 'calendar' => 'Booking calendar'], 'title' => 'Bookings', 'any' => 'Any', 'from' => 'From', 'to' => 'To', 'sku' => 'Service code', 'filter' => 'Filter', 'none' => 'No bookings match.',
+    'menu' => ['bookings' => 'Bookings', 'calendar' => 'Booking calendar', 'setup' => 'Booking setup'], 'title' => 'Bookings', 'any' => 'Any', 'from' => 'From', 'to' => 'To', 'sku' => 'Service code', 'filter' => 'Filter', 'none' => 'No bookings match.',
     'col' => ['status' => 'Status', 'resource' => 'Person or room', 'order' => 'Order', 'when' => 'When', 'service' => 'Service', 'phone' => 'Phone', 'paid' => 'Paid'],
     'view' => 'View', 'day' => 'Day', 'week' => 'Week', 'date' => 'Date', 'show' => 'Show', 'navigate' => 'Move through the calendar', 'previous' => 'Earlier', 'next' => 'Later',
     'capped' => 'Too many bookings to show them all. Narrow it down to one person or room.', 'no_resources' => 'There are no people or rooms yet.', 'zone_note' => 'Times are in Dhaka time (:zone).',

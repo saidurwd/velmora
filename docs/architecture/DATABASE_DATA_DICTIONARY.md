@@ -164,6 +164,7 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 | cancellation_policy_windows | policy_id FK, hours_before, fee_bp (CHECK ≤ 10000), UNIQUE (policy_id, hours_before): "cancel at least N hours before → fee X" |
 | cancellation_policy_translations | policy_id FK, locale FK, title, text, UNIQUE (policy_id, locale) |
 | (service_definitions) | also `cancellation_policy_id` NULL FK (NULL = the default policy) |
+| (service_definitions) | also `meeting_url` NULL varchar(500): where an online service is joined (https only; checked by the action) |
 | booking_cancellations | booking_id UNIQUE FK, kind (cancelled/no_show), by_type/by_id, minutes_before, paid_minor, fee_bp, fee_waived, fee_minor, refund_due_minor (advice only), reason, created_at; CHECKs: fee ≤ paid, refund_due ≤ paid − fee, waived ⇒ fee 0 | **AO** |
 | (service_bookings) | also `completed_at`, `completed_by` (customer/staff/system); idx(status, starts_at), idx(status, ends_at) for the lifecycle job |
 | booking_notices | booking_id FK, kind (reminder_long/reminder_short/review), channel (sms/email), for_starts_at, status (claimed/sent/failed/gave_up), attempts, last_error (class name only), created_at/updated_at; UNIQUE (booking_id, kind, channel, for_starts_at); **AO** except the outcome columns |

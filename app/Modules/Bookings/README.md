@@ -11,7 +11,8 @@ Service bookings (Phase 8, ADR P8-1, P8-2, P8-17). Cross-module use is limited t
 * Slice 10: the lifecycle job (`bookings:lifecycle`, every five minutes): `StartBookings`, `AutoCompleteBookings`, `SendBookingReminders` (24 h and 2 h before), `SendReviewPrompts`; `CompleteBooking` (staff, or the customer for their own); messages go through `BookingMessenger` (claim first, `booking_notices`).
 * Slice 11a: customer pages: "My bookings" (`MyBookingsController`, signed in) and the guest version (`GuestBookingsController`: signed link + SMS code + short session), `MyBookings` reader, the cost preview before cancelling.
 * Slice 11b: staff screens: bookings list, one booking with its actions, calendar (`Http/Controllers/Admin/BookingController`, `Services/StaffBookings`).
-* Next: staff setup screens (11c: services, packages, resources, availability, policies), then the Phase 8 gate.
+* Slice 11c: setup screens: services (with meeting link), people and rooms, weekly hours, days off, holidays, cancellation policies (`SaveCancellationPolicy`, `SetServiceOptions`, `Percent`, `SetupReader`).
+* Next: the Phase 8 gate (browser and accessibility tests for the customer pages, final report).
 
 ## Running it
 * All times are stored in UTC; availability is entered in Dhaka wall-clock time.

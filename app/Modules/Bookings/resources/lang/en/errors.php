@@ -16,5 +16,8 @@ return [
     'reschedule_limit' => 'This booking has already been moved :max times, which is the most allowed.', 'same_time' => 'That is the time it already has.', 'no_show_too_early' => 'A no-show can be recorded only once the booking has started.',
     'not_completable' => 'This booking cannot be marked as done.', 'not_started' => 'This booking has not started yet.',
     'resource_invalid' => 'That person or room cannot do this service.',
+    'policy_unknown' => 'That cancellation policy was not found.', 'meeting_url_invalid' => 'Enter a web address that starts with https://.', 'fee_invalid' => 'A fee must be from 0% to 100%.',
+    'windows_invalid' => 'Each time limit must be a different whole number of hours, from 1 to 8760.', 'fees_not_rising' => 'Cancelling closer to the start must never cost less: each limit must keep at least as much as the ones further away, the late fee at least as much as the last limit, and a no-show at least as much as the late fee.',
+    'move_rules_invalid' => 'Hours before a move must be 0 to 8760, and the number of moves 0 to 20.', 'words_required' => 'Please write the English title and text.', 'default_required' => 'Make another policy the default instead; the shop must always have one.',
     'not_for_sale' => 'This service cannot be booked online right now.',
 ];

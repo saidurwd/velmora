@@ -40,7 +40,8 @@ final class MyBookings
         foreach ($lines as $l) {
             $byItem[$l->orderItemId] = $l;
         }
-        $rows = DB::table('service_bookings as b')->join('service_resources as r', 'r.id', '=', 'b.resource_id')->whereIn('b.order_item_id', array_keys($byItem))->get(['b.*', 'r.name as resource_name']);   // unique order_item_id
+        $rows = DB::table('service_bookings as b')->join('service_resources as r', 'r.id', '=', 'b.resource_id')->join('service_packages as p', 'p.id', '=', 'b.package_id')->join('service_definitions as sd', 'sd.id', '=', 'p.service_id')
+            ->whereIn('b.order_item_id', array_keys($byItem))->get(['b.*', 'r.name as resource_name', 'sd.location_type', 'sd.meeting_url']);   // unique order_item_id
         if ($rows->isEmpty()) {
             return [];
         }
@@ -99,6 +100,7 @@ final class MyBookings
             'moves_left' => $movesLeft, 'move_hours' => $terms['reschedule_hours'], 'moved' => (int) $b->reschedule_count,
             'if_cancelled' => $confirmed && $minutes > 0 ? $this->policies->outcome($terms, false, $minutes, $paid) : null,
             'ended' => $ended === null ? null : ['kind' => (string) $ended->kind, 'fee' => Money::of((int) $ended->fee_minor), 'refund_due' => Money::of((int) $ended->refund_due_minor), 'by' => (string) $ended->by_type],
+            'meeting_url' => $b->location_type === 'online' && in_array($b->status, ['confirmed', 'in_progress'], true) ? $b->meeting_url : null,   // only someone who has a confirmed booking sees where to join
             'booking_id' => (int) $b->id, 'package_id' => (int) $b->package_id, 'resource_id' => (int) $b->resource_id,
         ];
     }

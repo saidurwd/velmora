@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 return [
-    'title' => 'My bookings', 'empty' => 'You have no bookings yet. When you book a service, it appears here.', 'upcoming' => 'Coming up', 'past' => 'Earlier', 'order' => 'Order', 'with' => 'With', 'open' => 'Open', 'back' => 'Back to my bookings',
+    'title' => 'My bookings', 'join' => 'Join online', 'empty' => 'You have no bookings yet. When you book a service, it appears here.', 'upcoming' => 'Coming up', 'past' => 'Earlier', 'order' => 'Order', 'with' => 'With', 'open' => 'Open', 'back' => 'Back to my bookings',
     'status' => ['held' => 'Waiting for payment', 'confirmed' => 'Confirmed', 'in_progress' => 'Under way', 'completed' => 'Done', 'cancelled' => 'Cancelled', 'no_show' => 'Missed'],
     'cancel_title' => 'Cancel this booking', 'cancel_free' => 'You can cancel for free. :amount is due back to you.',
     'cancel_fee' => 'Cancelling now keeps :percent% of the price (:fee). :amount is due back to you.', 'cancel_button' => 'Cancel booking', 'reason' => 'Reason (optional)',
