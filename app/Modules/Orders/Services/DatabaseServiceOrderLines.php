@@ -40,6 +40,20 @@ final class DatabaseServiceOrderLines implements ServiceOrderLines
         return $lines;
     }
 
+    public function linesForItems(array $orderItemIds): array
+    {
+        if ($orderItemIds === []) {
+            return [];
+        }
+
+        $lines = [];
+        foreach (DB::table('order_items')->whereIn('id', $orderItemIds)->where('product_type', 'service')->orderBy('id')->get(['id', 'variant_id', 'order_id', 'line_total_minor']) as $r) {   // primary key
+            $lines[] = new ServiceOrderLine((int) $r->id, (int) $r->variant_id, (int) $r->order_id, (int) $r->line_total_minor);
+        }
+
+        return $lines;
+    }
+
     public function lineFor(int $orderItemId): ?ServiceOrderLine
     {
         $r = DB::table('order_items')->where('id', $orderItemId)->where('product_type', 'service')->first(['id', 'variant_id', 'order_id', 'line_total_minor']);   // primary key

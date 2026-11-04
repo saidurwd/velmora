@@ -18,6 +18,7 @@ use App\Modules\Orders\Events\OrderCancelled;
 use App\Modules\Orders\Events\OrderPaid;
 use App\Modules\Orders\Events\OrderRefunded;
 use App\Modules\Platform\Outbox\OutboxRegistry;
+use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -48,6 +49,10 @@ class BookingsServiceProvider extends ModuleServiceProvider
         $this->app->make(OutboxRegistry::class)->register(BookingEnded::class);
         $this->app->make(OutboxRegistry::class)->register(BookingRescheduled::class);
         RateLimiter::for('booking-manage', fn (Request $r) => Limit::perMinute(20)->by('booking-manage|'.($r->user('web')?->getAuthIdentifier() ?? $r->ip())));
+        RateLimiter::for('bookings-actions', fn (Request $r) => Limit::perMinute(30)->by('bookings-actions|'.$r->route()?->getName().'|'.($r->user('admin')?->getAuthIdentifier() ?? $r->ip())));
+        $menu = $this->app->make(AdminMenu::class);
+        $menu->add('bookings::admin.menu.bookings', 'admin.bookings.index', 'bookings.view', 60);
+        $menu->add('bookings::admin.menu.calendar', 'admin.bookings.calendar', 'bookings.view', 61);
         // per visitor, not shared with anything else
         RateLimiter::for('booking-hold', fn (Request $r) => Limit::perMinute(20)->by('booking-hold|'.($r->user('web')?->getAuthIdentifier() ?? $r->ip())));
     }

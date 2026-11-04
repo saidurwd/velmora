@@ -21,6 +21,12 @@ interface ServiceOrderLines
      */
     public function linesForOrders(array $orderIds): array;
 
+    /**
+     * @param  list<int>  $orderItemIds
+     * @return list<ServiceOrderLine> the service lines with these ids, in one read
+     */
+    public function linesForItems(array $orderItemIds): array;
+
     /** One booked-service line by its id; null when there is no such service line. */
     public function lineFor(int $orderItemId): ?ServiceOrderLine;
 }
