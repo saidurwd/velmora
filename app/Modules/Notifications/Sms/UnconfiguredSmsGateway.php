@@ -16,6 +16,6 @@ final class UnconfiguredSmsGateway implements SmsGateway
 
     public function send(PhoneNumber $to, string $message, array $meta = []): SmsResult
     {
-        throw new RuntimeException("SMS driver [{$this->driver}] has no adapter. Save the provider's official API docs under docs/vendor/ and implement it (Phase 2 follow-up).");
+        throw new RuntimeException("SMS driver [{$this->driver}] has no adapter. Save the provider's official API docs under docs/vendor/ and implement it.");
     }
 }

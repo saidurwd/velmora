@@ -217,8 +217,9 @@ it('makes a cancellation of the order wait while a parcel is being made, and a p
 
 it('records one delivery once when the courier and its retries report it at the same instant, and then collects the cash exactly once', function () {
     [$shipment, $consignment, $orderId] = ($this->parcel)();
+    $deliveredAt = now()->utc()->addDays(2)->format('Y-m-d H:i:s');   // the courier's times must come after the parcel was handed over, which is now: never a fixed calendar date
 
-    $results = runShippingProbes(array_map(fn () => ['shipping:probe', ['event', "--consignment={$consignment}", '--status=DELIVERED', '--at=2026-11-04 11:30:00']], range(1, 6)));
+    $results = runShippingProbes(array_map(fn () => ['shipping:probe', ['event', "--consignment={$consignment}", '--status=DELIVERED', '--at='.$deliveredAt]], range(1, 6)));
 
     expect(count(array_filter($results, fn ($r) => $r['result'] === 'recorded')))->toBe(1)->and(count(array_filter($results, fn ($r) => $r['result'] === 'duplicate')))->toBe(5)
         ->and(DB::table('outbox_messages')->where('event_name', 'shipping.delivered')->count())->toBe(1)->and(DB::table('shipments')->where('public_id', $shipment)->value('status'))->toBe('delivered');
@@ -236,7 +237,8 @@ it('records one delivery once when the courier and its retries report it at the 
 it('ends in the right state whatever order concurrent messages arrive in, each stored once, the cash collected once', function () {
     foreach (range(1, 2) as $round) {
         [$shipment, $consignment, $orderId] = ($this->parcel)();
-        $messages = [['IN_TRANSIT', '2026-11-03 10:00:00'], ['OUT_FOR_DELIVERY', '2026-11-04 08:00:00'], ['DELIVERED', '2026-11-04 12:00:00']];
+        $at = fn (int $hours) => now()->utc()->addHours($hours)->format('Y-m-d H:i:s');   // after the hand-over (now), never a fixed calendar date
+        $messages = [['IN_TRANSIT', $at(10)], ['OUT_FOR_DELIVERY', $at(30)], ['DELIVERED', $at(50)]];
         $jobs = [];
         foreach ([...$messages, ...array_reverse($messages)] as [$status, $at]) {
             $jobs[] = ['shipping:probe', ['event', "--consignment={$consignment}", "--status={$status}", "--at={$at}"]];
@@ -247,7 +249,7 @@ it('ends in the right state whatever order concurrent messages arrive in, each s
 
         $id = (int) DB::table('shipments')->where('public_id', $shipment)->value('id');
         $row = DB::table('shipments')->where('id', $id)->first();
-        expect($row->status)->toBe('delivered', "round {$round}")->and(substr((string) $row->delivered_at, 0, 19))->toBe('2026-11-04 12:00:00')->and(DB::table('shipment_events')->where('shipment_id', $id)->where('source', 'webhook')->count())->toBe(3, "round {$round}: each message stored once")
+        expect($row->status)->toBe('delivered', "round {$round}")->and(substr((string) $row->delivered_at, 0, 19))->toBe($messages[2][1])->and(DB::table('shipment_events')->where('shipment_id', $id)->where('source', 'webhook')->count())->toBe(3, "round {$round}: each message stored once")
             ->and(DB::table('cod_collections')->where('shipment_id', $id)->count())->toBe(1, "round {$round}: the cash once")->and(DB::table('orders')->where('id', $orderId)->value('status'))->toBe('completed');
     }
 });

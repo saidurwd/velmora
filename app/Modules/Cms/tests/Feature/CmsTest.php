@@ -82,6 +82,7 @@ describe('pages', function () {
     });
 
     it('honours a scheduled publish time', function () {
+        $this->travelTo(CarbonImmutable::parse('2026-12-01 06:00:00', 'UTC'));   // the page controller reads the real clock, so it must be fixed too, or the test ages
         $clock = new FrozenClock(CarbonImmutable::parse('2026-12-01 06:00:00', 'UTC'));
         $this->app->instance(Clock::class, $clock);
         $staff = catalogStaff(['cms.edit', 'cms.publish']);
@@ -91,6 +92,7 @@ describe('pages', function () {
         $this->actingAs($staff, 'admin')->post("/admin/cms/pages/{$page->public_id}/transition", ['action' => 'schedule', 'publish_at' => '2026-12-02T12:00'])->assertRedirect();
         $this->get('/en/pages/delivery-information')->assertNotFound();
 
+        $this->travelTo(CarbonImmutable::parse('2026-12-02 07:00:00', 'UTC'));
         $clock->travelTo(CarbonImmutable::parse('2026-12-02 07:00:00', 'UTC')); // 13:00 Dhaka: past the 12:00 Dhaka go-live
         expect($page->fresh()->isLive($clock->now()))->toBeTrue();
         expect(app(PageDirectory::class)->published('en'))->toHaveCount(1);

@@ -38,7 +38,13 @@ return [
     ],
 
     'sms' => [
-        'driver' => env('SMS_DRIVER', 'log'), // log | fake | sslwireless (adapter pending official docs)
+        'driver' => env('SMS_DRIVER', 'log'), // log | fake | sslwireless
+        // SSL Wireless ISMS Plus (docs/vendor/sslwireless/). The token and sender id come from the provider's portal; this server's IP address must be whitelisted there.
+        'sslwireless' => [
+            'base_url' => env('SSLW_SMS_BASE_URL', 'https://smsplus.sslwireless.com/api/v3'),
+            'api_token' => env('SSLW_SMS_API_TOKEN'),
+            'sid' => env('SSLW_SMS_SID'),
+        ],
     ],
 
 ];

@@ -218,7 +218,7 @@ describe('sitemaps and robots', function () {
     it('replaces old files on regeneration and refuses anything but generated file names', function () {
         $this->get('/sitemap.xml')->assertOk();
         $before = Storage::disk('local')->files('sitemaps');
-        sleep(1);
+        $this->travel(2)->seconds();   // file names carry the second they were made in
         $this->artisan('seo:sitemaps')->assertSuccessful();
         $after = Storage::disk('local')->files('sitemaps');
 

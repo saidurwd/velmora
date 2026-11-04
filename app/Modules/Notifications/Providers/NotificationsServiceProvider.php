@@ -7,6 +7,7 @@ namespace App\Modules\Notifications\Providers;
 use App\Modules\Notifications\Contracts\SmsGateway;
 use App\Modules\Notifications\Sms\FakeSmsGateway;
 use App\Modules\Notifications\Sms\LogSmsGateway;
+use App\Modules\Notifications\Sms\SslWirelessSmsGateway;
 use App\Modules\Notifications\Sms\UnconfiguredSmsGateway;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 
@@ -24,6 +25,7 @@ class NotificationsServiceProvider extends ModuleServiceProvider
         $this->app->bind(SmsGateway::class, fn ($app) => match ($driver = (string) config('services.sms.driver', 'log')) {
             'log' => new LogSmsGateway,
             'fake' => $app->make(FakeSmsGateway::class),
+            'sslwireless' => new SslWirelessSmsGateway((string) config('services.sms.sslwireless.base_url'), (string) config('services.sms.sslwireless.api_token'), (string) config('services.sms.sslwireless.sid')),
             default => new UnconfiguredSmsGateway($driver),
         });
     }
