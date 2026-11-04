@@ -19,7 +19,7 @@
         @if ($urls['list'])<p><a href="{{ $urls['list'] }}" class="inline-flex min-h-11 items-center underline">{{ __('bookings::mine.back') }}</a></p>@endif
     </header>
 
-    @if (session('status'))<x-platform::alert type="success">{{ session('status') }}</x-platform::alert>@endif
+    @if ($guest && session('status'))<x-platform::alert type="success">{{ session('status') }}</x-platform::alert>@endif
     @error('booking')<x-platform::alert type="error">{{ $message }}</x-platform::alert>@enderror
 
     @if ($row['ended'])

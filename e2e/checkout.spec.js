@@ -4,6 +4,8 @@ import AxeBuilder from '@axe-core/playwright';
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
 async function noViolations(page, label) {
+    // the consent banner appears a moment after load, fixed to the bottom, and would sit on top of links the scan measures: answer it first
+    await page.getByRole('button', { name: 'No thanks' }).click({ timeout: 2000 }).catch(() => {});
     const results = await new AxeBuilder({ page }).withTags(TAGS).analyze();
     const summary = results.violations.map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 3).map((n) => n.target.join(' ')).join(' | ')}`);
     expect(summary, `${label}\n${summary.join('\n')}`).toEqual([]);

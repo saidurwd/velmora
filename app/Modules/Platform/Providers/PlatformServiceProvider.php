@@ -97,7 +97,7 @@ class PlatformServiceProvider extends ModuleServiceProvider
         RateLimiter::for('public-read', fn (Request $r) => Limit::perMinute(120)->by($r->ip()));
         RateLimiter::for('search', fn (Request $r) => Limit::perMinute(60)->by($r->ip()));
         RateLimiter::for('auth', fn (Request $r) => Limit::perMinute(10)->by($r->ip()));
-        RateLimiter::for('otp', fn (Request $r) => [Limit::perMinutes(10, 3)->by('otp-ip-min:'.$r->ip()), Limit::perHour(10)->by('otp-ip-hour:'.$r->ip())]);
+        RateLimiter::for('otp', fn (Request $r) => [Limit::perMinutes(10, (int) config('otp.throttle_per_ten_minutes'))->by('otp-ip-min:'.$r->ip()), Limit::perHour((int) config('otp.throttle_per_hour'))->by('otp-ip-hour:'.$r->ip())]);
         RateLimiter::for('user-read', fn (Request $r) => Limit::perMinute(120)->by($by($r)));
         RateLimiter::for('write', fn (Request $r) => Limit::perMinute(60)->by($by($r)));
         RateLimiter::for('critical', fn (Request $r) => Limit::perMinute(10)->by($by($r)));

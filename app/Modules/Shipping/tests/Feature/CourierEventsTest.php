@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schedule;
 
 beforeEach(function () {
+    $this->travelTo(CarbonImmutable::parse('2026-11-03 06:00:00', 'UTC'));   // before every date these tests write down: the courier's times are fixed calendar dates, so the clock must be fixed too
     shippingWorld($this);
     config(['services.sms.driver' => 'fake']);
     $this->sms = app(FakeSmsGateway::class);

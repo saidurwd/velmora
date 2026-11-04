@@ -4,6 +4,8 @@ import AxeBuilder from '@axe-core/playwright';
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
 async function noViolations(page, label) {
+    // the consent banner appears a moment after load, fixed to the bottom, and would sit on top of links the scan measures: answer it first
+    await page.getByRole('button', { name: 'No thanks' }).click({ timeout: 2000 }).catch(() => {});
     const results = await new AxeBuilder({ page }).withTags(TAGS).analyze();
     const summary = results.violations.map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 3).map((n) => n.target.join(' ')).join(' | ')}`);
     expect(summary, `${label}\n${summary.join('\n')}`).toEqual([]);
@@ -31,6 +33,8 @@ test('a signed-in customer orders, finds the order in My orders, and cancels it 
     await page.locator('#upazila_id').selectOption({ label: 'Savar' });
     await page.locator('#f-address_line').fill('House 5, Road 2');
     await page.getByRole('button', { name: 'Continue to review' }).click();
+    await expect(page.getByRole('heading', { name: 'Review your order' })).toBeVisible();
+    await page.getByRole('button', { name: 'No thanks' }).click({ timeout: 3000 }).catch(() => {});   // the consent banner would cover the button
     await page.getByRole('button', { name: /Place order/ }).click();
 
     await expect(page.getByRole('heading', { level: 1, name: /Thank you/ })).toBeVisible();

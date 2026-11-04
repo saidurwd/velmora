@@ -12,5 +12,9 @@ return [
     'max_sends_per_target' => 3,   // per phone number ...
     'target_window_seconds' => 600, // ... per 10 minutes
     'max_sends_per_ip_hour' => 10,
+    // The route throttle on every page that asks for or checks a code: requests (sending and checking both count) from one address. The defaults are the production
+    // values; only the browser tests, which run many code flows from one address, raise them (e2e/prepare.sh), in their own throw-away environment.
+    'throttle_per_ten_minutes' => (int) env('OTP_THROTTLE_PER_TEN_MINUTES', 3),
+    'throttle_per_hour' => (int) env('OTP_THROTTLE_PER_HOUR', 10),
     'daily_cap' => (int) env('OTP_DAILY_CAP', 1000), // global SMS sends per UTC day; alert + refuse beyond this
 ];

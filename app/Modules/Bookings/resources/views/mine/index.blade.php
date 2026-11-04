@@ -11,7 +11,7 @@
 @section($guest ? 'content' : 'account')
 <div class="{{ $guest ? 'mx-auto max-w-3xl space-y-6' : 'space-y-6' }}">
     <h1 class="text-2xl font-bold">{{ __('bookings::mine.title') }}@if ($guest && isset($number)) <span class="text-base font-normal text-muted">— {{ $number }}</span>@endif</h1>
-    @if (session('status'))<x-platform::alert type="success">{{ session('status') }}</x-platform::alert>@endif
+    @if ($guest && session('status'))<x-platform::alert type="success">{{ session('status') }}</x-platform::alert>@endif
     @if ($rows === [])
         <p class="text-muted">{{ __('bookings::mine.empty') }}</p>
     @else
