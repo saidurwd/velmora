@@ -1,5 +1,2 @@
-# Cart module
 
-Responsibilities, owned tables, events emitted/consumed: see docs/architecture/DOMAIN_MODEL_AND_MODULE_BOUNDARIES.md.
-Cross-module use is limited to Contracts, DTOs, Enums and Events (BD-11).
-* Phase 9, slice 2: `Privacy/CartPersonalData` removes a signed-in customer's cart on erasure.
+* Phase 9, slice 3: `Contracts/CartFiller` (implemented by `Services/CartLineFiller` over `AddToCart`) is how other modules put an item in a cart: today's price, the cart's own rules, the part that fits when stock or the per-line limit is short, and a result (`CartFillResult`) instead of an exception for a line that cannot go in.

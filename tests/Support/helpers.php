@@ -8,6 +8,7 @@ use App\Modules\Bookings\Actions\SaveServiceResource;
 use App\Modules\Bookings\Database\Seeders\CancellationPolicySeeder;
 use App\Modules\Catalog\Actions\SaveCategory;
 use App\Modules\Catalog\Actions\SaveProduct;
+use App\Modules\Catalog\Actions\TransitionProduct;
 use App\Modules\Catalog\DTOs\ProductData;
 use App\Modules\Catalog\DTOs\TranslationInput;
 use App\Modules\Catalog\DTOs\VariantData;
@@ -38,8 +39,11 @@ use App\Modules\Orders\Enums\PaymentStatus;
 use App\Modules\Payments\Database\Seeders\PaymentMethodSeeder;
 use App\Modules\Platform\Database\Seeders\LanguageSeeder;
 use App\Modules\Platform\DTOs\Actor;
+use App\Modules\Platform\DTOs\Money;
 use App\Modules\Platform\Enums\ActorType;
 use App\Modules\Platform\Outbox\OutboxDispatcher;
+use App\Modules\Pricing\Actions\SetRegularPrice;
+use App\Modules\Pricing\Database\Seeders\PriceListSeeder;
 use App\Modules\Pricing\Database\Seeders\TaxClassSeeder;
 use App\Modules\Pricing\Services\BreakdownCalculator;
 use App\Modules\Shipping\Actions\CreateShipment;
@@ -288,5 +292,52 @@ function privacyWorld(object $t): void
         $move->status(Actor::system('t'), $orderId, OrderStatus::Processing, 'test');
         $move->fulfillment(Actor::system('t'), $orderId, FulfillmentStatus::Fulfilled, 'test');
         $move->status(Actor::system('t'), $orderId, OrderStatus::Completed, 'test');
+    };
+}
+
+/**
+ * A small shop that can really sell: published products with a price and stock (a tee, a lamp sold in twos, an e-book, a service), and a way to write an order for a
+ * customer that contains them (at whatever price the order was placed at, which need not be today's).
+ */
+function shopWorld(object $t): void
+{
+    $t->seed([LanguageSeeder::class, TaxClassSeeder::class, PriceListSeeder::class, StockLocationSeeder::class, PaymentMethodSeeder::class]);
+    $t->actor = Actor::system('t');
+    $t->category = app(SaveCategory::class)->handle($t->actor, null, null, [new TranslationInput('en', 'General', 'general'), new TranslationInput('bn', 'সাধারণ')]);
+
+    $t->make = function (string $en, string $bn, string $sku, int $taka, int $stock = 10, ProductType $type = ProductType::Physical, int $min = 1, ?int $max = null, int $step = 1, bool $publish = true) use ($t): array {
+        $product = app(SaveProduct::class)->handle($t->actor, null, new ProductData($type, [new TranslationInput('en', $en), new TranslationInput('bn', $bn)], categoryIds: [$t->category->id],
+            defaultVariant: new VariantData($sku, trackInventory: $type === ProductType::Physical, minQty: $min, maxQty: $max, qtyStep: $step)));
+        $variantId = (int) $product->variants()->value('id');
+        app(SetRegularPrice::class)->handle($t->actor, $variantId, Money::of($taka * 100));
+        if ($type === ProductType::Physical) {
+            DB::table('stock_levels')->insert(['variant_id' => $variantId, 'location_id' => (int) DB::table('stock_locations')->value('id'), 'on_hand' => $stock, 'reserved' => 0, 'updated_at' => now()]);
+        }
+        if ($publish) {
+            app(TransitionProduct::class)->publish($t->actor, $product);
+        }
+
+        return ['product' => $product, 'variantId' => $variantId, 'publicId' => (string) DB::table('product_variants')->where('id', $variantId)->value('public_id'), 'slug' => (string) DB::table('product_translations')->where('product_id', $product->id)->where('locale', 'en')->value('slug')];
+    };
+    $t->setStock = fn (array $v, int $onHand) => DB::table('stock_levels')->where('variant_id', $v['variantId'])->update(['on_hand' => $onHand, 'reserved' => 0, 'updated_at' => now()]);
+    $t->setPrice = fn (array $v, int $taka) => app(SetRegularPrice::class)->handle($t->actor, $v['variantId'], Money::of($taka * 100));
+    $t->tee = ($t->make)('Cotton Tee', 'সুতির টি-শার্ট', 'TEE-1', 650, 10);
+    $t->lamp = ($t->make)('Brass Lamp', 'পিতলের ল্যাম্প', 'LAMP-1', 2300, 20, min: 2, max: 6, step: 2);
+    $t->ebook = ($t->make)('Cooking e-book', 'রান্নার ই-বুক', 'EBOOK-1', 350, 0, ProductType::Digital);
+
+    /** An order of the given variants (variant id => quantity) at the unit price stated (default 100 taka, deliberately not today's price). */
+    $t->orderFor = function (int $userId, array $lines, int $unitMinor = 10000, string $locale = 'en'): object {
+        $calc = [];
+        $newLines = [];
+        $physical = false;
+        foreach ($lines as $variantId => $qty) {
+            $type = (string) DB::table('products')->where('id', DB::table('product_variants')->where('id', $variantId)->value('product_id'))->value('product_type');
+            $physical = $physical || $type === 'physical';
+            $calc[] = ['variantId' => $variantId, 'quantity' => $qty, 'unitMinor' => $unitMinor, 'lineDiscountMinor' => 0, 'taxRateBp' => 0];
+            $newLines[] = new NewOrderLine($variantId, $type, ['en' => 'Item '.$variantId, 'bn' => 'পণ্য '.$variantId], 'SKU-'.$variantId);
+        }
+        $addresses = $physical ? [new NewOrderAddress('shipping', 'Rahim', '+8801712345678', 3, 30, 300, ['division' => ['en' => 'Dhaka', 'bn' => 'ঢাকা'], 'district' => ['en' => 'Dhaka', 'bn' => 'ঢাকা'], 'upazila' => ['en' => 'D', 'bn' => 'ড']], 'House 5', '1205', 'D', null)] : [];
+
+        return app(CreateOrder::class)->handle(new NewOrder(Actor::guest('t'), $userId, 'Rahim', '+8801712345678', 'r@example.com', OrderChannel::Web, $locale, 'online', $physical ? 'standard' : null, (new BreakdownCalculator)->calculate($calc, false, 0, 0, 0), $newLines, $addresses));
     };
 }

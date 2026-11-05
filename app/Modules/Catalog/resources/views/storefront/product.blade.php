@@ -89,6 +89,7 @@
                     </form>
                     @if ($page->qtyStep > 1 || $page->minQty > 1)<p id="qty-help" class="text-sm text-muted">{{ __('catalog::storefront.qty_rule', ['min' => $page->minQty, 'step' => $page->qtyStep]) }}</p>@endif
                 @endif
+                @includeIf('engagement::partials.product-actions', ['variant' => $page->variantPublicId, 'type' => $page->type, 'outOfStock' => $page->stockState === 'out_of_stock'])
             </div>
         </section>
     </div>

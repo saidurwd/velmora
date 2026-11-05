@@ -58,4 +58,11 @@ return [
     'track_link' => 'এই অর্ডার ট্র্যাক করুন',
     'receipt_link' => 'রসিদ প্রিন্ট করুন',
     'library_link' => 'আপনার ডাউনলোড',
+    'reorder_button' => 'আবার কিনুন',
+    'reorder_help' => 'এই পণ্যগুলো আজকের দামে আপনার কার্টে যাবে। চেকআউট না করা পর্যন্ত কিছুই কেনা হবে না।',
+    'reorder_title' => 'আপনার কার্টে যা গেল',
+    'reorder_added' => ':name × :count যোগ হয়েছে।',
+    'reorder_partial' => ':name: :requested এর মধ্যে মাত্র :added যোগ হয়েছে।',
+    'reorder_skipped' => ':name যোগ করা যায়নি।',
+    'reorder_view_cart' => 'আমার কার্ট দেখুন',
 ];

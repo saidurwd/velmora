@@ -58,4 +58,11 @@ return [
     'track_link' => 'Track this order',
     'receipt_link' => 'Print your receipt',
     'library_link' => 'Your downloads',
+    'reorder_button' => 'Buy again',
+    'reorder_help' => 'Puts these items in your cart at today\'s price. Nothing is bought until you check out.',
+    'reorder_title' => 'What went into your cart',
+    'reorder_added' => ':name × :count added.',
+    'reorder_partial' => ':name: only :added of :requested added.',
+    'reorder_skipped' => ':name was not added.',
+    'reorder_view_cart' => 'View my cart',
 ];

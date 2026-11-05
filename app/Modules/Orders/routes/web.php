@@ -32,6 +32,7 @@ Route::localized(function (): void {
     Route::middleware(['auth:web', 'session.policy:web'])->group(function (): void {
         Route::get('/account/orders', [AccountOrderController::class, 'index'])->name('account.orders');
         Route::get('/account/orders/{order}', [AccountOrderController::class, 'show'])->whereAlphaNumeric('order')->name('account.orders.show');
+        Route::post('/account/orders/{order}/reorder', [AccountOrderController::class, 'reorder'])->whereAlphaNumeric('order')->middleware('throttle:write')->name('account.orders.reorder');
         Route::post('/account/orders/{order}/cancel', [AccountOrderController::class, 'cancel'])->whereAlphaNumeric('order')->middleware('throttle:write')->name('account.orders.cancel');
     });
 });

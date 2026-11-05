@@ -15,6 +15,31 @@
 <p class="text-muted">{{ \App\Modules\Platform\Support\Fmt::dateTime($order->placed_at) }} · {{ __('orders::orders.status.'.$order->status->value) }} · {{ __('orders::orders.payment.'.$state) }}</p>
 @error('cancel')<x-platform::alert type="error">{{ $message }}</x-platform::alert>@enderror
 
+@if (session('reorder'))
+<section aria-labelledby="reorder-h" class="space-y-3 rounded-lg border border-line p-4">
+    <h2 id="reorder-h" class="text-lg font-semibold">{{ __('orders::account.reorder_title') }}</h2>
+    <ul class="space-y-1">
+        @foreach (session('reorder') as $line)
+            <li>
+                @if ($line['status'] === 'added')
+                    {{ __('orders::account.reorder_added', ['name' => $line['name'], 'count' => $line['added']]) }}
+                @elseif ($line['status'] === 'partial')
+                    {{ __('orders::account.reorder_partial', ['name' => $line['name'], 'added' => $line['added'], 'requested' => $line['requested']]) }} {{ __('cart::cart.errors.'.$line['reason'], $line['params']) }}
+                @else
+                    {{ __('orders::account.reorder_skipped', ['name' => $line['name']]) }} {{ __('cart::cart.errors.'.$line['reason'], $line['params']) }}
+                @endif
+            </li>
+        @endforeach
+    </ul>
+    <p><x-platform::btn :href="route('cart.show')">{{ __('orders::account.reorder_view_cart') }}</x-platform::btn></p>
+</section>
+@endif
+
+<form method="POST" action="{{ route('account.orders.reorder', $order->public_id) }}">@csrf
+    <x-platform::btn type="submit" variant="secondary">{{ __('orders::account.reorder_button') }}</x-platform::btn>
+    <span class="ms-2 text-sm text-muted">{{ __('orders::account.reorder_help') }}</span>
+</form>
+
 @if ($trackUrl)<p><x-platform::btn :href="$trackUrl" variant="secondary">{{ __('orders::account.track_link') }}</x-platform::btn></p>@endif
 @if ($libraryUrl)<p><x-platform::btn :href="$libraryUrl">{{ __('orders::account.library_link') }}</x-platform::btn></p>@endif
 <p><x-platform::btn :href="$receiptUrl" variant="secondary">{{ __('orders::account.receipt_link') }}</x-platform::btn></p>

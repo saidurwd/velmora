@@ -7,6 +7,7 @@ namespace App\Modules\Orders\Http\Controllers\Web;
 use App\Modules\IdentityAccess\Contracts\CustomerRegistration;
 use App\Modules\Orders\Actions\CancelOwnOrder;
 use App\Modules\Orders\Actions\LinkOrderToCustomer;
+use App\Modules\Orders\Actions\ReorderOrder;
 use App\Modules\Orders\Contracts\DigitalOrderLines;
 use App\Modules\Orders\Exceptions\OrderException;
 use App\Modules\Orders\Http\Requests\CancelOrderRequest;
@@ -31,6 +32,13 @@ class AccountOrderController
     public function index(Request $request): View
     {
         return view('orders::account.index', ['orders' => Order::query()->where('user_id', $this->userId($request))->latest('id')->paginate(self::PER_PAGE)]);
+    }
+
+    public function reorder(Request $request, ReorderOrder $reorder, string $order): RedirectResponse
+    {
+        $lines = $reorder->handle($this->userId($request), $order, app()->getLocale());
+
+        return redirect()->route('account.orders.show', $order)->with('reorder', $lines);
     }
 
     public function show(Request $request, string $order): View

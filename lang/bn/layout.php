@@ -14,6 +14,7 @@ return [
     'account_library' => 'আমার ডাউনলোড',
     'account_bookings' => 'আমার বুকিং',
     'account_security' => 'সাইন-ইন ও নিরাপত্তা',
+    'account_wishlist' => 'আমার উইশলিস্ট',
     'account_preferences' => 'বার্তা ও পছন্দ',
     'account_privacy' => 'গোপনীয়তা ও আপনার তথ্য',
 ];
