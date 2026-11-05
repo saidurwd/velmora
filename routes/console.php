@@ -13,6 +13,8 @@ use App\Modules\DigitalProducts\Jobs\CheckKeyStockJob;
 use App\Modules\IdentityAccess\Jobs\PurgeExpiredOtpChallenges;
 use App\Modules\Inventory\Jobs\ExpireReservationsJob;
 use App\Modules\Inventory\Jobs\VerifyStockLedger;
+use App\Modules\Notifications\Jobs\CheckNotificationHealthJob;
+use App\Modules\Notifications\Jobs\RunNotificationSweepJob;
 use App\Modules\Orders\Jobs\CancelStalePendingOrdersJob;
 use App\Modules\Payments\Jobs\CheckPaymentHealthJob;
 use App\Modules\Payments\Jobs\ExpireUnpaidPaymentsJob;
@@ -44,6 +46,8 @@ Schedule::job(new ReconcilePendingPaymentsJob)->everyTenMinutes()->name('payment
 Schedule::job(new CheckPaymentHealthJob)->everyFiveMinutes()->name('payments:check-health')->withoutOverlapping();
 Schedule::job(new PollCourierShipmentsJob)->everyTenMinutes()->name('shipping:poll-couriers')->withoutOverlapping();
 Schedule::job(new ExpireStaleHoldsJob)->everyMinute()->name('bookings:expire-holds')->withoutOverlapping();
+Schedule::job(new RunNotificationSweepJob)->everyMinute()->name('notifications:deliver-due')->withoutOverlapping();
+Schedule::job(new CheckNotificationHealthJob)->hourly()->name('notifications:health')->withoutOverlapping();
 Schedule::job(new RunBookingLifecycleJob)->everyFiveMinutes()->name('bookings:lifecycle')->withoutOverlapping();
 Schedule::job(new CheckKeyStockJob)->everyFifteenMinutes()->name('digital:check-keys')->withoutOverlapping();
 Schedule::job(new CheckShippingHealthJob)->everyFifteenMinutes()->name('shipping:check-health')->withoutOverlapping();

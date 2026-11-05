@@ -168,6 +168,10 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 | booking_cancellations | booking_id UNIQUE FK, kind (cancelled/no_show), by_type/by_id, minutes_before, paid_minor, fee_bp, fee_waived, fee_minor, refund_due_minor (advice only), reason, created_at; CHECKs: fee ≤ paid, refund_due ≤ paid − fee, waived ⇒ fee 0 | **AO** |
 | (service_bookings) | also `completed_at`, `completed_by` (customer/staff/system); idx(status, starts_at), idx(status, ends_at) for the lifecycle job |
 | booking_notices | booking_id FK, kind (reminder_long/reminder_short/review), channel (sms/email), for_starts_at, status (claimed/sent/failed/gave_up), attempts, last_error (class name only), created_at/updated_at; UNIQUE (booking_id, kind, channel, for_starts_at); **AO** except the outcome columns |
+| notification_templates | code UNIQUE, channel (email/sms), kind (transactional/marketing), is_active; CHECKs on channel and kind |
+| notification_template_versions | template_id FK, locale FK, version, subject (email), body, created_by, created_at; UNIQUE (template_id, locale, version); **AO**; the current words of a language are its highest version |
+| notification_logs | public_id, idempotency_key UNIQUE (code + event key), template_code, channel, kind, locale, recipient_masked, user_id NULL, related, status (queued/sending/sent/failed/dead/skipped), skip_reason, attempts, next_attempt_at, claimed_at, sent_at, template_version, provider_ref, last_error (a code, never a payload), payload (ENCRYPTED address + values; erased once sent, or after the retention period when dead); idx (status, next_attempt_at) |
+| notification_preferences | user_id FK, channel, marketing_opt_in, quiet_from/quiet_to (both or neither), opted_at, source; UNIQUE (user_id, channel) |
 | (cart_items) | also `hold_ref` (the held slot a booking line stands for; NULL for products) |
 | booking_requirements | booking_id, field_key, value, attachment_path |
 | booking_events | booking_id, event, actor, at, note | **AO** |
