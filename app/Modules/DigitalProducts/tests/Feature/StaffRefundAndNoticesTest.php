@@ -7,13 +7,15 @@ use App\Modules\DigitalProducts\Actions\ImportLicenseKeys;
 use App\Modules\DigitalProducts\Events\DigitalAssetVersionPublished;
 use App\Modules\DigitalProducts\Exceptions\DigitalException;
 use App\Modules\DigitalProducts\Listeners\NotifyOwnersOfNewVersion;
-use App\Modules\DigitalProducts\Mail\NewVersionMail;
 use App\Modules\DigitalProducts\Models\Entitlement;
 use App\Modules\DigitalProducts\Models\RefundPolicy;
 use App\Modules\DigitalProducts\Services\RefundPolicies;
 use App\Modules\IdentityAccess\Database\Seeders\RolesAndPermissionsSeeder;
 use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
 use App\Modules\IdentityAccess\Models\User;
+use App\Modules\Notifications\Actions\DeliverDueNotifications;
+use App\Modules\Notifications\Mail\NotificationMail;
+use App\Modules\Notifications\Services\TemplateCatalog;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\Outbox\OutboxDispatcher;
 use Illuminate\Database\QueryException;
@@ -30,8 +32,8 @@ beforeEach(function () {
     $this->viewer = catalogStaff(['digital.view']);
     $this->nobody = catalogStaff(['catalog.view']);
     $this->staff = Actor::system('t');
-    $this->buy = function (string $sku = 'BOOK-1', ?string $email = null, bool $guest = false) {
-        $order = ($this->place)([($sku === 'BOOK-1' ? $this->book : $this->book2) => 1], $guest ? null : $this->owner->id, '+8801712345678', $email);
+    $this->buy = function (string $sku = 'BOOK-1', ?string $email = null, bool $guest = false, string $locale = 'en') {
+        $order = ($this->place)([($sku === 'BOOK-1' ? $this->book : $this->book2) => 1], $guest ? null : $this->owner->id, '+8801712345678', $email, $locale);
         ($this->pay)($order->id);
 
         return [$order, DB::table('entitlements')->where('order_id', $order->id)->first()];
@@ -183,10 +185,20 @@ describe('telling owners about a new version', function () {
 
         ($this->upload)('BOOK-1', 'v2.pdf');
         app(OutboxDispatcher::class)->dispatchDue();
-        Mail::assertSent(NewVersionMail::class, 2);
-        Mail::assertSent(NewVersionMail::class, fn (NewVersionMail $m) => $m->hasTo('owner@example.com') && $m->version === 2 && str_contains($m->link, '/en/account/library') && $m->product === 'Cooking e-book');
-        Mail::assertSent(NewVersionMail::class, fn (NewVersionMail $m) => $m->hasTo('guest@example.com') && str_contains($m->link, '/downloads?') && str_contains($m->link, 'signature='));   // a guest gets a signed link
-        Mail::assertNotSent(NewVersionMail::class, fn (NewVersionMail $m) => $m->hasTo('other@example.com'));
+        Mail::assertSent(NotificationMail::class, 2);
+        Mail::assertSent(NotificationMail::class, fn (NotificationMail $m) => $m->hasTo('owner@example.com') && $m->subjectLine === 'A new version of Cooking e-book is ready' && str_contains($m->text, 'Version 2 of what you bought') && str_contains($m->text, '/en/account/library'));
+        Mail::assertSent(NotificationMail::class, fn (NotificationMail $m) => $m->hasTo('guest@example.com') && str_contains($m->text, '/downloads?') && str_contains($m->text, 'signature='));   // a guest gets a signed link
+        Mail::assertNotSent(NotificationMail::class, fn (NotificationMail $m) => $m->hasTo('other@example.com'));
+    });
+
+    it('writes the email in the language the order was placed in, whatever language the staff member publishing the file uses', function () {
+        Mail::fake();
+        ($this->buy)('BOOK-1', 'bn@example.com', false, 'bn');
+        ($this->upload)('BOOK-1', 'v1.pdf');
+        ($this->upload)('BOOK-1', 'v2.pdf');
+        app(OutboxDispatcher::class)->dispatchDue();
+
+        Mail::assertSent(NotificationMail::class, fn (NotificationMail $m) => $m->hasTo('bn@example.com') && str_contains($m->text, 'সংস্করণ') && ! str_contains($m->text, 'Version') && str_contains($m->text, '/bn/account/library'));
     });
 
     it('never tells the same owner twice about one version, even when the announcement is delivered again', function () {
@@ -197,11 +209,11 @@ describe('telling owners about a new version', function () {
         app(OutboxDispatcher::class)->dispatchDue();
         app(NotifyOwnersOfNewVersion::class)->handle(new DigitalAssetVersionPublished($v2->id, $this->book, 2));   // again, by hand
 
-        Mail::assertSent(NewVersionMail::class, 1);
-        expect(DB::table('entitlement_version_notices')->count())->toBe(1);
+        Mail::assertSent(NotificationMail::class, 1);
+        expect(DB::table('entitlement_version_notices')->count())->toBe(1)->and(DB::table('notification_logs')->where('template_code', 'digital.new_version.email')->count())->toBe(1);
         ($this->upload)('BOOK-1', 'v3.pdf');
         app(OutboxDispatcher::class)->dispatchDue();
-        Mail::assertSent(NewVersionMail::class, 2);   // a later version is news again
+        Mail::assertSent(NotificationMail::class, 2);   // a later version is news again
     });
 
     it('does not tell someone whose download was taken away', function () {
@@ -216,25 +228,28 @@ describe('telling owners about a new version', function () {
         Mail::assertNothingSent();
     });
 
-    it('takes back its record when a message cannot be sent, so a retry tries again and still tells nobody twice', function () {
+    it('keeps trying when the mail server is down, tells staff, and still tells nobody twice', function () {
         ($this->buy)('BOOK-1', 'one@example.com');
         ($this->buy)('BOOK-1', 'two@example.com');
         ($this->upload)('BOOK-1', 'v1.pdf');
 
         config(['mail.mailers.broken' => ['transport' => 'smtp', 'host' => '127.0.0.1', 'port' => 1, 'timeout' => 2], 'mail.default' => 'broken']);   // a mail server that is down
         Mail::purge();
-        $v2 = ($this->upload)('BOOK-1', 'v2.pdf');   // the announcement is delivered straight after the upload, and fails to send
+        $v2 = ($this->upload)('BOOK-1', 'v2.pdf');   // the announcement is delivered straight after the upload; the emails cannot be sent
         $event = new DigitalAssetVersionPublished($v2->id, $this->book, 2);
-        expect(DB::table('entitlement_version_notices')->count())->toBe(0);   // nobody is marked as told
+        expect(DB::table('entitlement_version_notices')->count())->toBe(2)   // both owners were asked about once
+            ->and(DB::table('notification_logs')->where('template_code', 'digital.new_version.email')->pluck('status')->all())->toBe(['failed', 'failed']);   // and staff can see that neither arrived
 
         config(['mail.default' => 'array']);
         Mail::purge();
         Mail::fake();
-        app(NotifyOwnersOfNewVersion::class)->handle($event);   // the retry
-        app(NotifyOwnersOfNewVersion::class)->handle($event);   // and once more, to be sure
+        app(NotifyOwnersOfNewVersion::class)->handle($event);   // the announcement again, by hand: nobody is asked twice
+        $this->travel(2)->minutes();
+        app(DeliverDueNotifications::class)->handle();   // what the scheduler does every minute
+        app(DeliverDueNotifications::class)->handle();
 
-        Mail::assertSent(NewVersionMail::class, 2);   // each told once, after the retry
-        expect(DB::table('entitlement_version_notices')->count())->toBe(2);
+        Mail::assertSent(NotificationMail::class, 2);   // each told once, after the retry
+        expect(DB::table('entitlement_version_notices')->count())->toBe(2)->and(DB::table('notification_logs')->where('template_code', 'digital.new_version.email')->pluck('status')->all())->toBe(['sent', 'sent']);
     });
 
     it('shows a new version in the library at once, to owners who had no email', function () {
@@ -256,7 +271,8 @@ describe('both languages', function () {
             expect($this->actingAs($this->manager, 'admin')->get($page)->assertOk()->getContent())->not->toContain('digital-products::');
         }
         $this->actingAs($this->manager, 'admin')->get('/admin/digital/policies')->assertSee('রিফান্ড নীতি');
-        $mail = new NewVersionMail('বই', 2, 'https://example.test/x', 'bn');
-        expect($mail->render())->toContain('সংস্করণ 2')->not->toContain('digital-products::');
+        $this->owner->forceFill(['locale' => 'bn'])->save();
+        $words = app(TemplateCatalog::class)->get('digital.new_version.email')->defaults['bn'];
+        expect($words[1])->toContain('সংস্করণ {{ version }}')->not->toContain('digital-products::');   // the email goes out in Bangla for a Bangla order
     });
 });

@@ -2,17 +2,9 @@
 
 declare(strict_types=1);
 
-return [
-    'sms_placed' => ':shop: অর্ডার :number পেয়েছি। মোট :total।:cod শীঘ্রই নিশ্চিত করব।', 'sms_cod' => ' পৌঁছালে নগদ দিন।',
-    'email_subject' => 'আপনার অর্ডার :number', 'email_heading' => 'ধন্যবাদ! অর্ডার :number', 'email_intro' => 'হ্যালো :name, আপনার অর্ডার পেয়েছি। যা অর্ডার করেছেন:',
-    'email_link' => 'অর্ডার দেখুন', 'email_footer' => 'এই ইমেইল ঠিকানায় একটি অর্ডার করা হয়েছে বলে আপনি এটি পাচ্ছেন।',
-    'sms_cancelled_stale' => ':shop: অর্ডার :number সময়মতো নিশ্চিত করা যায়নি, তাই বাতিল হয়েছে। আপনি আবার অর্ডার করতে পারেন।', 'payment_needs_review_note' => 'পেমেন্ট পর্যালোচনা দরকার: :reason',
+return ['payment_needs_review_note' => 'পেমেন্ট পর্যালোচনা দরকার: :reason',
     'payment_risk_note' => 'পেমেন্ট গেটওয়ে এই পেমেন্টকে উচ্চ ঝুঁকির বলে চিহ্নিত করেছে। পাঠানোর আগে ক্রেতাকে যাচাই করুন।',
-    'refund_note' => 'টাকা ফেরত সম্পন্ন: :amount (:kind)।', 'sms_refunded' => ':shop: অর্ডার :number-এর :amount ফেরত দেওয়া হয়েছে। আপনার অ্যাকাউন্টে দেখাতে কয়েকদিন লাগতে পারে।',
-    'sms_shipped' => ':shop: আপনার অর্ডার :number পথে আছে।',
-    'sms_delivered' => ':shop: আপনার অর্ডার :number পৌঁছে গেছে। আমাদের সাথে কেনাকাটার জন্য ধন্যবাদ!',
-    'sms_delivery_failed' => ':shop: আপনার অর্ডার :number পৌঁছে দেওয়া যায়নি। আমরা আবার চেষ্টা করব; অনুগ্রহ করে ফোন চালু রাখুন।',
-    'sms_delivery_failed_final' => ':shop: কয়েকবার চেষ্টা করেও আপনার অর্ডার :number পৌঁছে দেওয়া যায়নি। অনুগ্রহ করে আমাদের কল করুন।',
+    'refund_note' => 'টাকা ফেরত সম্পন্ন: :amount (:kind)।',
     'note_delivered' => 'এই অর্ডারের সব পার্সেল পৌঁছে গেছে।',
     'note_delivery_failed' => 'ডেলিভারির একটি চেষ্টা ব্যর্থ হয়েছে (চেষ্টা :attempts)।',
     'note_returned' => 'একটি পার্সেল দোকানে ফিরে আসছে।',

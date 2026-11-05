@@ -4,32 +4,30 @@ declare(strict_types=1);
 
 namespace App\Modules\Bookings\Services;
 
-use App\Modules\Bookings\Mail\BookingMail;
 use App\Modules\Catalog\Contracts\PurchasableVariants;
-use App\Modules\Notifications\Contracts\SmsGateway;
+use App\Modules\Notifications\Contracts\NotificationSender;
+use App\Modules\Notifications\DTOs\Recipient;
 use App\Modules\Orders\Contracts\OrderDirectory;
 use App\Modules\Orders\Contracts\ServiceOrderLines;
 use App\Modules\Platform\Contracts\Clock;
-use App\Modules\Platform\DTOs\PhoneNumber;
 use App\Modules\Platform\Support\LocaleFormatter;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
-use RuntimeException;
 use Throwable;
 
 /**
- * Sends one kind of message about one booking, by SMS and (when the order has an address) by email, in the language the order was placed in. Each message is
- * CLAIMED first with a database UNIQUE (booking, kind, channel, start time), so a retry, two workers or two scheduler runs can never send it twice; a failure
- * is recorded and tried again on a later run, at most `bookings.notice_max_attempts` times in all. Nothing about the message or the phone number is stored or logged.
+ * Asks the notifications platform to send one kind of message about one booking, by text message and (when the order has an address) by email, in the language the order
+ * was placed in. Each ask is CLAIMED first with a database UNIQUE (booking, kind, channel, start time), so a retry, two workers or two scheduler runs ask once (and a moved
+ * booking is asked again for its new time). The platform records, delivers, retries with growing waits and shows staff what could not be delivered; if the ASK itself fails
+ * (it could not be recorded) it is tried again on a later run, at most `bookings.notice_max_attempts` times. Nothing about the message or the phone number is stored or logged here.
  */
 final class BookingMessenger
 {
     public function __construct(
-        private readonly ServiceOrderLines $lines, private readonly OrderDirectory $orders, private readonly PurchasableVariants $variants, private readonly SmsGateway $sms,
+        private readonly ServiceOrderLines $lines, private readonly OrderDirectory $orders, private readonly PurchasableVariants $variants, private readonly NotificationSender $sender,
         private readonly LocaleFormatter $format, private readonly Clock $clock,
     ) {}
 
@@ -77,14 +75,11 @@ final class BookingMessenger
             };
             $params = ['shop' => (string) config('app.name'), 'service' => $service, 'when' => $when, 'where' => $where, 'link' => (string) $link];
 
-            if ($channel === 'sms') {
-                $result = $this->sms->send(PhoneNumber::parse($contact['phone']), __('bookings::notify.sms_'.$kind, $params), ['purpose' => 'booking_'.$kind]);
-                if (! $result->accepted) {
-                    throw new RuntimeException('sms_not_accepted');
-                }
-            } else {
-                Mail::to((string) $contact['email'])->send(new BookingMail(__('bookings::notify.subject_'.$kind, $params), __('bookings::notify.heading_'.$kind, $params), __('bookings::notify.body_'.$kind, $params), $link, $contact['locale'], __('bookings::notify.link_'.$kind)));
-            }
+            // the platform records it, delivers it, retries it and shows staff when it cannot; here we only ask, once for each start time (booking_notices)
+            $this->sender->send(
+                'booking.'.$kind.'.'.$channel, new Recipient($contact['phone'], $contact['email'], $contact['locale'], $contact['user_id']), $params,
+                'booking-'.$booking->id.'-'.$kind.'-'.$booking->starts_at, 'booking:'.$booking->public_id,
+            );
         } finally {
             App::setLocale($previous);
         }

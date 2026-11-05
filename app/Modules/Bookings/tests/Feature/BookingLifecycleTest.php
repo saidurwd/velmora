@@ -15,13 +15,16 @@ use App\Modules\Bookings\Actions\SetWeeklyAvailability;
 use App\Modules\Bookings\Actions\StartBookings;
 use App\Modules\Bookings\Exceptions\BookingException;
 use App\Modules\Bookings\Jobs\RunBookingLifecycleJob;
-use App\Modules\Bookings\Mail\BookingMail;
 use App\Modules\Cart\Contracts\CartReader;
 use App\Modules\Cart\DTOs\CartOwner;
 use App\Modules\Catalog\Actions\TransitionProduct;
 use App\Modules\Catalog\Models\Product;
 use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
 use App\Modules\IdentityAccess\Models\User;
+use App\Modules\Notifications\Actions\DeliverDueNotifications;
+use App\Modules\Notifications\Contracts\NotificationSender;
+use App\Modules\Notifications\DTOs\Recipient;
+use App\Modules\Notifications\Mail\NotificationMail;
 use App\Modules\Notifications\Sms\FakeSmsGateway;
 use App\Modules\Orders\Actions\PlaceOrder;
 use App\Modules\Orders\Actions\TransitionOrder;
@@ -41,7 +44,6 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -79,7 +81,7 @@ beforeEach(function () {
 
         return (string) DB::table('service_bookings')->where('order_item_id', DB::table('order_items')->where('order_id', $order->id)->value('id'))->value('public_id');
     };
-    $this->texts = fn () => array_values(array_filter($this->sms->sent(), fn (array $m) => str_starts_with((string) ($m['meta']['purpose'] ?? ''), 'booking_')));   // not the order confirmation
+    $this->texts = fn () => array_values(array_filter($this->sms->sent(), fn (array $m) => str_starts_with((string) ($m['meta']['purpose'] ?? ''), 'booking.')));   // not the order confirmation
     $this->row = fn (string $publicId) => DB::table('service_bookings')->where('public_id', $publicId)->first();
     $this->events = fn (string $publicId) => DB::table('booking_events')->where('booking_id', ($this->row)($publicId)->id)->orderBy('id')->pluck('event')->all();
     $this->notices = fn () => DB::table('booking_notices')->orderBy('id')->get(['kind', 'channel', 'status', 'attempts'])->map(fn ($r) => "{$r->kind}/{$r->channel}/{$r->status}/{$r->attempts}")->all();
@@ -94,9 +96,9 @@ describe('reminders', function () {
 
         $sms = ($this->texts)();
         expect($sms)->toHaveCount(1)->and($sms[0]['to'])->toBe('+8801712345678')->and($sms[0]['message'])->toContain('SVC-30')->and($sms[0]['message'])->toContain('1 Dec 2026, 10:00 AM')->and($sms[0]['message'])->toContain('at our place')
-            ->and($sms[0]['meta'])->toBe(['purpose' => 'booking_reminder_long'])->and(($this->notices)())->toBe(['reminder_long/sms/sent/1', 'reminder_long/email/sent/1']);
-        Mail::assertSent(BookingMail::class, fn (BookingMail $m) => $m->hasTo('rahim@example.com') && str_contains($m->body, '10:00 AM'));
-        Mail::assertSent(BookingMail::class, 1);
+            ->and($sms[0]['meta'])->toBe(['purpose' => 'booking.reminder_long.sms'])->and(($this->notices)())->toBe(['reminder_long/sms/sent/1', 'reminder_long/email/sent/1']);
+        Mail::assertSent(NotificationMail::class, fn (NotificationMail $m) => $m->hasTo('rahim@example.com') && str_contains($m->text, '10:00 AM') && str_contains($m->text, '/en/account/bookings/'));
+        expect(DB::table('notification_logs')->where('template_code', 'booking.reminder_long.email')->count())->toBe(1);
     });
 
     it('waits until 24 hours before, and sends only the last reminder to a booking made inside the last 2 hours', function () {
@@ -105,7 +107,7 @@ describe('reminders', function () {
         expect(app(SendBookingReminders::class)->handle())->toBe(0);
 
         $this->travelTo(CarbonImmutable::parse('2026-12-01 02:30:00', 'UTC'));   // 90 minutes before: the short window only
-        expect(app(SendBookingReminders::class)->handle())->toBe(2)->and(array_map(fn ($m) => $m['meta']['purpose'], ($this->texts)()))->toBe(['booking_reminder_short'])
+        expect(app(SendBookingReminders::class)->handle())->toBe(2)->and(array_map(fn ($m) => $m['meta']['purpose'], ($this->texts)()))->toBe(['booking.reminder_short.sms'])
             ->and(($this->notices)())->toBe(['reminder_short/sms/sent/1', 'reminder_short/email/sent/1']);
     });
 
@@ -114,7 +116,7 @@ describe('reminders', function () {
         app(SendBookingReminders::class)->handle();
         $this->travelTo(CarbonImmutable::parse('2026-12-01 02:00:00', 'UTC'));
 
-        expect(app(SendBookingReminders::class)->handle())->toBe(2)->and(array_map(fn ($m) => $m['meta']['purpose'], ($this->texts)()))->toBe(['booking_reminder_long', 'booking_reminder_short']);
+        expect(app(SendBookingReminders::class)->handle())->toBe(2)->and(array_map(fn ($m) => $m['meta']['purpose'], ($this->texts)()))->toBe(['booking.reminder_long.sms', 'booking.reminder_short.sms']);
     });
 
     it('does not remind a booking that is cancelled, only held, not ordered, or already started', function () {
@@ -141,7 +143,7 @@ describe('reminders', function () {
 
         expect(app(SendBookingReminders::class)->handle())->toBe(1)->and(($this->texts)()[0]['message'])->toContain('অনুস্মারক')->and(($this->texts)()[0]['message'])->toContain('আমাদের এখানে')
             ->and(($this->notices)())->toBe(['reminder_long/sms/sent/1']);
-        Mail::assertNotSent(BookingMail::class);
+        expect(DB::table('notification_logs')->where('template_code', 'like', 'booking.%.email')->count())->toBe(0);
     });
 
     it('follows the shop\'s settings for how long before', function () {
@@ -158,26 +160,38 @@ describe('reminders', function () {
 });
 
 describe('a message that fails', function () {
-    it('is tried again on the next runs, three times in all, then given up, and never sent twice once it works', function () {
-        Log::spy();
+    it('is the platform\'s to retry: asked for once, visible to staff as failed, delivered on a later try, and never sent twice', function () {
         ($this->booked)('10:00', 'en', null);
         $this->sms->fail = true;
+
+        expect(app(SendBookingReminders::class)->handle())->toBe(1)->and(($this->notices)())->toBe(['reminder_long/sms/sent/1'])   // the ask is made once
+            ->and(DB::table('notification_logs')->where('template_code', 'booking.reminder_long.sms')->value('status'))->toBe('failed');   // and staff can see that the text did not arrive
+        expect(app(SendBookingReminders::class)->handle())->toBe(0)->and(($this->texts)())->toBe([]);
+
+        $this->sms->fail = false;
+        $this->travel(2)->minutes();
+        app(DeliverDueNotifications::class)->handle();
+        app(DeliverDueNotifications::class)->handle();
+        expect(($this->texts)())->toHaveCount(1)->and(DB::table('notification_logs')->where('template_code', 'booking.reminder_long.sms')->value('status'))->toBe('sent')
+            ->and(app(SendBookingReminders::class)->handle())->toBe(0);
+    });
+
+    it('asks again on the next runs when the ask itself cannot be recorded, three times in all, then gives up', function () {
+        ($this->booked)('10:00', 'en', null);
+        $this->app->bind(NotificationSender::class, fn () => new class implements NotificationSender
+        {
+            public function send(string $templateCode, Recipient $to, array $variables, string $idempotencyKey, ?string $related = null): string
+            {
+                throw new RuntimeException('the platform could not record it');
+            }
+        });
 
         expect(app(SendBookingReminders::class)->handle())->toBe(0)->and(($this->notices)())->toBe(['reminder_long/sms/failed/1']);
         expect(app(SendBookingReminders::class)->handle())->toBe(0)->and(($this->notices)())->toBe(['reminder_long/sms/failed/2']);
-        $this->sms->fail = false;
-        expect(app(SendBookingReminders::class)->handle())->toBe(1)->and(($this->notices)())->toBe(['reminder_long/sms/sent/3'])->and(app(SendBookingReminders::class)->handle())->toBe(0);
-        Log::shouldHaveReceived('warning')->withArgs(fn ($m, $c = []) => $m === 'bookings.notice_failed' && ! str_contains(json_encode($c), '0171'))->twice();
-    });
-
-    it('gives up after the last attempt', function () {
-        ($this->booked)('10:00', 'en', null);
-        $this->sms->fail = true;
-
-        foreach (range(1, 5) as $_) {
+        expect(app(SendBookingReminders::class)->handle())->toBe(0)->and(($this->notices)())->toBe(['reminder_long/sms/gave_up/3']);
+        foreach (range(1, 3) as $_) {
             app(SendBookingReminders::class)->handle();
         }
-
         expect(($this->notices)())->toBe(['reminder_long/sms/gave_up/3'])->and(DB::table('booking_notices')->value('last_error'))->toBe(RuntimeException::class);
     });
 
@@ -283,8 +297,21 @@ describe('asking how it went', function () {
         expect(app(SendReviewPrompts::class)->handle())->toBe(2)->and(app(SendReviewPrompts::class)->handle())->toBe(0);
 
         $sms = ($this->texts)();
-        expect($sms)->toHaveCount(1)->and($sms[0]['message'])->toContain('/en/p/')->and($sms[0]['meta'])->toBe(['purpose' => 'booking_review']);
-        Mail::assertSent(BookingMail::class, fn (BookingMail $m) => str_contains((string) $m->link, '/en/p/'));
+        expect($sms)->toHaveCount(1)->and($sms[0]['message'])->toContain('/en/p/')->and($sms[0]['meta'])->toBe(['purpose' => 'booking.review.sms']);
+        Mail::assertSent(NotificationMail::class, fn (NotificationMail $m) => str_contains($m->text, '/en/p/') && $m->subjectLine !== '');
+    });
+});
+
+describe('one booking, several messages', function () {
+    it('keeps a reminder and the later question about how it went apart, so neither swallows the other', function () {
+        $id = ($this->booked)();
+        app(SendBookingReminders::class)->handle();   // 24 hours before
+        $this->travelTo(CarbonImmutable::parse('2026-12-01 05:30:00', 'UTC'));
+        app(CompleteBooking::class)->handle($this->staff, $id);
+        app(SendReviewPrompts::class)->handle();
+
+        expect(array_map(fn ($m) => $m['meta']['purpose'], ($this->texts)()))->toBe(['booking.reminder_long.sms', 'booking.review.sms']);
+        expect(DB::table('notification_logs')->where('related', 'booking:'.$id)->where('status', 'sent')->count())->toBe(4);   // two messages, each by text and by email
     });
 });
 

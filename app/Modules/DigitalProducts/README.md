@@ -13,3 +13,4 @@ Cross-module use is limited to Contracts, DTOs, Enums and Events (BD-11). Respon
 ## Running it
 * Disk: `DIGITAL_DISK` (default `private`, an S3 bucket; locally SeaweedFS, see `.env.example`). Never point it at a public disk.
 * PHP must allow uploads as large as `DIGITAL_MAX_UPLOAD_MB` (`upload_max_filesize`, `post_max_size`).
+* Phase 9, slice 1b: the new-version email is the `digital.new_version.email` template (`Notifications/DigitalTemplates`), sent in the order's language through `NotificationSender`; `NewVersionMail` is gone.

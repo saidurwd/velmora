@@ -258,7 +258,7 @@ describe('the reminders', function () {
 
         app(SendBookingReminders::class)->handle();
 
-        $texts = array_values(array_filter($this->sms->sent(), fn ($m) => str_starts_with((string) ($m['meta']['purpose'] ?? ''), 'booking_')));
+        $texts = array_values(array_filter($this->sms->sent(), fn ($m) => str_starts_with((string) ($m['meta']['purpose'] ?? ''), 'booking.')));
         expect($texts)->toHaveCount(2)->and($texts[0]['message'])->toContain('/en/account/bookings/')->and($texts[1]['message'])->toContain('/en/orders/')->and($texts[1]['message'])->toContain('signature=');
     });
 });

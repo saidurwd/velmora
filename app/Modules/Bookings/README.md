@@ -17,3 +17,4 @@ Service bookings (Phase 8, ADR P8-1, P8-2, P8-17). Cross-module use is limited t
 ## Running it
 * All times are stored in UTC; availability is entered in Dhaka wall-clock time.
 * The guard needs MariaDB >= 11.4 (`PERIOD FOR` + `WITHOUT OVERLAPS`).
+* Phase 9, slice 1b: booking messages go through the notifications platform (`BookingMessenger` claims each (booking, kind, channel, start time) once, then asks `NotificationSender`; templates in `Notifications/BookingTemplates`). `BookingMail` and its retry loop are gone; the platform retries and staff see failures under /admin/notifications.

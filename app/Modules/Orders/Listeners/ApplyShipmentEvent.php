@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Orders\Listeners;
 
 use App\Modules\Orders\Models\Order;
-use App\Modules\Orders\Services\CustomerSms;
 use App\Modules\Orders\Services\OrderCompletion;
+use App\Modules\Orders\Services\OrderMessages;
 use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\Outbox\DomainEvent;
 use App\Modules\Platform\Outbox\IdempotentConsumer;
@@ -16,6 +16,7 @@ use App\Modules\Shipping\Events\ShipmentHandedOver;
 use App\Modules\Shipping\Events\ShipmentReturned;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * Brings an order in line with what Shipping reports, and tells the customer. Shipping announces through the outbox and the order follows; each announcement
@@ -23,12 +24,12 @@ use Illuminate\Support\Facades\DB;
  */
 final class ApplyShipmentEvent
 {
-    public function __construct(private readonly IdempotentConsumer $consumer, private readonly CustomerSms $sms, private readonly OrderCompletion $completion, private readonly Clock $clock) {}
+    public function __construct(private readonly IdempotentConsumer $consumer, private readonly OrderMessages $messages, private readonly OrderCompletion $completion, private readonly Clock $clock) {}
 
     public function handedOver(ShipmentHandedOver $e): void
     {
         $this->once('orders.shipment_handed_over', $e, function () use ($e): void {
-            $this->tell($e->orderId, 'sms_shipped', [], 'order_shipped');
+            $this->tell($e->orderId, 'order.shipped.sms', $e);
         });
     }
 
@@ -40,7 +41,7 @@ final class ApplyShipmentEvent
                 DB::table('orders')->where('id', $e->orderId)->whereNull('delivered_at')->update(['delivered_at' => CarbonImmutable::parse($e->occurredAt, 'UTC'), 'updated_at' => $this->clock->now()]);
                 $this->note($e->orderId, __('orders::notifications.note_delivered'));
             }
-            $this->tell($e->orderId, 'sms_delivered', [], 'order_delivered');
+            $this->tell($e->orderId, 'order.delivered.sms', $e);
             $this->completion->attempt($e->orderId);
         });
     }
@@ -50,7 +51,7 @@ final class ApplyShipmentEvent
         $this->once('orders.shipment_failed', $e, function () use ($e): void {
             $final = $e->detail === 'final';
             $this->note($e->orderId, __('orders::notifications.note_delivery_failed', ['attempts' => $e->attempts]));
-            $this->tell($e->orderId, $final ? 'sms_delivery_failed_final' : 'sms_delivery_failed', [], 'order_delivery_failed');
+            $this->tell($e->orderId, $final ? 'order.delivery_failed_final.sms' : 'order.delivery_failed.sms', $e);
         });
     }
 
@@ -61,12 +62,12 @@ final class ApplyShipmentEvent
         });
     }
 
-    /** @param  array<string, scalar>  $params */
-    private function tell(int $orderId, string $key, array $params, string $purpose): void
+    /** Tells the customer; a repeat of the same announcement is the same message (its key is the announcement's own id), a different one is a new message. */
+    private function tell(int $orderId, string $code, DomainEvent $e): void
     {
         $order = Order::query()->find($orderId);
         if ($order !== null) {
-            $this->sms->send($order, $key, $params, $purpose);
+            $this->messages->tryToSend($order, $code, [], $code.'|'.($e->outboxId ?? (string) Str::ulid()));
         }
     }
 

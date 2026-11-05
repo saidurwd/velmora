@@ -13,7 +13,9 @@ use App\Modules\Bookings\Events\BookingRescheduled;
 use App\Modules\Bookings\Listeners\ConfirmBookingsForPaidOrder;
 use App\Modules\Bookings\Listeners\EndBookingsOfRefundedOrder;
 use App\Modules\Bookings\Listeners\ReleaseBookingsForCancelledOrder;
+use App\Modules\Bookings\Notifications\BookingTemplates;
 use App\Modules\Bookings\Services\DatabaseCancellationPolicyTexts;
+use App\Modules\Notifications\Contracts\TemplateRegistry;
 use App\Modules\Orders\Events\OrderCancelled;
 use App\Modules\Orders\Events\OrderPaid;
 use App\Modules\Orders\Events\OrderRefunded;
@@ -43,6 +45,9 @@ class BookingsServiceProvider extends ModuleServiceProvider
         parent::boot();
 
         $this->commands([BookingProbeCommand::class]);
+        foreach (BookingTemplates::all() as $template) {
+            $this->app->make(TemplateRegistry::class)->register($template);   // the messages this module sends; staff change their words
+        }
         Event::listen(OrderPaid::class, ConfirmBookingsForPaidOrder::class);
         Event::listen(OrderCancelled::class, ReleaseBookingsForCancelledOrder::class);
         Event::listen(OrderRefunded::class, EndBookingsOfRefundedOrder::class);

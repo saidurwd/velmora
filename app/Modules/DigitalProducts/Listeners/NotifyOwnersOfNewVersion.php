@@ -6,11 +6,11 @@ namespace App\Modules\DigitalProducts\Listeners;
 
 use App\Modules\Catalog\Contracts\VariantDirectory;
 use App\Modules\DigitalProducts\Events\DigitalAssetVersionPublished;
-use App\Modules\DigitalProducts\Mail\NewVersionMail;
+use App\Modules\Notifications\Contracts\NotificationSender;
+use App\Modules\Notifications\DTOs\Recipient;
 use App\Modules\Orders\Contracts\OrderDirectory;
 use App\Modules\Platform\Contracts\Clock;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Throwable;
@@ -22,7 +22,7 @@ use Throwable;
  */
 final class NotifyOwnersOfNewVersion
 {
-    public function __construct(private readonly OrderDirectory $orders, private readonly VariantDirectory $variants, private readonly Clock $clock) {}
+    public function __construct(private readonly OrderDirectory $orders, private readonly VariantDirectory $variants, private readonly Clock $clock, private readonly NotificationSender $sender) {}
 
     public function handle(DigitalAssetVersionPublished $event): void
     {
@@ -43,7 +43,7 @@ final class NotifyOwnersOfNewVersion
                     continue;   // already told
                 }
                 try {
-                    Mail::to($contact['email'])->send(new NewVersionMail($product, $event->version, $this->link($contact), $contact['locale']));
+                    $this->sender->send('digital.new_version.email', new Recipient(email: $contact['email'], locale: $contact['locale'], userId: $contact['user_id']), ['product' => $product, 'version' => $event->version, 'link' => $this->link($contact)], 'version-'.$event->versionId.'-right-'.$right->id, 'order:'.$contact['public_id']);
                 } catch (Throwable $e) {
                     DB::table('entitlement_version_notices')->where('entitlement_id', $right->id)->where('version_id', $event->versionId)->delete();   // not told after all: a retry will try again
 

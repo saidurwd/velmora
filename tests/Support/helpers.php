@@ -175,7 +175,7 @@ function digitalWorld(object $t): void
     $t->tee = $make('TEE-1', 'Cotton Tee', 'টি-শার্ট', ProductType::Physical);
     $t->types = [$t->book => 'digital', $t->book2 => 'digital', $t->tee => 'physical'];
 
-    $t->place = function (array $lines, ?int $userId = null, string $phone = '+8801712345678', ?string $email = null) use ($t): object {
+    $t->place = function (array $lines, ?int $userId = null, string $phone = '+8801712345678', ?string $email = null, string $locale = 'en') use ($t): object {
         $calc = [];
         $newLines = [];
         foreach ($lines as $variantId => $qty) {
@@ -185,7 +185,7 @@ function digitalWorld(object $t): void
         $physical = in_array('physical', array_map(fn ($v) => $t->types[$v], array_keys($lines)), true);
         $addresses = $physical ? [new NewOrderAddress('shipping', 'Rahim', $phone, 3, 30, 300, ['division' => ['en' => 'Dhaka', 'bn' => 'ঢাকা'], 'district' => ['en' => 'Dhaka', 'bn' => 'ঢাকা'], 'upazila' => ['en' => 'D', 'bn' => 'ড']], 'House 5', '1205', 'D', null)] : [];
 
-        return app(CreateOrder::class)->handle(new NewOrder(Actor::guest('t'), $userId, 'Rahim', $phone, $email, OrderChannel::Web, 'en', 'online', $physical ? 'standard' : null, (new BreakdownCalculator)->calculate($calc, false, 0, 0, 0), $newLines, $addresses));
+        return app(CreateOrder::class)->handle(new NewOrder(Actor::guest('t'), $userId, 'Rahim', $phone, $email, OrderChannel::Web, $locale, 'online', $physical ? 'standard' : null, (new BreakdownCalculator)->calculate($calc, false, 0, 0, 0), $newLines, $addresses));
     };
     $t->pay = function (int $orderId): void {
         app(TransitionOrder::class)->status(Actor::system('t'), $orderId, OrderStatus::Confirmed, 'test');

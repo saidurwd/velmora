@@ -63,7 +63,7 @@ class TemplateController
 
         return view('notifications::admin.template-form', [
             't' => $data, 'code' => $code, 'can' => true, 'preview' => ['locale' => (string) $request->validated('locale'), 'problem' => $problem,
-                'subject' => $definition->channel === 'email' ? $renderer->singleLine($renderer->render($subject, $sample)) : null, 'body' => $renderer->render($text, $sample)],
+                'subject' => $definition->channel === 'email' ? $renderer->singleLine($renderer->render($subject, $sample, $definition->multiline)) : null, 'body' => $renderer->render($text, $sample, $definition->multiline)],
         ]);
     }
 }

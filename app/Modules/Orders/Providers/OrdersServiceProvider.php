@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Orders\Providers;
 
+use App\Modules\Notifications\Contracts\TemplateRegistry;
 use App\Modules\Orders\Console\AccountProbeCommand;
 use App\Modules\Orders\Console\OrderProbeCommand;
 use App\Modules\Orders\Console\PlaceOrderProbeCommand;
@@ -21,6 +22,7 @@ use App\Modules\Orders\Events\OrderRefunded;
 use App\Modules\Orders\Listeners\ApplyPaymentEvent;
 use App\Modules\Orders\Listeners\ApplyShipmentEvent;
 use App\Modules\Orders\Listeners\SendOrderConfirmation;
+use App\Modules\Orders\Notifications\OrderTemplates;
 use App\Modules\Orders\Services\CodPaymentInitiator;
 use App\Modules\Orders\Services\DatabaseCodOrders;
 use App\Modules\Orders\Services\DatabaseCustomerOrders;
@@ -74,6 +76,9 @@ class OrdersServiceProvider extends ModuleServiceProvider
         $this->app->make(OutboxRegistry::class)->register(OrderPaid::class);
         $this->app->make(OutboxRegistry::class)->register(OrderRefunded::class);
         $this->app->make(OutboxRegistry::class)->register(OrderCancelled::class);
+        foreach (OrderTemplates::all() as $template) {
+            $this->app->make(TemplateRegistry::class)->register($template);   // the messages this module sends; staff change their words
+        }
         Event::listen(OrderPlaced::class, SendOrderConfirmation::class);
         Event::listen(PaymentInitiated::class, [ApplyPaymentEvent::class, 'initiated']);
         Event::listen(PaymentSucceeded::class, [ApplyPaymentEvent::class, 'succeeded']);

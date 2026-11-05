@@ -300,7 +300,7 @@ describe('the meeting link', function () {
 
     it('is told in the reminder of an online booking, and is not invented when there is none', function () {
         app(SendBookingReminders::class)->handle();
-        $first = collect($this->sms->sent())->first(fn ($m) => str_starts_with((string) ($m['meta']['purpose'] ?? ''), 'booking_'));
+        $first = collect($this->sms->sent())->first(fn ($m) => str_starts_with((string) ($m['meta']['purpose'] ?? ''), 'booking.'));
         expect($first['message'])->toContain('online')->not->toContain('https://');
     });
 

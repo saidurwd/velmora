@@ -10,3 +10,4 @@ Rules worth knowing:
 - Every state change locks the order row, checks the move against the enum and the cross-rules, and writes a history row in the same transaction.
 
 Cross-module use is limited to Contracts, DTOs, Enums and Events (BD-11).
+* Phase 9, slice 1b: order messages (placed, cash-on-delivery placed, shipped, delivered, cancelled, refunded) are templates in `Notifications/OrderTemplates`, sent through `Services/OrderMessages` → `NotificationSender` in the order's language. `CustomerSms` and `OrderPlacedMail` are gone. Delivery is queued: production needs the queue worker and the scheduler.

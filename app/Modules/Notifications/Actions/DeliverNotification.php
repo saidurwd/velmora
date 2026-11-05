@@ -6,6 +6,7 @@ namespace App\Modules\Notifications\Actions;
 
 use App\Modules\Notifications\Contracts\SmsGateway;
 use App\Modules\Notifications\Mail\NotificationMail;
+use App\Modules\Notifications\Services\TemplateCatalog;
 use App\Modules\Notifications\Services\TemplateRenderer;
 use App\Modules\Notifications\Services\TemplateStore;
 use App\Modules\Platform\Contracts\Clock;
@@ -23,7 +24,7 @@ use Throwable;
  */
 final class DeliverNotification
 {
-    public function __construct(private readonly TemplateStore $templates, private readonly TemplateRenderer $renderer, private readonly SmsGateway $sms, private readonly Clock $clock) {}
+    public function __construct(private readonly TemplateStore $templates, private readonly TemplateRenderer $renderer, private readonly TemplateCatalog $catalog, private readonly SmsGateway $sms, private readonly Clock $clock) {}
 
     /** @return string sent | failed | dead | skipped | busy */
     public function handle(int $id): string
@@ -55,7 +56,8 @@ final class DeliverNotification
             if ($words === null) {
                 return $this->finish($id, 'dead', null, 'no_words', null);
             }
-            $body = $this->renderer->render($words->body, $data['variables']);
+            $multiline = $this->catalog->get((string) $row->template_code)->multiline ?? [];
+            $body = $this->renderer->render($words->body, $data['variables'], $multiline);
             $reference = null;
 
             if ($row->channel === 'sms') {

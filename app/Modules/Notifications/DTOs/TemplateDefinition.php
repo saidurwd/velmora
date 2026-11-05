@@ -14,6 +14,7 @@ final readonly class TemplateDefinition
      * @param  list<string>  $variables
      * @param  array<string, array{0: string|null, 1: string}>  $defaults
      * @param  array<string, string>  $sample
+     * @param  list<string>  $multiline  variables (a subset of `variables`) whose values may hold line breaks, such as a list of items; every other value is one line
      */
-    public function __construct(public string $code, public string $channel, public string $kind, public array $variables, public array $defaults, public array $sample = []) {}
+    public function __construct(public string $code, public string $channel, public string $kind, public array $variables, public array $defaults, public array $sample = [], public array $multiline = []) {}
 }

@@ -11,8 +11,10 @@ use App\Modules\DigitalProducts\Listeners\GrantEntitlementsForPaidOrder;
 use App\Modules\DigitalProducts\Listeners\NotifyOwnersOfNewVersion;
 use App\Modules\DigitalProducts\Listeners\RevokeForRefundedOrder;
 use App\Modules\DigitalProducts\Models\Entitlement;
+use App\Modules\DigitalProducts\Notifications\DigitalTemplates;
 use App\Modules\DigitalProducts\Policies\EntitlementPolicy;
 use App\Modules\DigitalProducts\Services\DatabaseRefundPolicyTexts;
+use App\Modules\Notifications\Contracts\TemplateRegistry;
 use App\Modules\Orders\Events\OrderPaid;
 use App\Modules\Orders\Events\OrderRefunded;
 use App\Modules\Platform\Outbox\OutboxRegistry;
@@ -43,6 +45,9 @@ class DigitalProductsServiceProvider extends ModuleServiceProvider
         $this->commands([DigitalProbeCommand::class]);
         Gate::policy(Entitlement::class, EntitlementPolicy::class);
         RateLimiter::for('digital-download', fn (Request $r) => Limit::perMinute(20)->by('digital-download|'.($r->user('web')?->getAuthIdentifier() ?? $r->ip()).'|'.($r->route('order') ?? '')));
+        foreach (DigitalTemplates::all() as $template) {
+            $this->app->make(TemplateRegistry::class)->register($template);   // the messages this module sends; staff change their words
+        }
         Event::listen(OrderPaid::class, GrantEntitlementsForPaidOrder::class);
         Event::listen(OrderRefunded::class, RevokeForRefundedOrder::class);
         $this->app->make(OutboxRegistry::class)->register(DigitalAssetVersionPublished::class);

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\Orders\Listeners;
 
-use App\Modules\Notifications\Contracts\SmsGateway;
 use App\Modules\Orders\Actions\TransitionOrder;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Enums\PaymentStatus;
 use App\Modules\Orders\Exceptions\OrderException;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Services\OrderCompletion;
+use App\Modules\Orders\Services\OrderMessages;
 use App\Modules\Payments\Events\PaymentExpired;
 use App\Modules\Payments\Events\PaymentFailed;
 use App\Modules\Payments\Events\PaymentInitiated;
@@ -20,14 +20,12 @@ use App\Modules\Payments\Events\RefundSucceeded;
 use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\DTOs\Money;
-use App\Modules\Platform\DTOs\PhoneNumber;
 use App\Modules\Platform\Outbox\DomainEvent;
 use App\Modules\Platform\Outbox\IdempotentConsumer;
 use App\Modules\Platform\Support\Fmt;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Throwable;
+use Illuminate\Support\Str;
 
 /**
  * Brings an order in line with what Payments reports. This is the ONLY way an online payment changes an order: Payments announces
@@ -36,7 +34,7 @@ use Throwable;
  */
 final class ApplyPaymentEvent
 {
-    public function __construct(private readonly TransitionOrder $transition, private readonly IdempotentConsumer $consumer, private readonly Clock $clock, private readonly SmsGateway $sms, private readonly OrderCompletion $completion) {}
+    public function __construct(private readonly TransitionOrder $transition, private readonly IdempotentConsumer $consumer, private readonly Clock $clock, private readonly OrderMessages $messages, private readonly OrderCompletion $completion) {}
 
     public function initiated(PaymentInitiated $e): void
     {
@@ -105,22 +103,14 @@ final class ApplyPaymentEvent
             DB::table('order_notes')->insert(['order_id' => $e->orderId, 'author_id' => null, 'visibility' => 'internal', 'body' => __('orders::notifications.refund_note', ['amount' => $amount, 'kind' => $e->detail ?? 'partial']), 'created_at' => $this->clock->now()]);
 
             if ($follows) {
-                $this->tell($order, $amount);
+                $this->tell($order, $amount, $e);
             }
         });
     }
 
-    private function tell(Order $order, string $amount): void
+    private function tell(Order $order, string $amount, DomainEvent $e): void
     {
-        $previous = App::getLocale();
-        App::setLocale($order->locale);
-        try {
-            $this->sms->send(PhoneNumber::parse($order->contact_phone), __('orders::notifications.sms_refunded', ['shop' => (string) config('app.name'), 'number' => $order->order_number, 'amount' => $amount]), ['purpose' => 'order_refunded']);
-        } catch (Throwable $e) {
-            Log::warning('orders.refund_sms_failed', ['order' => $order->order_number, 'error' => $e::class]); // the refund stands; only the message failed
-        } finally {
-            App::setLocale($previous);
-        }
+        $this->messages->tryToSend($order, 'order.refunded.sms', ['amount' => $amount], 'order.refunded.sms|'.($e->outboxId ?? (string) Str::ulid()));   // the refund stands; only the message could fail
     }
 
     public function needsReview(PaymentNeedsReview $e): void

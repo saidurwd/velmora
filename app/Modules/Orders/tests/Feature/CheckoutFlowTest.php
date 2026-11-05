@@ -19,10 +19,11 @@ use App\Modules\DigitalProducts\Database\Seeders\RefundPolicySeeder;
 use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
 use App\Modules\IdentityAccess\Models\User;
 use App\Modules\Inventory\Database\Seeders\StockLocationSeeder;
+use App\Modules\Notifications\Actions\DeliverDueNotifications;
+use App\Modules\Notifications\Mail\NotificationMail;
 use App\Modules\Notifications\Sms\FakeSmsGateway;
 use App\Modules\Orders\Events\OrderPlaced;
 use App\Modules\Orders\Listeners\SendOrderConfirmation;
-use App\Modules\Orders\Mail\OrderPlacedMail;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Payments\Database\Seeders\PaymentMethodSeeder;
 use App\Modules\Platform\Database\Seeders\LanguageSeeder;
@@ -295,11 +296,13 @@ describe('telling the customer', function () {
         $order = ($this->placeOne)();
 
         expect($this->sms->sent())->toHaveCount(1)->and($this->sms->sent()[0]['to'])->toBe('+8801712345678')->and($this->sms->sent()[0]['message'])->toContain($order->order_number)->toContain('710.00')->toContain('Pay cash on delivery');
-        Mail::assertSent(OrderPlacedMail::class, function (OrderPlacedMail $m) use ($order) {
+        Mail::assertSent(NotificationMail::class, function (NotificationMail $m) use ($order) {
             $html = $m->render();
 
-            return $m->hasTo('rahim@example.com') && str_contains($html, $order->order_number) && str_contains($html, 'signature=') && str_contains($html, 'Cotton Tee');
+            return $m->hasTo('rahim@example.com') && $m->subjectLine === 'Your order '.$order->order_number && str_contains($html, $order->order_number) && str_contains($html, 'signature=') && str_contains($html, 'Cotton Tee × 1')
+                && str_contains($html, 'Total: ') && str_contains($html, 'View your order: ');
         });
+        expect(DB::table('notification_logs')->where('related', 'order:'.$order->public_id)->pluck('status')->all())->toBe(['sent', 'sent']);
     });
 
     it('sends each message at most once even if the outbox delivers the event again', function () {
@@ -311,23 +314,26 @@ describe('telling the customer', function () {
         app(SendOrderConfirmation::class)->handle($event);
 
         expect($this->sms->sent())->toHaveCount(1);
-        Mail::assertSent(OrderPlacedMail::class, 1);
+        Mail::assertSent(NotificationMail::class, 1);
+        expect(DB::table('notification_logs')->where('related', 'order:'.$order->public_id)->count())->toBe(2);   // one record for each message, however often the event came
     });
 
-    it('does not lose the order when the SMS provider is down, and retries without a second email', function () {
+    it('does not lose the order when the SMS provider is down: the email still goes, the text is retried on its own, and staff can see it failed', function () {
         $this->sms->fail = true;
-        $order = ($this->placeOne)();   // the order is placed; only the message failed
+        $order = ($this->placeOne)();   // the order is placed; only the text message failed
         expect(Order::count())->toBe(1)->and($this->sms->sent())->toHaveCount(0);
-        Mail::assertNothingSent();
+        Mail::assertSent(NotificationMail::class, 1);   // the email does not wait for the text
+        $sms = DB::table('notification_logs')->where('related', 'order:'.$order->public_id)->where('channel', 'sms')->first();
+        expect($sms->status)->toBe('failed')->and((int) $sms->attempts)->toBe(1);
 
         $this->sms->fail = false;
-        $outboxId = (int) DB::table('outbox_messages')->where('event_name', 'orders.placed')->value('id');
-        $event = tap(new OrderPlaced($order->id, $order->public_id, $order->order_number, 'en'), fn ($e) => $e->outboxId = $outboxId);
-        app(SendOrderConfirmation::class)->handle($event);
-        app(SendOrderConfirmation::class)->handle($event);
+        $this->travel(2)->minutes();
+        app(DeliverDueNotifications::class)->handle();   // what the scheduler does every minute
+        app(DeliverDueNotifications::class)->handle();
 
         expect($this->sms->sent())->toHaveCount(1);
-        Mail::assertSent(OrderPlacedMail::class, 1);
+        Mail::assertSent(NotificationMail::class, 1);   // and no second email
+        expect(DB::table('notification_logs')->where('id', $sms->id)->value('status'))->toBe('sent');
     });
 
     it('writes the SMS in Bangla for a Bangla order, and sends no email without an address', function () {
@@ -335,6 +341,18 @@ describe('telling the customer', function () {
 
         expect($order->locale)->toBe('bn')->and($this->sms->sent())->toHaveCount(1)->and($this->sms->sent()[0]['message'])->toContain('অর্ডার')->toContain($order->order_number)->toContain('পৌঁছালে নগদ দিন');
         Mail::assertNothingSent();
+        expect(DB::table('notification_logs')->where('related', 'order:'.$order->public_id)->where('channel', 'email')->count())->toBe(0);   // not even tried, so staff are not shown a failure for a message nobody asked for
+    });
+
+    it('sends every order its own email and its own text, not one message for all orders', function () {
+        $first = ($this->placeOne)();
+        $second = ($this->placeOne)();
+
+        Mail::assertSent(NotificationMail::class, 2);
+        expect($this->sms->sent())->toHaveCount(2)->and($first->id)->not->toBe($second->id);
+        foreach ([$first, $second] as $order) {
+            expect(DB::table('notification_logs')->where('related', 'order:'.$order->public_id)->where('channel', 'email')->count())->toBe(1);
+        }
     });
 });
 
