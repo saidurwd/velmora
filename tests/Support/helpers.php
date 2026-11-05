@@ -12,17 +12,26 @@ use App\Modules\Catalog\DTOs\ProductData;
 use App\Modules\Catalog\DTOs\TranslationInput;
 use App\Modules\Catalog\DTOs\VariantData;
 use App\Modules\Catalog\Enums\ProductType;
+use App\Modules\Customers\Actions\SaveAddress;
+use App\Modules\Customers\Contracts\CustomerProfiles;
+use App\Modules\Customers\Database\Seeders\GeographySeeder;
+use App\Modules\Customers\DTOs\AddressInput;
 use App\Modules\DigitalProducts\Actions\UploadDigitalAsset;
 use App\Modules\DigitalProducts\Database\Seeders\RefundPolicySeeder;
+use App\Modules\IdentityAccess\Database\Seeders\RolesAndPermissionsSeeder;
+use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
 use App\Modules\IdentityAccess\Models\User;
 use App\Modules\Inventory\Contracts\StockInitialiser;
 use App\Modules\Inventory\Contracts\StockReservations;
 use App\Modules\Inventory\Database\Seeders\StockLocationSeeder;
+use App\Modules\Notifications\Actions\SaveMessagePreferences;
+use App\Modules\Notifications\Sms\FakeSmsGateway;
 use App\Modules\Orders\Actions\CreateOrder;
 use App\Modules\Orders\Actions\TransitionOrder;
 use App\Modules\Orders\DTOs\NewOrder;
 use App\Modules\Orders\DTOs\NewOrderAddress;
 use App\Modules\Orders\DTOs\NewOrderLine;
+use App\Modules\Orders\Enums\FulfillmentStatus;
 use App\Modules\Orders\Enums\OrderChannel;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Enums\PaymentStatus;
@@ -40,6 +49,7 @@ use App\Modules\Shipping\Database\Seeders\CourierSeeder;
 use App\Modules\Shipping\DTOs\CourierEvent;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
@@ -236,5 +246,47 @@ function bookingsWorld(object $t): void
         ];
 
         return DB::table('service_bookings')->insertGetId($row);
+    };
+}
+
+/**
+ * A shop with digital goods and a physical product (digitalWorld), the staff roles, the geography, fake mail and SMS, and the helpers to make customers who have
+ * everything a data export or an erasure must cover: a profile, an address, a paid digital order with its download right, a message choice.
+ */
+function privacyWorld(object $t): void
+{
+    digitalWorld($t);
+    $t->seed([RolesAndPermissionsSeeder::class, GeographySeeder::class]);
+    $t->withoutMiddleware(EnforceSessionPolicy::class);
+    Mail::fake();
+    config(['services.sms.driver' => 'fake']);
+    $t->sms = app(FakeSmsGateway::class);
+    $t->sms->fail = false;
+    $t->manager = catalogStaff(['privacy.view', 'privacy.manage']);
+    $t->viewer = catalogStaff(['privacy.view']);
+
+    /** @return array{user: User, customerId: int, order: object, right: object} */
+    $t->makeCustomer = function (string $name, string $email, string $phone) use ($t): array {
+        $user = User::factory()->create(['name' => $name, 'email' => $email, 'phone' => $phone, 'locale' => 'en']);
+        app(CustomerProfiles::class)->ensureForUser($user->id, $name, $email, $phone);
+        $customerId = (int) DB::table('customers')->where('user_id', $user->id)->value('id');
+        $dhaka = (int) DB::table('divisions')->where('name_en', 'Dhaka')->value('id');
+        $district = (int) DB::table('districts')->where('division_id', $dhaka)->where('name_en', 'Dhaka')->value('id');
+        $upazila = (int) DB::table('upazilas')->where('district_id', $district)->orderBy('id')->value('id');
+        app(SaveAddress::class)->handle($customerId, null, new AddressInput($name, '01712345678', $dhaka, $district, $upazila, 'House 5, Road 3 for '.$name, 'Mirpur 10'));
+        $order = ($t->place)([$t->book => 1], $user->id, $phone, $email);
+        ($t->pay)($order->id);
+        app(SaveMessagePreferences::class)->handle($user->id, ['email' => true, 'sms' => true], '22:00', '07:00');
+
+        return ['user' => $user, 'customerId' => $customerId, 'order' => $order, 'right' => DB::table('entitlements')->where('order_id', $order->id)->first()];
+    };
+    /** Signed in as the customer, with a sign-in confirmation from just now (or without). */
+    $t->as = fn (User $user, bool $confirmed = true) => $t->flushSession()->actingAs($user, 'web')->withSession($confirmed ? ['auth.recently_confirmed_at' => now()->getTimestamp()] : []);
+    /** Finishes an order the way staff would, so it no longer blocks an erasure. */
+    $t->finish = function (int $orderId): void {
+        $move = app(TransitionOrder::class);
+        $move->status(Actor::system('t'), $orderId, OrderStatus::Processing, 'test');
+        $move->fulfillment(Actor::system('t'), $orderId, FulfillmentStatus::Fulfilled, 'test');
+        $move->status(Actor::system('t'), $orderId, OrderStatus::Completed, 'test');
     };
 }

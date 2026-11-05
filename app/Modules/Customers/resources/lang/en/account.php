@@ -20,7 +20,7 @@ return [
         'name' => 'Full name',
         'birth_date' => 'Date of birth (optional)',
         'birth_help' => 'Used only for birthday offers if you opt in below.',
-        'marketing' => 'Send me offers and news by SMS and email. I can change this at any time.',
+        'marketing_moved' => 'Choose which offers and news you receive in Messages & preferences.',
         'save' => 'Save profile',
         'saved' => 'Your profile was saved.',
         'language' => 'Language',

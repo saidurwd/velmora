@@ -14,4 +14,6 @@ return [
     'account_library' => 'My downloads',
     'account_bookings' => 'My bookings',
     'account_security' => 'Sign-in & security',
+    'account_preferences' => 'Messages & preferences',
+    'account_privacy' => 'Privacy & your data',
 ];

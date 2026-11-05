@@ -9,6 +9,7 @@ use App\Modules\Notifications\Console\NotificationProbeCommand;
 use App\Modules\Notifications\Contracts\NotificationSender;
 use App\Modules\Notifications\Contracts\SmsGateway;
 use App\Modules\Notifications\Contracts\TemplateRegistry;
+use App\Modules\Notifications\Privacy\NotificationPersonalData;
 use App\Modules\Notifications\Services\TemplateCatalog;
 use App\Modules\Notifications\Sms\FakeSmsGateway;
 use App\Modules\Notifications\Sms\LogSmsGateway;
@@ -16,6 +17,7 @@ use App\Modules\Notifications\Sms\SslWirelessSmsGateway;
 use App\Modules\Notifications\Sms\UnconfiguredSmsGateway;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use App\Modules\Privacy\Contracts\PersonalDataRegistry;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -45,6 +47,10 @@ class NotificationsServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+        // This module's part of a customer's data export and erasure (the Privacy module asks every module for its own).
+        $registry = $this->app->make(PersonalDataRegistry::class);
+        $registry->addExporter(NotificationPersonalData::class);
+        $registry->addEraser(NotificationPersonalData::class, 50);
 
         $this->commands([NotificationProbeCommand::class]);
 

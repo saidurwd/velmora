@@ -215,16 +215,14 @@ describe('phone change', function () {
 });
 
 describe('profile', function () {
-    it('saves name, birthday and marketing consent with a consent timestamp', function () {
+    it('saves name and birthday, and does not decide marketing consent (that is one place only: /account/preferences)', function () {
         $user = signedIn($this);
 
         $this->put('/en/account/profile', ['name' => 'আমিনা রহমান', 'birth_date' => '১৯৯০-০৫-১৫', 'marketing_consent' => '1'])->assertSessionHas('status');
 
         $profile = DB::table('customers')->where('user_id', $user->id)->first();
-        expect($profile->name)->toBe('আমিনা রহমান')->and($profile->birth_date)->toBe('1990-05-15')->and((bool) $profile->marketing_consent)->toBeTrue()->and($profile->marketing_consent_at)->not->toBeNull();
-
-        $this->put('/en/account/profile', ['name' => 'Amina'])->assertSessionHas('status');
-        expect((bool) DB::table('customers')->where('user_id', $user->id)->value('marketing_consent'))->toBeFalse(); // unticked = withdrawn
+        expect($profile->name)->toBe('আমিনা রহমান')->and($profile->birth_date)->toBe('1990-05-15')->and((bool) $profile->marketing_consent)->toBeFalse()   // a field that is no longer part of this form is ignored
+            ->and(DB::table('notification_preferences')->where('user_id', $user->id)->count())->toBe(0);
     });
 
     it('rejects future dates and missing names', function () {

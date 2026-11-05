@@ -24,7 +24,7 @@ class ProfileController
 
         // The profile row is created from an outbox event; make sure it exists even if that has not been delivered yet.
         $profiles->ensureForUser($userId, null, $user?->email, $user?->phone);
-        $profiles->updateProfile($userId, (string) $request->validated('name'), $request->validated('birth_date'), $request->boolean('marketing_consent'));
+        $profiles->updateProfile($userId, (string) $request->validated('name'), $request->validated('birth_date'));
 
         return back()->with('status', __('customers::account.profile.saved'));
     }

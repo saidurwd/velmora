@@ -82,6 +82,8 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 | cart_items | cart_id FK cascade, variant_id FK, quantity CHECK>0 (cap 100 per line, 50 lines per cart, in the Action), added_price_minor CHECK≥0 (unit price last accepted: drives the change notice); UNIQUE(cart_id,variant_id) | |
 
 ## Orders
+
+> Erasure (Phase 9): `orders.anonymised_at` (set once). The three contact columns of an order may be replaced by the fixed placeholders `Deleted customer` / `erased` / NULL only in the same update that sets it; every other column stays frozen (trigger `orders_erasure_scrub_only`). `order_addresses` of an erased customer are scrubbed to the same placeholders; the district snapshot stays.
 | Table | Columns / constraints | Flags |
 |---|---|---|
 | orders | STD; placement_key char(64) NULL UNIQUE (sha256 of shopper + checkout form token: one order per checkout submission), order_number s20 UNIQUE (`VM-YYMM-NNNNNN` from SEQUENCE `order_number_seq`), user_id NULL FK users (NULL = guest checkout; may be set ONCE from NULL when the shopper adds the order to their account — trigger `orders_owner_set_once`; never changed afterwards), contact_name, contact_phone (E.164), contact_email NULL, status (pending/confirmed/processing/completed/cancelled), payment_status (unpaid/pending/paid/partially_refunded/refunded/failed), fulfillment_status (unfulfilled/partially_fulfilled/fulfilled/partially_returned/returned), needs_review b, channel (web/api/admin), locale, currency, subtotal_minor, discount_minor, shipping_minor, cod_fee_minor, tax_minor, grand_total_minor (all ≥0), tax_inclusive b, CHECK(grand_total_minor = subtotal_minor − discount_minor + shipping_minor + cod_fee_minor + IF(tax_inclusive,0,tax_minor)) (see BANGLADESH_LOCALIZATION §5), CHECK((status='cancelled') = (cancelled_at IS NOT NULL)), payment_method_code, shipping_method_code NULL, placed_at, cancelled_at, cancel_reason; idx(user_id,created_at),(status,created_at),(payment_status,created_at),(contact_phone),(needs_review). Trigger: only status, payment_status, fulfillment_status, needs_review, cancelled_at, cancel_reason, updated_at may change; DELETE refused | financial, no delete |
@@ -136,6 +138,8 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 | return_requests / return_items | STD; order_id, reason_code, status, inspection_outcome (restock/quarantine/write_off), photos | |
 
 ## Digital Products
+
+> Erasure (Phase 9): `download_logs.ip` and `user_agent` may be cleared to NULL and never changed to anything else (trigger `download_logs_clear_only`).
 | Table | Columns / constraints |
 |---|---|
 | digital_assets | **As built (Phase 8, slice 1):** id, public_id, variant_id FK UNIQUE (one asset per variant), download_limit NULL (NULL = shop default), access_days NULL (NULL = no expiry), created_by; CHECKs ≥1 |
@@ -172,6 +176,8 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 | notification_template_versions | template_id FK, locale FK, version, subject (email), body, created_by, created_at; UNIQUE (template_id, locale, version); **AO**; the current words of a language are its highest version |
 | notification_logs | public_id, idempotency_key UNIQUE (code + event key), template_code, channel, kind, locale, recipient_masked, user_id NULL, related, status (queued/sending/sent/failed/dead/skipped), skip_reason, attempts, next_attempt_at, claimed_at, sent_at, template_version, provider_ref, last_error (a code, never a payload), payload (ENCRYPTED address + values; erased once sent, or after the retention period when dead); idx (status, next_attempt_at) |
 | notification_preferences | user_id FK, channel, marketing_opt_in, quiet_from/quiet_to (both or neither), opted_at, source; UNIQUE (user_id, channel) |
+| notification_consent_events | user_id FK, channel (email/sms), granted, source (account/checkout/staff/link), created_at; **append-only**; one row each time a customer's marketing yes/no CHANGES (the current answer is in notification_preferences); identifies nobody once the account is erased |
+| privacy_requests | public_id, user_id FK, type (export/erasure), status (export: requested/ready/failed/expired; erasure: requested/approved/rejected/cancelled/blocked/done; moves enforced by trigger), open_key UNIQUE (`<user>:<type>` while open, NULL when closed: one open request of each kind per customer), locale, reason, decision_reason, decided_by FK, failure (codes only), file_key (encrypted export on the private disk), requested/decided/completed/expires_at |
 | (cart_items) | also `hold_ref` (the held slot a booking line stands for; NULL for products) |
 | booking_requirements | booking_id, field_key, value, attachment_path |
 | booking_events | booking_id, event, actor, at, note | **AO** |

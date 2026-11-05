@@ -19,6 +19,16 @@ final class EloquentCustomerProfiles implements CustomerProfiles
         return $customer ? $this->dto($customer) : null;
     }
 
+    public function findManyByUserIds(array $userIds): array
+    {
+        $out = [];
+        foreach (Customer::query()->whereIn('user_id', $userIds)->get() as $customer) {   // unique user_id
+            $out[(int) $customer->user_id] = $this->dto($customer);
+        }
+
+        return $out;
+    }
+
     public function ensureForUser(int $userId, ?string $name, ?string $email, ?string $phone): CustomerProfile
     {
         $existing = Customer::query()->where('user_id', $userId)->first();
@@ -42,22 +52,18 @@ final class EloquentCustomerProfiles implements CustomerProfiles
         Customer::query()->where('user_id', $userId)->update(['name' => $name]);
     }
 
-    public function updateProfile(int $userId, string $name, ?string $birthDate, bool $marketingConsent): void
+    public function updateProfile(int $userId, string $name, ?string $birthDate): void
     {
         $customer = Customer::query()->where('user_id', $userId)->firstOrFail();
 
         $customer->name = $name;
         $customer->birth_date = $birthDate === null ? null : CarbonImmutable::parse($birthDate);
 
-        if ((bool) $customer->marketing_consent !== $marketingConsent) {
-            $customer->forceFill(['marketing_consent' => $marketingConsent, 'marketing_consent_at' => now('UTC')]);
-        }
-
         $customer->save();
     }
 
     private function dto(Customer $c): CustomerProfile
     {
-        return new CustomerProfile($c->public_id, $c->name, $c->email, $c->phone, (bool) $c->marketing_consent, $c->birth_date?->toDateString());
+        return new CustomerProfile($c->public_id, $c->name, $c->email, $c->phone, $c->birth_date?->toDateString());
     }
 }

@@ -10,10 +10,12 @@ use App\Modules\Cart\Contracts\CartReader;
 use App\Modules\Cart\Contracts\CartWriter;
 use App\Modules\Cart\Contracts\HeldCartLines;
 use App\Modules\Cart\Listeners\MergeGuestCartOnLogin;
+use App\Modules\Cart\Privacy\CartPersonalData;
 use App\Modules\Cart\Services\CartBuilder;
 use App\Modules\Cart\Services\CartOwners;
 use App\Modules\Cart\Services\DatabaseHeldCartLines;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use App\Modules\Privacy\Contracts\PersonalDataRegistry;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Event;
 
@@ -35,6 +37,9 @@ class CartServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+        // This module's part of a customer's data export and erasure (the Privacy module asks every module for its own).
+        $registry = $this->app->make(PersonalDataRegistry::class);
+        $registry->addEraser(CartPersonalData::class, 40);
 
         Event::listen(Login::class, [MergeGuestCartOnLogin::class, 'handle']);
     }

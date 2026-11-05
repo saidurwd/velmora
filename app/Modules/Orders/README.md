@@ -11,3 +11,4 @@ Rules worth knowing:
 
 Cross-module use is limited to Contracts, DTOs, Enums and Events (BD-11).
 * Phase 9, slice 1b: order messages (placed, cash-on-delivery placed, shipped, delivered, cancelled, refunded) are templates in `Notifications/OrderTemplates`, sent through `Services/OrderMessages` → `NotificationSender` in the order's language. `CustomerSms` and `OrderPlacedMail` are gone. Delivery is queued: production needs the queue worker and the scheduler.
+* Phase 9, slice 2: `Privacy/OrderPersonalData` exports a customer's orders and, on erasure, replaces the contact and delivery address by fixed placeholders (allowed by the `orders_erasure_scrub_only` trigger only as exact placeholders, once, with `anonymised_at`); amounts, items and tax are never touched. An order that is pending, confirmed or processing blocks erasure.

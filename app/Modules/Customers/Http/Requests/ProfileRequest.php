@@ -30,7 +30,6 @@ class ProfileRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:150'],
             'birth_date' => ['nullable', 'date_format:Y-m-d', 'before:today', 'after:1900-01-01'],
-            'marketing_consent' => ['sometimes', 'boolean'],
         ];
     }
 }

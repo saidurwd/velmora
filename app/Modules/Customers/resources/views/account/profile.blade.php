@@ -10,10 +10,7 @@
         @csrf @method('PUT')
         <x-platform::form.field name="name" :value="$profile?->name" :label="__('customers::account.profile.name')" autocomplete="name" required />
         <x-platform::form.field name="birth_date" type="date" :value="$profile?->birthDate" :label="__('customers::account.profile.birth_date')" :help="__('customers::account.profile.birth_help')" autocomplete="bday" />
-        <label class="flex items-start gap-2">
-            <input type="checkbox" name="marketing_consent" value="1" @checked(old('marketing_consent', $profile?->marketingConsent)) class="mt-1 size-4">
-            <span>{{ __('customers::account.profile.marketing') }}</span>
-        </label>
+        <p class="text-sm"><a class="underline" href="{{ route('account.preferences') }}">{{ __('customers::account.profile.marketing_moved') }}</a></p>
         <x-platform::form.button>{{ __('customers::account.profile.save') }}</x-platform::form.button>
     </form>
 

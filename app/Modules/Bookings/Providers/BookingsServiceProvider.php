@@ -14,6 +14,7 @@ use App\Modules\Bookings\Listeners\ConfirmBookingsForPaidOrder;
 use App\Modules\Bookings\Listeners\EndBookingsOfRefundedOrder;
 use App\Modules\Bookings\Listeners\ReleaseBookingsForCancelledOrder;
 use App\Modules\Bookings\Notifications\BookingTemplates;
+use App\Modules\Bookings\Privacy\BookingPersonalData;
 use App\Modules\Bookings\Services\DatabaseCancellationPolicyTexts;
 use App\Modules\Notifications\Contracts\TemplateRegistry;
 use App\Modules\Orders\Events\OrderCancelled;
@@ -22,6 +23,7 @@ use App\Modules\Orders\Events\OrderRefunded;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use App\Modules\Privacy\Contracts\PersonalDataRegistry;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -43,6 +45,10 @@ class BookingsServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+        // This module's part of a customer's data export and erasure (the Privacy module asks every module for its own).
+        $registry = $this->app->make(PersonalDataRegistry::class);
+        $registry->addExporter(BookingPersonalData::class);
+        $registry->addEraser(BookingPersonalData::class, 30);
 
         $this->commands([BookingProbeCommand::class]);
         foreach (BookingTemplates::all() as $template) {

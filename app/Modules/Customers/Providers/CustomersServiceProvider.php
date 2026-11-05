@@ -9,12 +9,14 @@ use App\Modules\Customers\Contracts\AddressChecker;
 use App\Modules\Customers\Contracts\CustomerProfiles;
 use App\Modules\Customers\Contracts\Geography;
 use App\Modules\Customers\Listeners\CreateCustomerProfile;
+use App\Modules\Customers\Privacy\CustomerPersonalData;
 use App\Modules\Customers\Services\DatabaseGeography;
 use App\Modules\Customers\Services\EloquentAddressBook;
 use App\Modules\Customers\Services\EloquentCustomerProfiles;
 use App\Modules\Customers\Services\ValidatingAddressChecker;
 use App\Modules\IdentityAccess\Events\UserRegistered;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use App\Modules\Privacy\Contracts\PersonalDataRegistry;
 use Illuminate\Support\Facades\Event;
 
 class CustomersServiceProvider extends ModuleServiceProvider
@@ -35,6 +37,10 @@ class CustomersServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+        // This module's part of a customer's data export and erasure (the Privacy module asks every module for its own).
+        $registry = $this->app->make(PersonalDataRegistry::class);
+        $registry->addExporter(CustomerPersonalData::class);
+        $registry->addEraser(CustomerPersonalData::class, 60);
 
         Event::listen(UserRegistered::class, [CreateCustomerProfile::class, 'handle']);
     }

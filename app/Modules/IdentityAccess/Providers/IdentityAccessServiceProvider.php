@@ -22,12 +22,14 @@ use App\Modules\IdentityAccess\Listeners\TrackSession;
 use App\Modules\IdentityAccess\Mfa\PendingStaffLogin;
 use App\Modules\IdentityAccess\Otp\CheckoutPhoneConfirmation;
 use App\Modules\IdentityAccess\Permissions\SuperAdminBypass;
+use App\Modules\IdentityAccess\Privacy\AccountPersonalData;
 use App\Modules\IdentityAccess\Support\DatabaseStaffDirectory;
 use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\Events\LocaleChosen;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use App\Modules\Privacy\Contracts\PersonalDataRegistry;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Routing\Router;
@@ -58,6 +60,10 @@ class IdentityAccessServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+        // This module's part of a customer's data export and erasure (the Privacy module asks every module for its own).
+        $registry = $this->app->make(PersonalDataRegistry::class);
+        $registry->addExporter(AccountPersonalData::class);
+        $registry->addEraser(AccountPersonalData::class, 100);
 
         Event::listen(LocaleChosen::class, [SaveUserLocale::class, 'handle']);
         Event::listen(Login::class, [TrackSession::class, 'onLogin']);

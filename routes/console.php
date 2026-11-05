@@ -21,6 +21,7 @@ use App\Modules\Payments\Jobs\ExpireUnpaidPaymentsJob;
 use App\Modules\Payments\Jobs\PollRefundsJob;
 use App\Modules\Payments\Jobs\ReconcilePendingPaymentsJob;
 use App\Modules\Platform\Jobs\DispatchOutboxMessages;
+use App\Modules\Privacy\Jobs\ExpireExportsJob;
 use App\Modules\Search\Jobs\PruneSearchQueries;
 use App\Modules\Shipping\Jobs\CheckShippingHealthJob;
 use App\Modules\Shipping\Jobs\PollCourierShipmentsJob;
@@ -36,6 +37,7 @@ Artisan::command('inspire', function () {
 Schedule::job(new DispatchOutboxMessages)->everyMinute()->name('outbox:dispatch')->withoutOverlapping();
 Schedule::call(fn () => Cache::put('scheduler:heartbeat', now()->toIso8601String(), 600))->everyMinute()->name('scheduler:heartbeat');
 Schedule::job(new PurgeExpiredOtpChallenges)->dailyAt('03:15')->name('otp:purge');
+Schedule::job(new ExpireExportsJob)->dailyAt('03:20')->name('privacy:expire-exports');   // deletes data copies past their date
 Schedule::job(new ReconcileListing)->everyMinute()->name('catalog:reconcile-listing')->withoutOverlapping();
 Schedule::job(new PruneSearchQueries)->dailyAt('03:10')->name('search:prune-queries');
 Schedule::job(new GenerateSitemaps)->dailyAt('04:00')->name('seo:sitemaps');

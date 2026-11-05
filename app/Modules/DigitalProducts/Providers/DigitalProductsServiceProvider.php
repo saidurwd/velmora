@@ -13,6 +13,7 @@ use App\Modules\DigitalProducts\Listeners\RevokeForRefundedOrder;
 use App\Modules\DigitalProducts\Models\Entitlement;
 use App\Modules\DigitalProducts\Notifications\DigitalTemplates;
 use App\Modules\DigitalProducts\Policies\EntitlementPolicy;
+use App\Modules\DigitalProducts\Privacy\DigitalPersonalData;
 use App\Modules\DigitalProducts\Services\DatabaseRefundPolicyTexts;
 use App\Modules\Notifications\Contracts\TemplateRegistry;
 use App\Modules\Orders\Events\OrderPaid;
@@ -20,6 +21,7 @@ use App\Modules\Orders\Events\OrderRefunded;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use App\Modules\Privacy\Contracts\PersonalDataRegistry;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -41,6 +43,10 @@ class DigitalProductsServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+        // This module's part of a customer's data export and erasure (the Privacy module asks every module for its own).
+        $registry = $this->app->make(PersonalDataRegistry::class);
+        $registry->addExporter(DigitalPersonalData::class);
+        $registry->addEraser(DigitalPersonalData::class, 30);
 
         $this->commands([DigitalProbeCommand::class]);
         Gate::policy(Entitlement::class, EntitlementPolicy::class);

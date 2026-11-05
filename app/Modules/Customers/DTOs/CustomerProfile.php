@@ -11,7 +11,6 @@ final readonly class CustomerProfile
         public ?string $name,
         public ?string $email,
         public ?string $phone,
-        public bool $marketingConsent,
         public ?string $birthDate = null,
     ) {}
 }

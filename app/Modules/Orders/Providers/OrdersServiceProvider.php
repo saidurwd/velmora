@@ -23,6 +23,7 @@ use App\Modules\Orders\Listeners\ApplyPaymentEvent;
 use App\Modules\Orders\Listeners\ApplyShipmentEvent;
 use App\Modules\Orders\Listeners\SendOrderConfirmation;
 use App\Modules\Orders\Notifications\OrderTemplates;
+use App\Modules\Orders\Privacy\OrderPersonalData;
 use App\Modules\Orders\Services\CodPaymentInitiator;
 use App\Modules\Orders\Services\DatabaseCodOrders;
 use App\Modules\Orders\Services\DatabaseCustomerOrders;
@@ -41,6 +42,7 @@ use App\Modules\Payments\Events\RefundSucceeded;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use App\Modules\Privacy\Contracts\PersonalDataRegistry;
 use App\Modules\Shipping\Events\ShipmentDelivered;
 use App\Modules\Shipping\Events\ShipmentFailed;
 use App\Modules\Shipping\Events\ShipmentHandedOver;
@@ -70,6 +72,10 @@ class OrdersServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+        // This module's part of a customer's data export and erasure (the Privacy module asks every module for its own).
+        $registry = $this->app->make(PersonalDataRegistry::class);
+        $registry->addExporter(OrderPersonalData::class);
+        $registry->addEraser(OrderPersonalData::class, 20);
 
         $this->commands([OrderProbeCommand::class, PlaceOrderProbeCommand::class, AccountProbeCommand::class]);
         $this->app->make(OutboxRegistry::class)->register(OrderPlaced::class);

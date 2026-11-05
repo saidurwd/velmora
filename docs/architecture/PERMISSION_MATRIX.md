@@ -34,6 +34,8 @@ Default grants for the seeded roles. Roles are created once; administrators may 
 | `bookings.manage` | ✔ | ✔ |  |  |  |  |  |  |  |
 | `notifications.view` | ✔ | ✔ |  |  |  |  |  |  |  |
 | `notifications.manage` | ✔ | ✔ |  |  |  |  |  |  |  |
+| `privacy.view` | ✔ | ✔ |  |  |  |  |  |  |  |
+| `privacy.manage` ⚠ | ✔ | ✔ |  |  |  |  |  |  |  |
 | `orders.view` | ✔ | ✔ |  | ✔ | ✔ | ✔ | ✔ |  | ✔ |
 | `orders.update` | ✔ | ✔ |  | ✔ |  |  |  |  |  |
 | `orders.cancel` | ✔ | ✔ |  | ✔ |  |  |  |  |  |
