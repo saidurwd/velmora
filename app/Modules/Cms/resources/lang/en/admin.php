@@ -17,6 +17,11 @@ return [
         'starts' => 'Show from', 'ends' => 'Show until', 'dhaka' => 'Dhaka time. Leave blank for no limit.',
     ],
     'errors' => [
+        'faq_invalid' => 'Choose a topic from the list.',
+        'faq_half' => 'Give both a question and an answer for each language you fill in.',
+        'faq_default_required' => 'The English question and answer are required.',
+        'faq_not_found' => 'That question was not found.',
+
         'default_language_required' => 'The :locale version is required.', 'unsupported_language' => 'Language “:locale” is not supported.',
         'not_publishable_content' => 'A page needs a title and content in the default language before it can be published.', 'not_publishable_future' => 'The scheduled time must be in the future.',
         'unsafe_link' => 'The link must be a page on this site (starting with /) or an https:// address.', 'bad_window' => 'The end time must be after the start time.', 'placement_invalid' => 'Choose where the banner appears.',

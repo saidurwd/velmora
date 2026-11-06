@@ -34,5 +34,6 @@ class CmsServiceProvider extends ModuleServiceProvider
         $menu = $this->app->make(AdminMenu::class);
         $menu->add('cms::admin.menu.pages', 'admin.cms.pages.index', 'cms.view', 60);
         $menu->add('cms::admin.menu.banners', 'admin.cms.banners.index', 'cms.view', 61);
+        $menu->add('cms::faq.menu', 'admin.cms.faq.index', 'cms.view', 62);
     }
 }

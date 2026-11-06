@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Modules\Cms\Http\Controllers\Web\HelpController;
 use App\Modules\Cms\Http\Controllers\Web\PageController;
 use App\Modules\Cms\Http\Controllers\Web\SeoFilesController;
 use Illuminate\Support\Facades\Route;
 
 Route::localized(function (): void {
+    Route::get('/help', [HelpController::class, 'show'])->middleware('throttle:public-read')->name('help');
     Route::get('/pages/{slug}', [PageController::class, 'show'])->middleware('cache.headers:private;max_age=0;must_revalidate;etag')->name('cms.page');
 });
 

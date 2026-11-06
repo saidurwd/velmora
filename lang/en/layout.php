@@ -17,6 +17,7 @@ return [
     'account_wishlist' => 'My wishlist',
     'account_reviews' => 'My reviews',
     'account_returns' => 'My returns',
+    'account_support' => 'Help from us',
     'account_preferences' => 'Messages & preferences',
     'account_privacy' => 'Privacy & your data',
 ];

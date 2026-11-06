@@ -194,7 +194,10 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 | product_rating_stats | product_id PK FK, stars_1 … stars_5 counts of PUBLISHED reviews; changed with conditional updates in the same transaction as the decision that publishes or removes a review (never recomputed over all reviews); count and average are derived |
 | wishlist_items | user_id FK, variant_id FK, created_at; UNIQUE (user_id, variant_id); a signed-in customer only (no guest wishlist); capped by `engagement.wishlist_max` (200) |
 | stock_alerts | user_id FK, variant_id FK, status (pending/notified; CHECK ties it to notified_at), locale, created_at, notified_at; UNIQUE (user_id, variant_id); index (status, variant_id, id) serves the five-minute run |
-| support_tickets / support_messages / support_attachments | status, assignee_id, order_id NULL, sla_due_at; canned_replies(+translations) |
+| support_tickets | public_id, reference (a short random code the customer quotes, UNIQUE), user_id FK (customers only), order_id NULL FK (one of the customer's own), subject, category (order/delivery/payment/return/account/other), status (open/answered/closed; moves enforced by trigger; closed ⇔ closed_at), assignee_id NULL FK, locale, sla_due_at (first answer due), first_responded_at, last_message_at, closed_at; deleted on the customer's erasure |
+| support_messages | public_id, ticket_id FK, author_type (customer/staff), author_id FK, body (≤5,000), is_internal (a note for staff only: never shown to the customer; CHECK staff-only), created_at; never edited; deleted with the ticket on erasure |
+| support_attachments | public_id, message_id FK, original_name (cleaned), mime (image/webp re-encoded, or application/pdf), size_bytes, storage_key UNIQUE (random key on the private disk); deleted with its file on erasure |
+| canned_replies / canned_reply_translations | public_id, is_active, sort_order; per language title (≤80) and plain-text body (≤2,000) with {{ customer }} and {{ order }} filled in when chosen; UNIQUE (reply, locale) |
 | notification_templates (+versions) | event_key, channel, locale, subject, body, is_active, version |
 | notification_logs | channel, recipient_hash, template_key, status, provider_ref, cost_minor, attempts, error, sent_at (no PII body) |
 | notification_preferences | customer_id, channel, category, opted_in |
@@ -202,6 +205,8 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 | data_requests | customer_id, type (export/delete), status, approved_by |
 
 ## CMS, Search, Integrations, Reporting
+
+> Phase 9 slice 6: `faq_entries` — public_id, category (orders/delivery/payment/returns/account/other), sort_order, is_published, created_by; `faq_entry_translations` — per language question (≤200) and plain-text answer (≤4,000), UNIQUE (entry, locale). Shown on `/help`; a new entry starts hidden and showing it needs `cms.publish`.
 | Table | Columns |
 |---|---|
 | cms_pages (+translations) | STD; slug via translation, status, publish_at; SD |

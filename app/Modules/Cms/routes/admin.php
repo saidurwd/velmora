@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Cms\Http\Controllers\Admin\BannerController;
+use App\Modules\Cms\Http\Controllers\Admin\FaqController;
 use App\Modules\Cms\Http\Controllers\Admin\PageController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +17,15 @@ Route::middleware(['auth:admin', 'session.policy:admin'])->prefix('cms')->name('
         Route::put('/{page}', [PageController::class, 'update'])->middleware('permission:cms.edit')->name('update');
         Route::post('/{page}/transition', [PageController::class, 'transition'])->middleware('permission:cms.publish')->name('transition');
         Route::delete('/{page}', [PageController::class, 'destroy'])->middleware('permission:cms.edit')->name('destroy');
+    });
+
+    Route::prefix('faq')->name('faq.')->group(function (): void {
+        Route::get('/', [FaqController::class, 'index'])->middleware('permission:cms.view')->name('index');
+        Route::get('/create', [FaqController::class, 'create'])->middleware('permission:cms.edit')->name('create');
+        Route::post('/', [FaqController::class, 'save'])->middleware(['permission:cms.edit', 'throttle:60,1'])->name('store');
+        Route::get('/{entry}/edit', [FaqController::class, 'edit'])->whereAlphaNumeric('entry')->middleware('permission:cms.view')->name('edit');
+        Route::put('/{entry}', [FaqController::class, 'save'])->whereAlphaNumeric('entry')->middleware(['permission:cms.edit', 'throttle:60,1'])->name('update');
+        Route::delete('/{entry}', [FaqController::class, 'destroy'])->whereAlphaNumeric('entry')->middleware(['permission:cms.edit', 'throttle:60,1'])->name('destroy');
     });
 
     Route::prefix('banners')->name('banners.')->group(function (): void {

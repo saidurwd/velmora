@@ -23,6 +23,14 @@ final class EngagementTemplates
                 'en' => [null, '{{ shop }}: {{ product }} is back in stock. {{ link }}'],
                 'bn' => [null, '{{ shop }}: {{ product }} আবার স্টকে এসেছে। {{ link }}'],
             ], $sample),
+            new TemplateDefinition('support.reply_received.email', 'email', 'transactional', ['shop', 'reference', 'link'], [
+                'en' => ['We have answered your message ({{ reference }})', "We have answered your message ({{ reference }})\n\nOur team has replied to your support request. Open it to read the answer and reply.\n\n{{ link }}\n\n{{ shop }}"],
+                'bn' => ['আপনার বার্তার উত্তর দিয়েছি ({{ reference }})', "আপনার বার্তার উত্তর দিয়েছি ({{ reference }})\n\nআমাদের দল আপনার সহায়তার অনুরোধের উত্তর দিয়েছে। উত্তর পড়তে ও জবাব দিতে এটি খুলুন।\n\n{{ link }}\n\n{{ shop }}"],
+            ], ['shop' => 'Velmora', 'reference' => 'K7M2-Q9XD', 'link' => 'https://example.com/en/account/support/x']),
+            new TemplateDefinition('support.reply_received.sms', 'sms', 'transactional', ['shop', 'reference', 'link'], [
+                'en' => [null, '{{ shop }}: we have answered your message {{ reference }}. Read it: {{ link }}'],
+                'bn' => [null, '{{ shop }}: আপনার বার্তা {{ reference }} এর উত্তর দিয়েছি। পড়ুন: {{ link }}'],
+            ], ['shop' => 'Velmora', 'reference' => 'K7M2-Q9XD', 'link' => 'https://example.com/en/account/support/x']),
         ];
     }
 }

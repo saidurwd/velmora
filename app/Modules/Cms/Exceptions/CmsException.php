@@ -54,4 +54,24 @@ final class CmsException extends DomainException
     {
         return new self('image_'.$reason);
     }
+
+    public static function faqInvalid(): self
+    {
+        return new self('faq_invalid');
+    }
+
+    public static function faqHalf(): self
+    {
+        return new self('faq_half');
+    }
+
+    public static function faqDefaultRequired(): self
+    {
+        return new self('faq_default_required');
+    }
+
+    public static function faqNotFound(): self
+    {
+        return new self('faq_not_found');
+    }
 }

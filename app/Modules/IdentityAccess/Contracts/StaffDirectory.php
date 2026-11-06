@@ -12,4 +12,11 @@ interface StaffDirectory
      * @return array<int, string> keyed by user id
      */
     public function names(array $userIds): array;
+
+    /**
+     * The staff who hold a permission (through any role), for pick-lists such as "assign to". Names only.
+     *
+     * @return array<int, string> keyed by user id
+     */
+    public function withPermission(string $permission): array;
 }

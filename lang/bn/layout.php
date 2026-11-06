@@ -17,6 +17,7 @@ return [
     'account_wishlist' => 'আমার উইশলিস্ট',
     'account_reviews' => 'আমার রিভিউ',
     'account_returns' => 'আমার ফেরত',
+    'account_support' => 'আমাদের সহায়তা',
     'account_preferences' => 'বার্তা ও পছন্দ',
     'account_privacy' => 'গোপনীয়তা ও আপনার তথ্য',
 ];
