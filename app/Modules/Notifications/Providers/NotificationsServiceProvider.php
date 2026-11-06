@@ -6,10 +6,12 @@ namespace App\Modules\Notifications\Providers;
 
 use App\Modules\Notifications\Actions\SendNotification;
 use App\Modules\Notifications\Console\NotificationProbeCommand;
+use App\Modules\Notifications\Contracts\MarketingConsent;
 use App\Modules\Notifications\Contracts\NotificationSender;
 use App\Modules\Notifications\Contracts\SmsGateway;
 use App\Modules\Notifications\Contracts\TemplateRegistry;
 use App\Modules\Notifications\Privacy\NotificationPersonalData;
+use App\Modules\Notifications\Services\DatabaseMarketingConsent;
 use App\Modules\Notifications\Services\TemplateCatalog;
 use App\Modules\Notifications\Sms\FakeSmsGateway;
 use App\Modules\Notifications\Sms\LogSmsGateway;
@@ -35,6 +37,7 @@ class NotificationsServiceProvider extends ModuleServiceProvider
         $this->app->singleton(TemplateCatalog::class);
         $this->app->bind(TemplateRegistry::class, TemplateCatalog::class);
         $this->app->bind(NotificationSender::class, SendNotification::class);
+        $this->app->bind(MarketingConsent::class, DatabaseMarketingConsent::class);
 
         $this->app->bind(SmsGateway::class, fn ($app) => match ($driver = (string) config('services.sms.driver', 'log')) {
             'log' => new LogSmsGateway,

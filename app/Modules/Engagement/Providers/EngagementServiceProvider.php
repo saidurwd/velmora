@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Engagement\Providers;
 
+use App\Modules\Engagement\Notifications\CartReminderTemplates;
 use App\Modules\Engagement\Notifications\EngagementTemplates;
 use App\Modules\Engagement\Privacy\EngagementPersonalData;
 use App\Modules\Engagement\Privacy\SupportPersonalData;
@@ -46,7 +47,7 @@ class EngagementServiceProvider extends ModuleServiceProvider
         $registry->addExporter(SupportPersonalData::class);
         $registry->addEraser(SupportPersonalData::class, 45);
 
-        foreach (EngagementTemplates::all() as $template) {
+        foreach ([...EngagementTemplates::all(), ...CartReminderTemplates::all()] as $template) {
             $this->app->make(TemplateRegistry::class)->register($template);   // the messages this module sends; staff change their words
         }
     }

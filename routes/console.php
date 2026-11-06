@@ -12,6 +12,7 @@ use App\Modules\Cms\Jobs\GenerateSitemaps;
 use App\Modules\DigitalProducts\Jobs\CheckKeyStockJob;
 use App\Modules\Engagement\Jobs\CheckSupportHealthJob;
 use App\Modules\Engagement\Jobs\NotifyBackInStockJob;
+use App\Modules\Engagement\Jobs\SendCartRemindersJob;
 use App\Modules\IdentityAccess\Jobs\PurgeExpiredOtpChallenges;
 use App\Modules\Inventory\Jobs\ExpireReservationsJob;
 use App\Modules\Inventory\Jobs\VerifyStockLedger;
@@ -40,6 +41,7 @@ Schedule::job(new DispatchOutboxMessages)->everyMinute()->name('outbox:dispatch'
 Schedule::call(fn () => Cache::put('scheduler:heartbeat', now()->toIso8601String(), 600))->everyMinute()->name('scheduler:heartbeat');
 Schedule::job(new PurgeExpiredOtpChallenges)->dailyAt('03:15')->name('otp:purge');
 Schedule::job(new NotifyBackInStockJob)->everyFiveMinutes()->name('engagement:back-in-stock')->withoutOverlapping();   // tells people who asked when an item is back
+Schedule::job(new SendCartRemindersJob)->everyFifteenMinutes()->name('engagement:cart-reminders')->withoutOverlapping();   // reminds opted-in customers about a forgotten cart (does nothing unless CART_RECOVERY_ENABLED)
 Schedule::job(new CheckSupportHealthJob)->hourly()->name('support:health');   // writes one error line when tickets were not answered in time
 Schedule::job(new ExpireExportsJob)->dailyAt('03:20')->name('privacy:expire-exports');   // deletes data copies past their date
 Schedule::job(new ReconcileListing)->everyMinute()->name('catalog:reconcile-listing')->withoutOverlapping();

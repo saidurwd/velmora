@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Cart\Providers;
 
 use App\Modules\Cart\Actions\ClearCart;
+use App\Modules\Cart\Contracts\AbandonedCarts;
 use App\Modules\Cart\Contracts\CartFiller;
 use App\Modules\Cart\Contracts\CartOwnerResolver;
 use App\Modules\Cart\Contracts\CartReader;
@@ -15,6 +16,7 @@ use App\Modules\Cart\Privacy\CartPersonalData;
 use App\Modules\Cart\Services\CartBuilder;
 use App\Modules\Cart\Services\CartLineFiller;
 use App\Modules\Cart\Services\CartOwners;
+use App\Modules\Cart\Services\DatabaseAbandonedCarts;
 use App\Modules\Cart\Services\DatabaseHeldCartLines;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use App\Modules\Privacy\Contracts\PersonalDataRegistry;
@@ -34,6 +36,7 @@ class CartServiceProvider extends ModuleServiceProvider
         $this->app->bind(CartOwnerResolver::class, CartOwners::class);
         $this->app->bind(CartWriter::class, ClearCart::class);
         $this->app->bind(CartFiller::class, CartLineFiller::class);
+        $this->app->bind(AbandonedCarts::class, DatabaseAbandonedCarts::class);
         $this->app->bind(HeldCartLines::class, DatabaseHeldCartLines::class);
     }
 

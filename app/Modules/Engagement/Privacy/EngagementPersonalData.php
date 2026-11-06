@@ -31,6 +31,7 @@ final class EngagementPersonalData implements PersonalDataEraser, PersonalDataEx
         return [
             'saved' => $saved->map(fn ($r) => ['item' => $name((int) $r->variant_id), 'saved_at' => $r->created_at])->all(),
             'reviews' => $reviews->map(fn ($r) => ['item' => $name((int) $r->variant_id), 'rating' => (int) $r->rating, 'title' => $r->title, 'text' => $r->body, 'status' => $r->status, 'written_at' => $r->created_at])->all(),
+            'cart_reminders' => DB::table('cart_recovery_messages')->where('user_id', $userId)->orderBy('id')->get(['channel', 'created_at'])->map(fn ($r) => ['channel' => $r->channel, 'sent_at' => $r->created_at])->all(),   // index (user_id, created_at)
             'stock_alerts' => $alerts->map(fn ($r) => ['item' => $name((int) $r->variant_id), 'status' => $r->status, 'asked_at' => $r->created_at, 'told_at' => $r->notified_at])->all(),
         ];
     }
@@ -44,6 +45,7 @@ final class EngagementPersonalData implements PersonalDataEraser, PersonalDataEx
     {
         DB::table('wishlist_items')->where('user_id', $userId)->delete();
         DB::table('stock_alerts')->where('user_id', $userId)->delete();
+        DB::table('cart_recovery_messages')->where('user_id', $userId)->delete();
         foreach (DB::table('reviews')->where('user_id', $userId)->get(['id', 'product_id', 'rating', 'status']) as $review) {
             if ($review->status === 'published') {
                 $this->stats->remove((int) $review->product_id, (int) $review->rating);
