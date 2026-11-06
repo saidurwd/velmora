@@ -15,6 +15,7 @@ return [
     'account_bookings' => 'My bookings',
     'account_security' => 'Sign-in & security',
     'account_wishlist' => 'My wishlist',
+    'account_reviews' => 'My reviews',
     'account_preferences' => 'Messages & preferences',
     'account_privacy' => 'Privacy & your data',
 ];

@@ -14,6 +14,7 @@ use App\Modules\Orders\Contracts\DigitalOrderLines;
 use App\Modules\Orders\Contracts\OrderDirectory;
 use App\Modules\Orders\Contracts\OrderFulfilment;
 use App\Modules\Orders\Contracts\OrderPayables;
+use App\Modules\Orders\Contracts\PurchasedLines;
 use App\Modules\Orders\Contracts\ServiceOrderLines;
 use App\Modules\Orders\Events\OrderCancelled;
 use App\Modules\Orders\Events\OrderPaid;
@@ -31,6 +32,7 @@ use App\Modules\Orders\Services\DatabaseDigitalOrderLines;
 use App\Modules\Orders\Services\DatabaseOrderDirectory;
 use App\Modules\Orders\Services\DatabaseOrderFulfilment;
 use App\Modules\Orders\Services\DatabaseOrderPayables;
+use App\Modules\Orders\Services\DatabasePurchasedLines;
 use App\Modules\Orders\Services\DatabaseServiceOrderLines;
 use App\Modules\Orders\Services\PaymentInitiators;
 use App\Modules\Payments\Events\PaymentExpired;
@@ -67,6 +69,7 @@ class OrdersServiceProvider extends ModuleServiceProvider
         $this->app->bind(DigitalOrderLines::class, DatabaseDigitalOrderLines::class);
         $this->app->bind(ServiceOrderLines::class, DatabaseServiceOrderLines::class);
         $this->app->bind(CustomerOrders::class, DatabaseCustomerOrders::class);
+        $this->app->bind(PurchasedLines::class, DatabasePurchasedLines::class);
     }
 
     public function boot(): void

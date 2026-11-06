@@ -104,6 +104,8 @@
         </section>
     @endif
 
+    @includeIf('engagement::partials.product-reviews', ['variant' => $page->variantPublicId])
+
     @if ($related !== [])
         @include('catalog::storefront.partials.rail', ['id' => 'related', 'title' => __('catalog::storefront.related'), 'url' => url('/'.app()->getLocale().'/shop'), 'cards' => $related])
     @endif

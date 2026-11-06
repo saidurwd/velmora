@@ -15,6 +15,7 @@ return [
     'account_bookings' => 'আমার বুকিং',
     'account_security' => 'সাইন-ইন ও নিরাপত্তা',
     'account_wishlist' => 'আমার উইশলিস্ট',
+    'account_reviews' => 'আমার রিভিউ',
     'account_preferences' => 'বার্তা ও পছন্দ',
     'account_privacy' => 'গোপনীয়তা ও আপনার তথ্য',
 ];

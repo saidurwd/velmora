@@ -1,2 +1,2 @@
 
-* Phase 9, slice 3: `Actions/ReorderOrder` ("Buy again", `POST /account/orders/{order}/reorder`) puts the lines of one of the customer's own orders into their cart through `CartFiller`; the result is shown on the order page.
+* Phase 9, slice 4: `Contracts/PurchasedLines` (implemented by `Services/DatabasePurchasedLines`) tells the Engagement module whether a customer's own order line can be reviewed (completed and paid, or digital and paid; never cancelled or fully refunded).

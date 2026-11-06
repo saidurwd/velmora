@@ -186,7 +186,8 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 ## Engagement, Support, Notifications
 | Table | Columns |
 |---|---|
-| reviews | STD; product_id, order_item_id UNIQUE, customer_id, rating 1–5 CHECK, title, body, locale, status (pending/published/rejected), helpful_count; review_votes UNIQUE(review_id,customer_id); product_rating_stats(product_id PK, count, sum, updated by event) |
+| reviews | public_id, product_id FK, variant_id FK, order_item_id FK UNIQUE (one review per order line), user_id FK, rating 1–5 CHECK, title ≤100, body, locale (en/bn, the language written), author_name ("Amina R.", a snapshot), status (pending/published/rejected/withdrawn; moves enforced by trigger; rejected ⇔ rejection_reason set), moderated_by/at, created/updated_at; deleted on the author's erasure |
+| product_rating_stats | product_id PK FK, stars_1 … stars_5 counts of PUBLISHED reviews; changed with conditional updates in the same transaction as the decision that publishes or removes a review (never recomputed over all reviews); count and average are derived |
 | wishlist_items | user_id FK, variant_id FK, created_at; UNIQUE (user_id, variant_id); a signed-in customer only (no guest wishlist); capped by `engagement.wishlist_max` (200) |
 | stock_alerts | user_id FK, variant_id FK, status (pending/notified; CHECK ties it to notified_at), locale, created_at, notified_at; UNIQUE (user_id, variant_id); index (status, variant_id, id) serves the five-minute run |
 | support_tickets / support_messages / support_attachments | status, assignee_id, order_id NULL, sla_due_at; canned_replies(+translations) |

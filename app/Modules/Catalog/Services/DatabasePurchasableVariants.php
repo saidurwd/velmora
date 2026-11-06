@@ -47,7 +47,7 @@ final class DatabasePurchasableVariants implements PurchasableVariants
             $out[(int) $r->id] = new PurchasableVariant(
                 (int) $r->id, (string) $r->public_id, (string) $r->sku, (string) ($r->name ?? ''), $options[(int) $r->id] ?? null, (string) ($r->slug ?? ''),
                 $images[(int) $r->product_id] ?? null, (string) $r->product_type, (string) $r->tax_class_code, $live, (bool) $r->track_inventory,
-                max(1, (int) $r->min_qty), $r->max_qty === null ? null : (int) $r->max_qty, max(1, (int) $r->qty_step), (int) ($r->weight_g ?? 0),
+                max(1, (int) $r->min_qty), $r->max_qty === null ? null : (int) $r->max_qty, max(1, (int) $r->qty_step), (int) ($r->weight_g ?? 0), (int) $r->product_id,
             );
         }
 

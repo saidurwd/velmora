@@ -325,6 +325,21 @@ function shopWorld(object $t): void
     $t->lamp = ($t->make)('Brass Lamp', 'পিতলের ল্যাম্প', 'LAMP-1', 2300, 20, min: 2, max: 6, step: 2);
     $t->ebook = ($t->make)('Cooking e-book', 'রান্নার ই-বুক', 'EBOOK-1', 350, 0, ProductType::Digital);
 
+    /** Confirms an order and marks it paid (a digital order can then be reviewed). */
+    $t->payOrder = function (int $orderId): void {
+        $move = app(TransitionOrder::class);
+        $move->status(Actor::system('t'), $orderId, OrderStatus::Confirmed, 'test');
+        $move->payment(Actor::system('t'), $orderId, PaymentStatus::Paid, 'test');
+    };
+    /** Takes an order all the way: confirmed, paid, packed, delivered, completed. */
+    $t->completeOrder = function (int $orderId) use ($t): void {
+        ($t->payOrder)($orderId);
+        $move = app(TransitionOrder::class);
+        $move->status(Actor::system('t'), $orderId, OrderStatus::Processing, 'test');
+        $move->fulfillment(Actor::system('t'), $orderId, FulfillmentStatus::Fulfilled, 'test');
+        $move->status(Actor::system('t'), $orderId, OrderStatus::Completed, 'test');
+    };
+
     /** An order of the given variants (variant id => quantity) at the unit price stated (default 100 taka, deliberately not today's price). */
     $t->orderFor = function (int $userId, array $lines, int $unitMinor = 10000, string $locale = 'en'): object {
         $calc = [];

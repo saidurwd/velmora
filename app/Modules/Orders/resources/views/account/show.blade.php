@@ -35,6 +35,8 @@
 </section>
 @endif
 
+@includeIf('engagement::partials.order-reviews', ['order' => $order->public_id])
+
 <form method="POST" action="{{ route('account.orders.reorder', $order->public_id) }}">@csrf
     <x-platform::btn type="submit" variant="secondary">{{ __('orders::account.reorder_button') }}</x-platform::btn>
     <span class="ms-2 text-sm text-muted">{{ __('orders::account.reorder_help') }}</span>

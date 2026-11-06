@@ -8,4 +8,7 @@ return [
 
     // How many back-in-stock alerts one customer can have waiting.
     'alerts_max' => 100,
+
+    // How many days after buying a customer can still review it.
+    'review_window_days' => 180,
 ];
