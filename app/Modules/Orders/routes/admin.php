@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Orders\Http\Controllers\Admin\CancellationRequestController;
 use App\Modules\Orders\Http\Controllers\Admin\FraudController;
 use App\Modules\Orders\Http\Controllers\Admin\OrderController;
 use App\Modules\Orders\Http\Controllers\Admin\ReceiptController;
@@ -17,6 +18,12 @@ Route::middleware(['auth:admin', 'session.policy:admin'])->prefix('orders')->nam
         Route::get('/blocklist', [FraudController::class, 'blocklist'])->middleware('permission:orders.view')->name('blocklist');
         Route::post('/blocklist', [FraudController::class, 'addPhone'])->middleware(['permission:orders.cancel', 'throttle:30,1'])->name('blocklist.add');
         Route::post('/blocklist/{entry}/toggle', [FraudController::class, 'toggle'])->whereNumber('entry')->middleware(['permission:orders.cancel', 'throttle:30,1'])->name('blocklist.toggle');
+    });
+
+    Route::prefix('cancellation-requests')->name('cancellations.')->group(function (): void {
+        Route::get('/', [CancellationRequestController::class, 'index'])->middleware('permission:orders.cancel')->name('index');
+        Route::post('/{cancellation}/approve', [CancellationRequestController::class, 'approve'])->whereAlphaNumeric('cancellation')->middleware(['permission:orders.cancel', 'throttle:60,1'])->name('approve');
+        Route::post('/{cancellation}/reject', [CancellationRequestController::class, 'reject'])->whereAlphaNumeric('cancellation')->middleware(['permission:orders.cancel', 'throttle:60,1'])->name('reject');
     });
 
     Route::get('/{order}/receipt', [ReceiptController::class, 'show'])->whereAlphaNumeric('order')->middleware(['permission:orders.view', 'throttle:60,1'])->name('receipt');

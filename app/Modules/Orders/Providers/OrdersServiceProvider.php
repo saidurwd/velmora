@@ -104,5 +104,6 @@ class OrdersServiceProvider extends ModuleServiceProvider
         $menu->add('orders::orders.menu', 'admin.orders.index', 'orders.view', 20);
         $menu->add('orders::fraud.menu_settings', 'admin.orders.fraud.settings', 'settings.view', 21);
         $menu->add('orders::fraud.menu_blocklist', 'admin.orders.fraud.blocklist', 'orders.view', 22);
+        $menu->add('orders::cancel-requests.menu', 'admin.orders.cancellations.index', 'orders.cancel', 23);
     }
 }

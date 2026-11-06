@@ -15,6 +15,7 @@ use App\Modules\Orders\Exceptions\OrderException;
 use App\Modules\Orders\Http\Requests\OrderNoteRequest;
 use App\Modules\Orders\Http\Requests\TransitionOrderRequest;
 use App\Modules\Orders\Models\Order;
+use App\Modules\Orders\Models\OrderCancellationRequest;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\Enums\ActorType;
 use Illuminate\Contracts\View\View;
@@ -64,6 +65,7 @@ class OrderController
             'order' => $order,
             'canSeePhone' => $request->user('admin')?->can('customers.view_pii') === true,
             'canCancel' => $request->user('admin')?->can('orders.cancel') === true,
+            'cancelRequest' => OrderCancellationRequest::query()->where('order_id', $order->id)->whereIn('status', ['requested', 'approved'])->latest('id')->first(),   // index (order_id, id)
         ]);
     }
 

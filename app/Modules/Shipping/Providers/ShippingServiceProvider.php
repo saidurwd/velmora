@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Shipping\Providers;
 
+use App\Modules\Notifications\Contracts\TemplateRegistry;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use App\Modules\Privacy\Contracts\PersonalDataRegistry;
 use App\Modules\Shipping\Console\ShipmentProbeCommand;
 use App\Modules\Shipping\Contracts\ShippingQuoter;
 use App\Modules\Shipping\Couriers\FakeCourier;
@@ -16,6 +18,8 @@ use App\Modules\Shipping\Events\ShipmentFailed;
 use App\Modules\Shipping\Events\ShipmentHandedOver;
 use App\Modules\Shipping\Events\ShipmentReturned;
 use App\Modules\Shipping\Listeners\OpenReturnForReturnedParcel;
+use App\Modules\Shipping\Notifications\ReturnTemplates;
+use App\Modules\Shipping\Privacy\ReturnPersonalData;
 use App\Modules\Shipping\Services\CourierRegistry;
 use App\Modules\Shipping\Services\DatabaseShippingQuoter;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -40,7 +44,13 @@ class ShippingServiceProvider extends ModuleServiceProvider
     {
         parent::boot();
 
+        $registry = $this->app->make(PersonalDataRegistry::class);
+        $registry->addExporter(ReturnPersonalData::class);   // this module's part of a customer's data copy and erasure
+        $registry->addEraser(ReturnPersonalData::class, 25);
         $this->commands([ShipmentProbeCommand::class]);
+        foreach (ReturnTemplates::all() as $template) {
+            $this->app->make(TemplateRegistry::class)->register($template);   // what the shop tells customers about their returns; staff change the words
+        }
         Event::listen(ShipmentReturned::class, [OpenReturnForReturnedParcel::class, 'handle']);
         $outbox = $this->app->make(OutboxRegistry::class);
         foreach ([ShipmentHandedOver::class, ShipmentDelivered::class, ShipmentFailed::class, ShipmentReturned::class] as $event) {

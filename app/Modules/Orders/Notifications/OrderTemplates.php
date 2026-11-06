@@ -86,6 +86,38 @@ final class OrderTemplates
                 ['number' => 'VM-2611-000001', 'name' => 'Rahim', 'items' => 'Cotton Panjabi × 2 — ৳ 1,300.00', 'summary' => "Delivery: ৳ 60.00\nTotal: ৳ 1,360.00", 'link' => 'https://example.com/orders/abc'],
                 ['items', 'summary'],
             ),
+            new TemplateDefinition(
+                'order.cancel_request_approved.sms', 'sms', 'transactional', ['shop', 'number'],
+                [
+                    'en' => [null, '{{ shop }}: we agree to cancel order {{ number }}. We will cancel it and return your money, and tell you when it is done.'],
+                    'bn' => [null, '{{ shop }}: অর্ডার {{ number }} বাতিলে আমরা রাজি। আমরা বাতিল করে টাকা ফেরত দেব, এবং শেষ হলে জানাব।'],
+                ],
+                ['shop' => 'Velmora', 'number' => 'VM-2611-000001'],
+            ),
+            new TemplateDefinition(
+                'order.cancel_request_approved.email', 'email', 'transactional', ['shop', 'number', 'note', 'link'],
+                [
+                    'en' => ['We agree to cancel order {{ number }}', "We agree to cancel order {{ number }}\n\nWe will cancel the order and return your money, and tell you when it is done.\n\n{{ note }}\n\nYour order: {{ link }}\n\n{{ shop }}"],
+                    'bn' => ['অর্ডার {{ number }} বাতিলে আমরা রাজি', "অর্ডার {{ number }} বাতিলে আমরা রাজি\n\nআমরা অর্ডার বাতিল করে আপনার টাকা ফেরত দেব, এবং শেষ হলে জানাব।\n\n{{ note }}\n\nআপনার অর্ডার: {{ link }}\n\n{{ shop }}"],
+                ],
+                ['shop' => 'Velmora', 'number' => 'VM-2611-000001', 'note' => 'Thank you for your patience.', 'link' => 'https://example.com/en/account/orders/x'],
+            ),
+            new TemplateDefinition(
+                'order.cancel_request_rejected.sms', 'sms', 'transactional', ['shop', 'number'],
+                [
+                    'en' => [null, '{{ shop }}: we could not cancel order {{ number }}. See the order in your account for the reason.'],
+                    'bn' => [null, '{{ shop }}: অর্ডার {{ number }} আমরা বাতিল করতে পারিনি। কারণ আপনার অ্যাকাউন্টে অর্ডারটিতে দেখুন।'],
+                ],
+                ['shop' => 'Velmora', 'number' => 'VM-2611-000001'],
+            ),
+            new TemplateDefinition(
+                'order.cancel_request_rejected.email', 'email', 'transactional', ['shop', 'number', 'note', 'link'],
+                [
+                    'en' => ['About your request to cancel order {{ number }}', "About your request to cancel order {{ number }}\n\nWe could not cancel this order.\n\nReason: {{ note }}\n\nYour order: {{ link }}\n\n{{ shop }}"],
+                    'bn' => ['অর্ডার {{ number }} বাতিলের অনুরোধ প্রসঙ্গে', "অর্ডার {{ number }} বাতিলের অনুরোধ প্রসঙ্গে\n\nআমরা এই অর্ডার বাতিল করতে পারিনি।\n\nকারণ: {{ note }}\n\nআপনার অর্ডার: {{ link }}\n\n{{ shop }}"],
+                ],
+                ['shop' => 'Velmora', 'number' => 'VM-2611-000001', 'note' => 'It has already been packed.', 'link' => 'https://example.com/en/account/orders/x'],
+            ),
         ];
     }
 }

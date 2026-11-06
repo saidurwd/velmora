@@ -13,6 +13,8 @@ use App\Modules\Orders\Exceptions\OrderException;
 use App\Modules\Orders\Http\Requests\CancelOrderRequest;
 use App\Modules\Orders\Http\Requests\CreateAccountFromOrderRequest;
 use App\Modules\Orders\Models\Order;
+use App\Modules\Orders\Models\OrderCancellationRequest;
+use App\Modules\Orders\Services\CancellationRequestRules;
 use App\Modules\Payments\Contracts\PaymentMethodCatalog;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\Enums\ActorType;
@@ -52,6 +54,8 @@ class AccountOrderController
             'payUrl' => $online && $open && Route::has('payments.pay') ? URL::temporarySignedRoute('payments.pay', now()->addDays((int) config('orders.confirmation_link_days')), ['locale' => app()->getLocale(), 'order' => $model->public_id]) : null,
             'trackUrl' => $this->trackUrl($model), 'receiptUrl' => $this->receiptUrl($model), 'libraryUrl' => $this->libraryUrl($model),
             'cancelDenied' => CancelOwnOrder::deniedReason($model),
+            'cancelRequest' => OrderCancellationRequest::query()->where('order_id', $model->id)->latest('id')->first(),   // index (order_id, id)
+            'canAskToCancel' => CancellationRequestRules::deniedReason($model) === null,
             'notes' => $model->notes()->where('visibility', 'customer')->get(),
         ]);
     }

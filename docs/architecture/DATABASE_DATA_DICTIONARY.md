@@ -83,6 +83,8 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 
 ## Orders
 
+> Phase 9 slice 5: `order_cancellation_requests` — public_id, order_id FK, user_id FK, status (requested/approved/rejected/withdrawn; moves enforced by trigger; a refusal needs its decision_note), open_key UNIQUE (the order id while the request waits or is approved, NULL once refused or withdrawn: one open request per order), note (the customer's words, cleared on erasure), decided_by/at, decision_note, created/updated_at. Approving records the shop's agreement only; it never cancels or refunds.
+
 > Erasure (Phase 9): `orders.anonymised_at` (set once). The three contact columns of an order may be replaced by the fixed placeholders `Deleted customer` / `erased` / NULL only in the same update that sets it; every other column stays frozen (trigger `orders_erasure_scrub_only`). `order_addresses` of an erased customer are scrubbed to the same placeholders; the district snapshot stays.
 | Table | Columns / constraints | Flags |
 |---|---|---|
@@ -111,6 +113,8 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 | reconciliation_exceptions | STD; type (unmatched_provider_txn/amount_mismatch/currency_mismatch/orphan_payment/long_pending/late_success/duplicate_payment/cod_short/cod_over/refund_stuck), payment_id NULL, order_id NULL, reference, details j, status (open/resolved/ignored), resolved_by, resolved_at, resolution; UNIQUE(type,reference) so one problem is raised once | |
 
 ## Shipping & Fulfilment
+
+> Phase 9 slice 5: `return_requests.reason` (the customer's words) may be CLEARED to NULL and never changed to anything else (trigger `return_requests_reason_clear_only`); every other frozen column stays frozen.
 | Table | Columns / constraints | Flags |
 |---|---|---|
 | shipping_zones (+translations) / shipping_zone_districts | public_id, is_fallback b (exactly one: generated marker + UNIQUE), cod_available b, is_active, sort_order; zone name per language. A district belongs to at most one zone (UNIQUE district_id); districts no zone claims use the fallback zone. District-level only at MVP (no upazila zones) | |

@@ -12,12 +12,13 @@ use App\Modules\Platform\Support\Transactions;
 use App\Modules\Shipping\Enums\ReturnStatus;
 use App\Modules\Shipping\Exceptions\ShipmentException;
 use App\Modules\Shipping\Models\ReturnRequest;
+use App\Modules\Shipping\Services\ReturnMessages;
 use Illuminate\Support\Facades\DB;
 
 /** A person allows or refuses a return, or the return is withdrawn. The first decision wins (one conditional UPDATE). Who may decide (`shipping.manage`) is decided by the caller. */
 final class DecideReturn
 {
-    public function __construct(private readonly AuditLogger $audit, private readonly Clock $clock) {}
+    public function __construct(private readonly AuditLogger $audit, private readonly Clock $clock, private readonly ReturnMessages $messages) {}
 
     /** @throws ShipmentException */
     public function authorize(Actor $actor, string $returnPublicId, string $shippingCostPayer = 'none'): ReturnRequest
@@ -26,13 +27,19 @@ final class DecideReturn
             throw new ShipmentException('payer_invalid');
         }
 
-        return $this->move($actor, $returnPublicId, ReturnStatus::Authorized, null, ['shipping_cost_payer' => $shippingCostPayer], [ReturnStatus::Requested]);
+        $return = $this->move($actor, $returnPublicId, ReturnStatus::Authorized, null, ['shipping_cost_payer' => $shippingCostPayer], [ReturnStatus::Requested]);
+        $this->messages->tell($return, 'authorized');   // after the decision is saved; a problem sending is only logged
+
+        return $return;
     }
 
     /** @throws ShipmentException */
     public function reject(Actor $actor, string $returnPublicId, string $reason): ReturnRequest
     {
-        return $this->move($actor, $returnPublicId, ReturnStatus::Rejected, $this->reason($reason), [], [ReturnStatus::Requested]);
+        $return = $this->move($actor, $returnPublicId, ReturnStatus::Rejected, $this->reason($reason), [], [ReturnStatus::Requested]);
+        $this->messages->tell($return, 'rejected');
+
+        return $return;
     }
 
     /** @throws ShipmentException */

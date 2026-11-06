@@ -35,6 +35,8 @@
 </section>
 @endif
 
+@includeIf('shipping::partials.order-returns', ['order' => $order->public_id])
+
 @includeIf('engagement::partials.order-reviews', ['order' => $order->public_id])
 
 <form method="POST" action="{{ route('account.orders.reorder', $order->public_id) }}">@csrf
@@ -84,6 +86,33 @@
 <section aria-labelledby="notes-h" class="space-y-2">
     <h2 id="notes-h" class="text-lg font-semibold">{{ __('orders::account.notes') }}</h2>
     @foreach ($notes as $note)<p class="rounded-md border border-line p-3 text-sm"><span class="text-muted">{{ \App\Modules\Platform\Support\Fmt::dateTime($note->created_at) }}</span><br>{{ $note->body }}</p>@endforeach
+</section>
+@endif
+
+@php $open = $cancelRequest !== null && in_array($cancelRequest->status, ['requested', 'approved'], true); @endphp
+@error('ask')<x-platform::alert type="error">{{ $message }}</x-platform::alert>@enderror
+@if ($open || $canAskToCancel || ($cancelRequest !== null && $cancelRequest->status === 'rejected'))
+<section aria-labelledby="ask-h" class="space-y-3 rounded-lg border border-line p-4">
+    <h2 id="ask-h" class="text-lg font-semibold">{{ __('orders::cancel-requests.title') }}</h2>
+    @if ($cancelRequest !== null && $cancelRequest->status === 'requested')
+        <p>{{ __('orders::cancel-requests.waiting') }}</p>
+        <form method="POST" action="{{ route('account.orders.cancellation.withdraw', ['order' => $order->public_id, 'cancellation' => $cancelRequest->public_id]) }}">@csrf
+            <x-platform::btn type="submit" size="sm" variant="secondary">{{ __('orders::cancel-requests.withdraw') }}</x-platform::btn>
+        </form>
+    @elseif ($cancelRequest !== null && $cancelRequest->status === 'approved')
+        <p>{{ __('orders::cancel-requests.approved_text') }}</p>
+        @if ($cancelRequest->decision_note)<p class="text-sm">{{ __('orders::cancel-requests.from_us', ['note' => $cancelRequest->decision_note]) }}</p>@endif
+    @else
+        @if ($cancelRequest !== null && $cancelRequest->status === 'rejected')<p class="text-sm">{{ __('orders::cancel-requests.rejected_text', ['note' => $cancelRequest->decision_note]) }}</p>@endif
+        @if ($canAskToCancel)
+        <p class="text-sm text-muted">{{ __('orders::cancel-requests.help') }}</p>
+        <form method="POST" action="{{ route('account.orders.cancellation.store', $order->public_id) }}" class="space-y-3">@csrf
+            <div><label for="ask-note" class="block text-sm font-medium">{{ __('orders::cancel-requests.note_label') }}</label>
+                <input id="ask-note" name="note" maxlength="255" value="{{ old('note') }}" class="block w-full rounded-md border border-line px-3 py-2"></div>
+            <x-platform::btn type="submit" variant="secondary">{{ __('orders::cancel-requests.button') }}</x-platform::btn>
+        </form>
+        @endif
+    @endif
 </section>
 @endif
 

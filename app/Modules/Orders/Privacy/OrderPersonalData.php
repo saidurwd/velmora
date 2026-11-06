@@ -36,7 +36,10 @@ final class OrderPersonalData implements PersonalDataEraser, PersonalDataExporte
         $items = DB::table('order_items')->whereIn('order_id', $ids)->orderBy('id')->get()->groupBy('order_id');   // index order_id
         $addresses = DB::table('order_addresses')->whereIn('order_id', $ids)->get()->groupBy('order_id');
 
+        $asks = DB::table('order_cancellation_requests')->whereIn('order_id', $ids)->orderBy('id')->get(['order_id', 'status', 'note', 'decision_note', 'created_at'])->groupBy('order_id');   // index (user_id, id)
+
         return $orders->map(fn ($o) => [
+            'cancellation_requests' => ($asks[$o->id] ?? collect())->map(fn ($a) => ['asked_at' => $a->created_at, 'status' => $a->status, 'your_words' => $a->note, 'our_answer' => $a->decision_note])->values()->all(),
             'order_number' => $o->order_number, 'placed_at' => $o->placed_at, 'status' => $o->status, 'payment_status' => $o->payment_status, 'currency' => $o->currency,
             'subtotal_minor' => (int) $o->subtotal_minor, 'discount_minor' => (int) $o->discount_minor, 'shipping_minor' => (int) $o->shipping_minor, 'cod_fee_minor' => (int) $o->cod_fee_minor, 'tax_minor' => (int) $o->tax_minor, 'total_minor' => (int) $o->grand_total_minor,
             'payment_method' => $o->payment_method_code, 'contact' => ['name' => $o->contact_name, 'phone' => $o->contact_phone, 'email' => $o->contact_email],
@@ -58,6 +61,7 @@ final class OrderPersonalData implements PersonalDataEraser, PersonalDataExporte
             return;
         }
         // The delivery address is not part of the money record.
+        DB::table('order_cancellation_requests')->whereIn('order_id', $ids)->whereNotNull('note')->update(['note' => null]);   // the customer's own words go
         DB::table('order_addresses')->whereIn('order_id', $ids)->update([
             'recipient_name' => self::NAME, 'phone' => self::PHONE, 'fingerprint' => null, 'area' => '', 'address_line' => '', 'landmark' => null, 'delivery_note' => null, 'postal_code' => null, 'updated_at' => $now,
         ]);

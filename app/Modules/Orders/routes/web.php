@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Orders\Http\Controllers\Web\AccountOrderController;
+use App\Modules\Orders\Http\Controllers\Web\CancellationRequestController;
 use App\Modules\Orders\Http\Controllers\Web\CheckoutController;
 use App\Modules\Orders\Http\Controllers\Web\ReceiptController;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,8 @@ Route::localized(function (): void {
         Route::get('/account/orders', [AccountOrderController::class, 'index'])->name('account.orders');
         Route::get('/account/orders/{order}', [AccountOrderController::class, 'show'])->whereAlphaNumeric('order')->name('account.orders.show');
         Route::post('/account/orders/{order}/reorder', [AccountOrderController::class, 'reorder'])->whereAlphaNumeric('order')->middleware('throttle:write')->name('account.orders.reorder');
+        Route::post('/account/orders/{order}/cancellation-request', [CancellationRequestController::class, 'store'])->whereAlphaNumeric('order')->middleware('throttle:write')->name('account.orders.cancellation.store');
+        Route::post('/account/orders/{order}/cancellation-request/{cancellation}/withdraw', [CancellationRequestController::class, 'withdraw'])->whereAlphaNumeric('order')->whereAlphaNumeric('cancellation')->middleware('throttle:write')->name('account.orders.cancellation.withdraw');
         Route::post('/account/orders/{order}/cancel', [AccountOrderController::class, 'cancel'])->whereAlphaNumeric('order')->middleware('throttle:write')->name('account.orders.cancel');
     });
 });

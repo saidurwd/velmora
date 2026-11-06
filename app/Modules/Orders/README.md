@@ -1,2 +1,2 @@
 
-* Phase 9, slice 4: `Contracts/PurchasedLines` (implemented by `Services/DatabasePurchasedLines`) tells the Engagement module whether a customer's own order line can be reviewed (completed and paid, or digital and paid; never cancelled or fully refunded).
+* Phase 9, slice 5: customers' cancellation requests (`order_cancellation_requests`; `Actions/RequestOrderCancellation`, `WithdrawCancellationRequest`, `DecideCancellationRequest`; rules in `Services/CancellationRequestRules`). Approving records the agreement and tells the customer; it never cancels or refunds. Staff queue at `/admin/orders/cancellation-requests` (`orders.cancel`).
