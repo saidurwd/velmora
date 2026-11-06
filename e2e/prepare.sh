@@ -41,6 +41,7 @@ mysql -h"${DB_HOST:-127.0.0.1}" -P"${DB_PORT:-3306}" -u"${DB_USERNAME:-root}" "$
 php artisan tinker --execute="require base_path('e2e/seed-customer.php');" >/dev/null
 php artisan tinker --execute="require base_path('e2e/seed-shipment.php');" >/dev/null
 php artisan tinker --execute="require base_path('e2e/seed-phase8.php');" >/dev/null
+php artisan tinker --execute="require base_path('e2e/seed-phase9.php');" >/dev/null
 php artisan catalog:reindex --quiet
 php artisan search:reindex --quiet
 php artisan cache:clear --quiet

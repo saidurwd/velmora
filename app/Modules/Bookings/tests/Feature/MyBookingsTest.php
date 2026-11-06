@@ -181,6 +181,14 @@ describe('one booking', function () {
         expect(($this->row)($id)->status)->toBe('completed')->and(($this->row)($id)->completed_by)->toBe('customer');
     });
 
+    it('cannot be marked as done by somebody else, even once it has started', function () {
+        $id = ($this->booked)();
+        $this->travelTo(CarbonImmutable::parse('2026-12-01 04:30:00', 'UTC'));
+
+        ($this->as)($this->other)->post('/en/account/bookings/'.$id.'/complete')->assertRedirect();
+        expect(($this->row)($id)->status)->toBe('confirmed')->and(($this->row)($id)->completed_by)->toBeNull();
+    });
+
     it('is in Bangla too', function () {
         $id = ($this->booked)();
 
