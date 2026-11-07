@@ -15,7 +15,7 @@ interface MetricDefinition
     /** A stable name, used in files and links. */
     public function code(): string;
 
-    /** 'money' (minor units) or 'count'. */
+    /** 'money' (minor units), 'count' or 'percent' (basis points). */
     public function kind(): string;
 
     /** True when the number is about money that moved (collected, refunded, net sales): needs `reports.finance.view`. */

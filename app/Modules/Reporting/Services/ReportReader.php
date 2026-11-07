@@ -16,7 +16,7 @@ final class ReportReader
 
     public function inputs(ReportFilter $f): MetricInputs
     {
-        return $this->combine($this->sales($f)->first(), $this->payments($f)->first());
+        return $this->combine($this->sales($f)->first(), $this->payments($f)->first(), $this->units($f)->first());
     }
 
     /** @return array<string, MetricInputs> day => sums, for every day in the period that has any sales or money */
@@ -24,10 +24,11 @@ final class ReportReader
     {
         $sales = $this->sales($f)->groupBy('day')->addSelect('day')->get()->keyBy(fn ($r) => (string) $r->day);   // unique (day, ...)
         $money = $this->payments($f)->groupBy('day')->addSelect('day')->get()->keyBy(fn ($r) => (string) $r->day);
+        $units = $this->units($f)->groupBy('day')->addSelect('day')->get()->keyBy(fn ($r) => (string) $r->day);
         $out = [];
         foreach ($this->days->range($f->from, $f->to) as $day) {
-            if (isset($sales[$day]) || isset($money[$day])) {
-                $out[$day] = $this->combine($sales[$day] ?? null, $money[$day] ?? null);
+            if (isset($sales[$day]) || isset($money[$day]) || isset($units[$day])) {
+                $out[$day] = $this->combine($sales[$day] ?? null, $money[$day] ?? null, $units[$day] ?? null);
             }
         }
 
@@ -50,15 +51,47 @@ final class ReportReader
         };
         $sales = $this->sales($f)->groupBy($column)->addSelect($column.' as grp')->get()->keyBy(fn ($r) => (string) $r->grp);   // unique (day, ...) range
         $money = $this->payments($f)->groupBy($column)->addSelect($column.' as grp')->get()->keyBy(fn ($r) => (string) $r->grp);
-        $names = array_values(array_unique([...$sales->keys()->all(), ...$money->keys()->all()]));
+        $units = $this->units($f)->groupBy($column)->addSelect($column.' as grp')->get()->keyBy(fn ($r) => (string) $r->grp);
+        $names = array_values(array_unique([...$sales->keys()->all(), ...$money->keys()->all(), ...$units->keys()->all()]));
         sort($names);
 
         $out = [];
         foreach ($names as $name) {
-            $out[(string) $name] = $this->combine($sales[$name] ?? null, $money[$name] ?? null);
+            $out[(string) $name] = $this->combine($sales[$name] ?? null, $money[$name] ?? null, $units[$name] ?? null);
         }
 
         return $out;
+    }
+
+    /**
+     * What each product variant sold in the period (units, returned units, goods price, discounts), under the choices of the filter.
+     *
+     * @return array<int, array{sku: string, inputs: MetricInputs}> keyed by variant id
+     */
+    public function byVariant(ReportFilter $f): array
+    {
+        $rows = $this->scoped(DB::table('report_daily_products'), $f)->groupBy('variant_id')->orderBy('variant_id')   // unique (day, variant_id, ...)
+            ->selectRaw('variant_id, MAX(sku) AS sku, SUM(units) AS units, SUM(returned_units) AS returned, SUM(gross_minor) AS gross, SUM(discounts_minor) AS discounts')->get();
+        $out = [];
+        foreach ($rows as $r) {
+            $out[(int) $r->variant_id] = ['sku' => (string) $r->sku, 'inputs' => new MetricInputs(grossMinor: (int) $r->gross, discountsMinor: (int) $r->discounts, unitsSold: (int) $r->units, returnedUnits: (int) $r->returned)];
+        }
+
+        return $out;
+    }
+
+    /**
+     * The tax billed in the period per kind of charge and rate (the period only: tax is not split by channel or language).
+     *
+     * @return list<array{kind: string, rate_bp: int, tax_inclusive: bool, lines: int, taxable: int, tax: int}>
+     */
+    public function taxRows(ReportFilter $f): array
+    {
+        $rows = DB::table('report_daily_tax')->whereBetween('day', [$f->from, $f->to])->where('currency', (string) config('reporting.currency'))   // unique (day, ...) range
+            ->groupBy('kind', 'rate_bp', 'tax_inclusive')->orderBy('kind')->orderBy('rate_bp')->orderBy('tax_inclusive')
+            ->selectRaw('kind, rate_bp, tax_inclusive, SUM(`lines`) AS lines_total, SUM(taxable_minor) AS taxable, SUM(tax_minor) AS tax')->get();
+
+        return array_values($rows->map(fn ($r): array => ['kind' => (string) $r->kind, 'rate_bp' => (int) $r->rate_bp, 'tax_inclusive' => (bool) $r->tax_inclusive, 'lines' => (int) $r->lines_total, 'taxable' => (int) $r->taxable, 'tax' => (int) $r->tax])->all());
     }
 
     /** @return array{days: int, worked_out: int, missing: list<string>, as_of: string|null} how much of the period has been worked out (days that have not started yet are not missing) */
@@ -100,6 +133,11 @@ final class ReportReader
         );
     }
 
+    private function units(ReportFilter $f): Builder
+    {
+        return $this->scoped(DB::table('report_daily_products'), $f)->selectRaw('COALESCE(SUM(units), 0) AS units, COALESCE(SUM(returned_units), 0) AS returned_units');
+    }
+
     private function scoped(Builder $q, ReportFilter $f): Builder
     {
         $q->whereBetween('day', [$f->from, $f->to])->where('currency', (string) config('reporting.currency'));   // unique (day, ...)
@@ -112,11 +150,11 @@ final class ReportReader
         return $q;
     }
 
-    private function combine(?object $s, ?object $p): MetricInputs
+    private function combine(?object $s, ?object $p, ?object $u = null): MetricInputs
     {
         return new MetricInputs(
             (int) ($s->orders ?? 0), (int) ($s->gross ?? 0), (int) ($s->discounts ?? 0), (int) ($s->shipping ?? 0), (int) ($s->cod_fee ?? 0), (int) ($s->tax ?? 0), (int) ($s->billed ?? 0),
-            (int) ($s->cancelled_orders ?? 0), (int) ($s->cancelled_billed ?? 0), (int) ($p->collected ?? 0), (int) ($p->refunded ?? 0), (int) ($p->refunded_live ?? 0),
+            (int) ($s->cancelled_orders ?? 0), (int) ($s->cancelled_billed ?? 0), (int) ($p->collected ?? 0), (int) ($p->refunded ?? 0), (int) ($p->refunded_live ?? 0), (int) ($u->units ?? 0), (int) ($u->returned_units ?? 0),
         );
     }
 }

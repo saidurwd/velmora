@@ -6,7 +6,7 @@
     use App\Modules\Platform\DTOs\Money;
     use App\Modules\Platform\Support\Fmt;
     use Carbon\CarbonImmutable;
-    $show = fn (string $code, ?int $value, string $kind) => $value === null ? '—' : ($kind === 'money' ? Fmt::money(Money::of($value, 'BDT')) : Fmt::number($value));
+    $show = fn (string $code, ?int $value, string $kind) => $value === null ? '—' : ($kind === 'money' ? Fmt::money(Money::of($value, 'BDT')) : ($kind === 'percent' ? Fmt::number($value / 100, 2).'%' : Fmt::number($value)));
     $dayName = fn (string $day) => Fmt::date(CarbonImmutable::parse($day, 'UTC'));
     $columns = array_values(array_filter($metrics, fn ($m) => in_array($m->code(), ['orders', 'gross_sales', 'discounts', 'billed_total', 'collected', 'refunded', 'net_sales'], true)));
 @endphp

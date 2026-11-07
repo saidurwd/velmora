@@ -56,4 +56,20 @@ return [
         'label' => 'Net sales',
         'definition' => 'Gross sales minus discounts minus refunds of orders that were not cancelled, by the day of the refund. Refunds of cancelled orders are left out because those orders were never counted in sales. Delivery charges and tax are not taken out separately.',
     ],
+    'units_sold' => [
+        'label' => 'Units sold',
+        'definition' => 'The number of items sold on those orders (a line of 3 shirts is 3 units). Cancelled orders are not counted.',
+    ],
+    'returned_units' => [
+        'label' => 'Units returned',
+        'definition' => 'How many of the sold items have come back through a return.',
+    ],
+    'return_rate' => [
+        'label' => 'Return rate',
+        'definition' => 'Units returned as a share of units sold, to two decimals.',
+    ],
+    'sales_after_discounts' => [
+        'label' => 'Sales after discounts',
+        'definition' => 'Gross sales minus discounts: what the lines of those orders add up to, before delivery charges, fees and any tax added on top.',
+    ],
 ];

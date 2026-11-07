@@ -8,6 +8,7 @@ use App\Modules\Payments\Contracts\PaymentMethodCatalog;
 use App\Modules\Reporting\DTOs\ReportColumn;
 use App\Modules\Reporting\DTOs\ReportFilter;
 use App\Modules\Reporting\Metrics\MetricCatalogue;
+use App\Modules\Reporting\Services\Ratio;
 use App\Modules\Reporting\Services\ReportReader;
 
 /** How customers pay: for each payment method, the orders, what was billed, what share of the billed total that is, and the money received and given back. */
@@ -46,7 +47,7 @@ final class PaymentMethods implements ReportDefinition
             $m = $this->metrics->compute($inputs, true);
             yield [
                 'method' => $this->methods->label($code, app()->getLocale()), 'orders' => $m['orders'], 'billed_total' => $m['billed_total'],
-                'share' => $all === 0 ? 0 : intdiv(2 * $inputs->billedMinor * 10000 + $all, 2 * $all), 'collected' => $m['collected'], 'refunded' => $m['refunded'],
+                'share' => Ratio::basisPoints($inputs->billedMinor, $all), 'collected' => $m['collected'], 'refunded' => $m['refunded'],
             ];
         }
     }

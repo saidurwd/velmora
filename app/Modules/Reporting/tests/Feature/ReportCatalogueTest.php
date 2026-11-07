@@ -30,8 +30,8 @@ describe('the list', function () {
     it('shows each person only the reports they may open', function () {
         $codes = fn (User $u) => array_map(fn ($r) => $r->code(), app(ReportCatalogue::class)->visibleFor($u));
 
-        expect($codes($this->finance))->toBe(['sales_by_day', 'payment_methods', 'channels_languages', 'refunds_cancellations', 'cod_aging', 'low_stock', 'stock_aging'])
-            ->and($codes($this->analyst))->toBe(['sales_by_day', 'payment_methods', 'channels_languages', 'refunds_cancellations'])   // not cash aging (finance), not stock (inventory)
+        expect($codes($this->finance))->toBe(['sales_by_day', 'payment_methods', 'channels_languages', 'refunds_cancellations', 'best_sellers', 'sales_by_product', 'sales_by_category', 'sales_by_brand', 'tax_summary', 'cod_aging', 'low_stock', 'stock_aging'])
+            ->and($codes($this->analyst))->toBe(['sales_by_day', 'payment_methods', 'channels_languages', 'refunds_cancellations', 'best_sellers', 'sales_by_product', 'sales_by_category', 'sales_by_brand'])   // not tax or cash aging (finance), not stock (inventory)
             ->and($codes($this->nobody))->toBe([]);
     });
 
@@ -51,6 +51,11 @@ describe('who may open which report', function () {
         'payment_methods' => [200, 200, 403],
         'channels_languages' => [200, 200, 403],
         'refunds_cancellations' => [200, 200, 403],
+        'best_sellers' => [200, 200, 403],
+        'sales_by_product' => [200, 200, 403],
+        'sales_by_category' => [200, 200, 403],
+        'sales_by_brand' => [200, 200, 403],
+        'tax_summary' => [403, 200, 403],
         'cod_aging' => [403, 200, 403],
         'low_stock' => [403, 200, 403],
         'stock_aging' => [403, 200, 403],

@@ -36,7 +36,7 @@ describe('the scenario adds up', function () {
         ($this->work)();
 
         expect(($this->numbers)('2026-03-10', '2026-03-10'))->toBe([
-            'orders' => 3, 'gross_sales' => 170000, 'discounts' => 10000, 'delivery_charges' => 12000, 'cod_fees' => 2000, 'tax' => 2608, 'billed_total' => 174000,
+            'orders' => 3, 'units_sold' => 0, 'returned_units' => 0, 'return_rate' => 0, 'gross_sales' => 170000, 'discounts' => 10000, 'sales_after_discounts' => 160000, 'delivery_charges' => 12000, 'cod_fees' => 2000, 'tax' => 2608, 'billed_total' => 174000,
             'average_order_value' => 58000, 'cancelled_orders' => 1, 'cancelled_value' => 30000, 'collected' => 126000, 'refunded' => 0, 'net_sales' => 160000,
         ]);
     });
@@ -46,7 +46,7 @@ describe('the scenario adds up', function () {
         ($this->work)();
 
         expect(($this->numbers)('2026-03-11', '2026-03-11'))->toBe([
-            'orders' => 0, 'gross_sales' => 0, 'discounts' => 0, 'delivery_charges' => 0, 'cod_fees' => 0, 'tax' => 0, 'billed_total' => 0,
+            'orders' => 0, 'units_sold' => 0, 'returned_units' => 0, 'return_rate' => 0, 'gross_sales' => 0, 'discounts' => 0, 'sales_after_discounts' => 0, 'delivery_charges' => 0, 'cod_fees' => 0, 'tax' => 0, 'billed_total' => 0,
             'average_order_value' => 0, 'cancelled_orders' => 0, 'cancelled_value' => 0, 'collected' => 58000, 'refunded' => 50000, 'net_sales' => -20000,
         ]);
     });

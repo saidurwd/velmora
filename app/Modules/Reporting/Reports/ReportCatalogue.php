@@ -11,7 +11,8 @@ final class ReportCatalogue
 {
     /** @var list<class-string<ReportDefinition>> */
     private const REPORTS = [
-        SalesByDay::class, PaymentMethods::class, ChannelsAndLanguages::class, RefundsAndCancellations::class, CodAging::class, LowStock::class, StockAging::class,
+        SalesByDay::class, PaymentMethods::class, ChannelsAndLanguages::class, RefundsAndCancellations::class, BestSellers::class, SalesByProduct::class, SalesByCategory::class, SalesByBrand::class,
+        TaxSummary::class, CodAging::class, LowStock::class, StockAging::class,
     ];
 
     /** @var list<ReportDefinition> reports added after the built-in ones */

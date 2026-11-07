@@ -20,5 +20,7 @@ final readonly class MetricInputs
         public int $collectedMinor = 0,
         public int $refundedMinor = 0,
         public int $refundedLiveMinor = 0,
+        public int $unitsSold = 0,
+        public int $returnedUnits = 0,
     ) {}
 }

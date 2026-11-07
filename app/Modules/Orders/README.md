@@ -1,3 +1,4 @@
 
 * Phase 9, slice 5: customers' cancellation requests (`order_cancellation_requests`; `Actions/RequestOrderCancellation`, `WithdrawCancellationRequest`, `DecideCancellationRequest`; rules in `Services/CancellationRequestRules`). Approving records the agreement and tells the customer; it never cancels or refunds. Staff queue at `/admin/orders/cancellation-requests` (`orders.cancel`).
 * Phase 10, slice 1: `Contracts/SalesFigures` gives the Reporting module the totals of the orders placed in a time window (per channel, payment method, language and currency; cancelled orders counted apart) and a few facts about given orders. New index `orders(placed_at)`.
+* Phase 10, slice 2b: `Contracts/SalesFigures` also gives the lines of the orders placed in a time window (per variant and the order groups; cancelled orders left out) and the tax billed per kind of charge and rate.

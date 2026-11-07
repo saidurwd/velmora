@@ -13,7 +13,7 @@ final class MetricCatalogue
     public function all(): array
     {
         return [
-            new OrdersCount, new GrossSales, new Discounts, new DeliveryCharges, new CodFees, new Tax, new BilledTotal, new AverageOrderValue,
+            new OrdersCount, new UnitsSold, new ReturnedUnits, new ReturnRate, new GrossSales, new Discounts, new SalesAfterDiscounts, new DeliveryCharges, new CodFees, new Tax, new BilledTotal, new AverageOrderValue,
             new CancelledOrders, new CancelledValue, new Collected, new Refunded, new NetSales,
         ];
     }

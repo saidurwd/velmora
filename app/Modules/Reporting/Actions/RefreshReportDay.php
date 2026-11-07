@@ -48,6 +48,8 @@ final class RefreshReportDay
             DB::statement('INSERT INTO report_day_status (`day`, refreshed_at, `trigger`, sales_rows, payment_rows) VALUES (?, ?, ?, 0, 0) ON DUPLICATE KEY UPDATE `day` = `day`', [$day, $now, $trigger]);   // primary key
 
             $sales = $this->sales->placedBetween($from, $to);
+            $lines = $this->sales->linesPlacedBetween($from, $to);
+            $taxes = $this->sales->taxPlacedBetween($from, $to);
             $captured = $this->payments->capturedBetween($from, $to);
             $refunds = $this->payments->refundedBetween($from, $to);
             $facts = $this->sales->facts(array_values(array_unique([...array_map(fn (PaymentFact $f): int => $f->orderId, $captured), ...array_map(fn (PaymentFact $f): int => $f->orderId, $refunds)])));
@@ -55,11 +57,25 @@ final class RefreshReportDay
 
             DB::table('report_daily_sales')->where('day', $day)->delete();           // unique (day, ...)
             DB::table('report_daily_payments')->where('day', $day)->delete();
+            DB::table('report_daily_products')->where('day', $day)->delete();
+            DB::table('report_daily_tax')->where('day', $day)->delete();
             foreach ($sales as $s) {
                 DB::table('report_daily_sales')->insert([
                     'day' => $day, 'channel' => $s->channel, 'payment_method' => $s->paymentMethod, 'locale' => $s->locale, 'currency' => $s->currency, 'orders' => $s->orders,
                     'gross_minor' => $s->grossMinor, 'discounts_minor' => $s->discountsMinor, 'shipping_minor' => $s->shippingMinor, 'cod_fee_minor' => $s->codFeeMinor, 'tax_minor' => $s->taxMinor,
                     'billed_minor' => $s->billedMinor, 'cancelled_orders' => $s->cancelledOrders, 'cancelled_billed_minor' => $s->cancelledBilledMinor, 'refreshed_at' => $now,
+                ]);
+            }
+            foreach ($lines as $l) {
+                DB::table('report_daily_products')->insert([
+                    'day' => $day, 'variant_id' => $l->variantId, 'sku' => mb_substr($l->sku, 0, 64), 'channel' => $l->channel, 'payment_method' => $l->paymentMethod, 'locale' => $l->locale, 'currency' => $l->currency,
+                    'orders' => $l->orders, 'units' => $l->units, 'returned_units' => $l->returnedUnits, 'gross_minor' => $l->grossMinor, 'discounts_minor' => $l->discountsMinor, 'refreshed_at' => $now,
+                ]);
+            }
+            foreach ($taxes as $t) {
+                DB::table('report_daily_tax')->insert([
+                    'day' => $day, 'kind' => $t->kind, 'rate_bp' => $t->rateBp, 'currency' => $t->currency, 'tax_inclusive' => $t->taxInclusive, 'lines' => $t->lines, 'taxable_minor' => $t->taxableMinor,
+                    'tax_minor' => $t->taxMinor, 'refreshed_at' => $now,
                 ]);
             }
             foreach ($money as $group) {
