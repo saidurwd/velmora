@@ -34,6 +34,33 @@ final class ReportReader
         return $out;
     }
 
+    /**
+     * The same sums split by one thing: 'channel', 'payment_method' or 'locale'.
+     *
+     * @param  'channel'|'payment_method'|'locale'  $dimension
+     * @return array<string, MetricInputs> group => sums, groups in name order
+     */
+    public function breakdown(ReportFilter $f, string $dimension): array
+    {
+        // only these three names ever reach the SQL; anything else is a bug in the caller and stops here
+        $column = match ($dimension) {
+            'channel' => 'channel',
+            'payment_method' => 'payment_method',
+            'locale' => 'locale',
+        };
+        $sales = $this->sales($f)->groupBy($column)->addSelect($column.' as grp')->get()->keyBy(fn ($r) => (string) $r->grp);   // unique (day, ...) range
+        $money = $this->payments($f)->groupBy($column)->addSelect($column.' as grp')->get()->keyBy(fn ($r) => (string) $r->grp);
+        $names = array_values(array_unique([...$sales->keys()->all(), ...$money->keys()->all()]));
+        sort($names);
+
+        $out = [];
+        foreach ($names as $name) {
+            $out[(string) $name] = $this->combine($sales[$name] ?? null, $money[$name] ?? null);
+        }
+
+        return $out;
+    }
+
     /** @return array{days: int, worked_out: int, missing: list<string>, as_of: string|null} how much of the period has been worked out (days that have not started yet are not missing) */
     public function coverage(ReportFilter $f): array
     {

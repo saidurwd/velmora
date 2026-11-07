@@ -2,21 +2,15 @@
 
 declare(strict_types=1);
 
-use App\Modules\Payments\Database\Seeders\PaymentMethodSeeder;
-use App\Modules\Platform\Database\Seeders\LanguageSeeder;
-use App\Modules\Reporting\Actions\RefreshReportDay;
 use App\Modules\Reporting\DTOs\ReportFilter;
 use App\Modules\Reporting\Jobs\RefreshRecentReportsJob;
 use App\Modules\Reporting\Jobs\RefreshWindowReportsJob;
 use App\Modules\Reporting\Metrics\MetricCatalogue;
-use App\Modules\Reporting\Services\ReportDays;
 use App\Modules\Reporting\Services\ReportReader;
-use Carbon\CarbonImmutable;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 
 /*
  * The reports must add up to the ledgers. Orders, payments, refunds and cash collections are written straight into their tables (the ledgers), the summary is worked
@@ -33,54 +27,7 @@ use Illuminate\Support\Str;
  */
 
 beforeEach(function () {
-    $this->travelTo(CarbonImmutable::parse('2026-03-20 12:00:00', 'UTC'));
-    $this->seed([LanguageSeeder::class, PaymentMethodSeeder::class]);
-    $this->days = app(ReportDays::class);
-    $this->refresh = fn (string $day, string $trigger = 'schedule') => app(RefreshReportDay::class)->handle($day, $trigger);
-
-    $this->order = function (array $over = []): int {
-        static $n = 0;
-        $n++;
-
-        return DB::table('orders')->insertGetId(array_replace([
-            'public_id' => strtolower((string) Str::ulid()), 'order_number' => sprintf('VM-REP-%06d', $n), 'contact_name' => 'Test', 'contact_phone' => '+8801712345678', 'locale' => 'en',
-            'channel' => 'web', 'status' => 'confirmed', 'currency' => 'BDT', 'subtotal_minor' => 0, 'discount_minor' => 0, 'shipping_minor' => 0, 'cod_fee_minor' => 0, 'tax_minor' => 0,
-            'grand_total_minor' => 0, 'tax_inclusive' => false, 'payment_method_code' => 'online', 'placed_at' => '2026-03-10 06:00:00', 'created_at' => now(), 'updated_at' => now(),
-        ], $over));
-    };
-    $this->pay = fn (int $orderId, int $amount, string $paidAt, string $method = 'online', string $provider = 'sslcommerz'): int => DB::table('payments')->insertGetId([
-        'public_id' => strtolower((string) Str::ulid()), 'order_id' => $orderId, 'method_code' => $method, 'provider' => $provider, 'amount_minor' => $amount, 'currency' => 'BDT',
-        'captured_minor' => $amount, 'status' => 'paid', 'paid_at' => $paidAt, 'created_at' => $paidAt, 'updated_at' => $paidAt,
-    ]);
-    $this->refund = fn (int $paymentId, int $orderId, int $amount, string $status, string $at): int => DB::table('refunds')->insertGetId([
-        'public_id' => strtolower((string) Str::ulid()), 'payment_id' => $paymentId, 'order_id' => $orderId, 'amount_minor' => $amount, 'currency' => 'BDT', 'status' => $status,
-        'method' => 'manual', 'reason' => 'test', 'refund_ref' => 'RF-'.Str::random(10), 'created_at' => $at, 'updated_at' => $at,
-    ]);
-
-    $this->scenario = function (): array {
-        $o1 = ($this->order)(['subtotal_minor' => 100000, 'discount_minor' => 10000, 'shipping_minor' => 6000, 'grand_total_minor' => 96000]);
-        $o2 = ($this->order)(['channel' => 'admin', 'locale' => 'bn', 'payment_method_code' => 'cod', 'subtotal_minor' => 50000, 'shipping_minor' => 6000, 'cod_fee_minor' => 2000, 'grand_total_minor' => 58000]);
-        $o3 = ($this->order)(['status' => 'cancelled', 'cancelled_at' => '2026-03-10 09:00:00', 'subtotal_minor' => 30000, 'grand_total_minor' => 30000]);
-        $o4 = ($this->order)(['subtotal_minor' => 20000, 'tax_minor' => 2608, 'tax_inclusive' => true, 'grand_total_minor' => 20000]);
-        $p1 = ($this->pay)($o1, 96000, '2026-03-10 06:30:00');
-        $p2 = ($this->pay)($o2, 58000, '2026-03-11 08:00:00', 'cod', 'cod');
-        $p3 = ($this->pay)($o3, 30000, '2026-03-10 07:00:00');
-        DB::table('cod_collections')->insert(['public_id' => strtolower((string) Str::ulid()), 'order_id' => $o2, 'payment_id' => $p2, 'amount_minor' => 58000, 'source' => 'manual', 'collected_at' => '2026-03-11 08:00:00', 'created_at' => '2026-03-11 08:00:00']);
-        ($this->refund)($p1, $o1, 20000, 'succeeded', '2026-03-11 10:00:00');
-        ($this->refund)($p3, $o3, 30000, 'succeeded', '2026-03-11 11:00:00');
-        ($this->refund)($p1, $o1, 5000, 'requested', '2026-03-11 12:00:00');
-
-        return compact('o1', 'o2', 'o3', 'o4', 'p1', 'p2', 'p3');
-    };
-    $this->work = function (string $from = '2026-03-10', string $to = '2026-03-11'): void {
-        foreach ($this->days->range($from, $to) as $day) {
-            ($this->refresh)($day);
-        }
-    };
-    $this->numbers = fn (string $from = '2026-03-10', string $to = '2026-03-11', ?string $channel = null, ?string $method = null, ?string $locale = null): array => app(MetricCatalogue::class)->compute(
-        app(ReportReader::class)->inputs(new ReportFilter($from, $to, $channel, $method, $locale)),
-        true,
-    );
+    reportWorld($this);
 });
 
 describe('the scenario adds up', function () {

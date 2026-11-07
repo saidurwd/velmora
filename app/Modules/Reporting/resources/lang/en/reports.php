@@ -28,4 +28,10 @@ return [
     'finance_note' => 'Payments received, refunds and net sales are shown only to people who may see finance figures.',
     'how' => 'How it is worked out',
     'money_note' => 'All amounts are in taka.',
+    'menu_all' => 'All reports',
+    'index_title' => 'Reports',
+    'index_intro' => 'Every report you may open. Each one can also be asked for as a spreadsheet file.',
+    'sales_description' => 'Gross sales to net sales for a period, with the definition of every figure.',
+    'all_reports' => 'All reports',
+    'first_rows' => 'These are the first :count rows. Ask for the file to get all of them.',
 ];

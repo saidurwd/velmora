@@ -10,9 +10,11 @@ use App\Modules\Inventory\Contracts\Availability;
 use App\Modules\Inventory\Contracts\ReturnStock;
 use App\Modules\Inventory\Contracts\ShipmentStock;
 use App\Modules\Inventory\Contracts\StockInitialiser;
+use App\Modules\Inventory\Contracts\StockReportFigures;
 use App\Modules\Inventory\Contracts\StockReservations;
 use App\Modules\Inventory\Events\StockLow;
 use App\Modules\Inventory\Services\DatabaseAvailability;
+use App\Modules\Inventory\Services\DatabaseStockReportFigures;
 use App\Modules\Inventory\Services\LedgerReturnStock;
 use App\Modules\Inventory\Services\LedgerStockInitialiser;
 use App\Modules\Inventory\Services\OrderShipmentStock;
@@ -38,6 +40,7 @@ class InventoryServiceProvider extends ModuleServiceProvider
         $this->app->bind(ShipmentStock::class, OrderShipmentStock::class);
         $this->app->bind(ReturnStock::class, LedgerReturnStock::class);
         $this->app->bind(StockInitialiser::class, LedgerStockInitialiser::class);
+        $this->app->bind(StockReportFigures::class, DatabaseStockReportFigures::class);
         $this->commands([StockProbeCommand::class, StockOpsProbeCommand::class]);
     }
 

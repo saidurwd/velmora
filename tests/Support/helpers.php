@@ -46,6 +46,11 @@ use App\Modules\Pricing\Actions\SetRegularPrice;
 use App\Modules\Pricing\Database\Seeders\PriceListSeeder;
 use App\Modules\Pricing\Database\Seeders\TaxClassSeeder;
 use App\Modules\Pricing\Services\BreakdownCalculator;
+use App\Modules\Reporting\Actions\RefreshReportDay;
+use App\Modules\Reporting\DTOs\ReportFilter;
+use App\Modules\Reporting\Metrics\MetricCatalogue;
+use App\Modules\Reporting\Services\ReportDays;
+use App\Modules\Reporting\Services\ReportReader;
 use App\Modules\Shipping\Actions\CreateShipment;
 use App\Modules\Shipping\Actions\HandOverShipment;
 use App\Modules\Shipping\Actions\RecordCourierEvent;
@@ -355,4 +360,60 @@ function shopWorld(object $t): void
 
         return app(CreateOrder::class)->handle(new NewOrder(Actor::guest('t'), $userId, 'Rahim', '+8801712345678', 'r@example.com', OrderChannel::Web, $locale, 'online', $physical ? 'standard' : null, (new BreakdownCalculator)->calculate($calc, false, 0, 0, 0), $newLines, $addresses));
     };
+}
+
+/**
+ * A tiny shop ledger for the reports: closures to write orders, payments and refunds straight into their tables, the hand-worked scenario of the reconciliation tests, and the
+ * calls that work report days out. The clock is set to 20 March 2026 (UTC), so earlier March days are in the past.
+ */
+function reportWorld(object $t): void
+{
+    $t->travelTo(CarbonImmutable::parse('2026-03-20 12:00:00', 'UTC'));
+    $t->seed([LanguageSeeder::class, PaymentMethodSeeder::class]);
+    $t->days = app(ReportDays::class);
+    $t->refresh = fn (string $day, string $trigger = 'schedule') => app(RefreshReportDay::class)->handle($day, $trigger);
+
+    $t->order = function (array $over = []): int {
+        static $n = 0;
+        $n++;
+
+        return DB::table('orders')->insertGetId(array_replace([
+            'public_id' => strtolower((string) Str::ulid()), 'order_number' => sprintf('VM-REP-%06d', $n), 'contact_name' => 'Test', 'contact_phone' => '+8801712345678', 'locale' => 'en',
+            'channel' => 'web', 'status' => 'confirmed', 'currency' => 'BDT', 'subtotal_minor' => 0, 'discount_minor' => 0, 'shipping_minor' => 0, 'cod_fee_minor' => 0, 'tax_minor' => 0,
+            'grand_total_minor' => 0, 'tax_inclusive' => false, 'payment_method_code' => 'online', 'placed_at' => '2026-03-10 06:00:00', 'created_at' => now(), 'updated_at' => now(),
+        ], $over));
+    };
+    $t->pay = fn (int $orderId, int $amount, string $paidAt, string $method = 'online', string $provider = 'sslcommerz'): int => DB::table('payments')->insertGetId([
+        'public_id' => strtolower((string) Str::ulid()), 'order_id' => $orderId, 'method_code' => $method, 'provider' => $provider, 'amount_minor' => $amount, 'currency' => 'BDT',
+        'captured_minor' => $amount, 'status' => 'paid', 'paid_at' => $paidAt, 'created_at' => $paidAt, 'updated_at' => $paidAt,
+    ]);
+    $t->refund = fn (int $paymentId, int $orderId, int $amount, string $status, string $at): int => DB::table('refunds')->insertGetId([
+        'public_id' => strtolower((string) Str::ulid()), 'payment_id' => $paymentId, 'order_id' => $orderId, 'amount_minor' => $amount, 'currency' => 'BDT', 'status' => $status,
+        'method' => 'manual', 'reason' => 'test', 'refund_ref' => 'RF-'.Str::random(10), 'created_at' => $at, 'updated_at' => $at,
+    ]);
+
+    $t->scenario = function () use ($t): array {
+        $o1 = ($t->order)(['subtotal_minor' => 100000, 'discount_minor' => 10000, 'shipping_minor' => 6000, 'grand_total_minor' => 96000]);
+        $o2 = ($t->order)(['channel' => 'admin', 'locale' => 'bn', 'payment_method_code' => 'cod', 'subtotal_minor' => 50000, 'shipping_minor' => 6000, 'cod_fee_minor' => 2000, 'grand_total_minor' => 58000]);
+        $o3 = ($t->order)(['status' => 'cancelled', 'cancelled_at' => '2026-03-10 09:00:00', 'subtotal_minor' => 30000, 'grand_total_minor' => 30000]);
+        $o4 = ($t->order)(['subtotal_minor' => 20000, 'tax_minor' => 2608, 'tax_inclusive' => true, 'grand_total_minor' => 20000]);
+        $p1 = ($t->pay)($o1, 96000, '2026-03-10 06:30:00');
+        $p2 = ($t->pay)($o2, 58000, '2026-03-11 08:00:00', 'cod', 'cod');
+        $p3 = ($t->pay)($o3, 30000, '2026-03-10 07:00:00');
+        DB::table('cod_collections')->insert(['public_id' => strtolower((string) Str::ulid()), 'order_id' => $o2, 'payment_id' => $p2, 'amount_minor' => 58000, 'source' => 'manual', 'collected_at' => '2026-03-11 08:00:00', 'created_at' => '2026-03-11 08:00:00']);
+        ($t->refund)($p1, $o1, 20000, 'succeeded', '2026-03-11 10:00:00');
+        ($t->refund)($p3, $o3, 30000, 'succeeded', '2026-03-11 11:00:00');
+        ($t->refund)($p1, $o1, 5000, 'requested', '2026-03-11 12:00:00');
+
+        return compact('o1', 'o2', 'o3', 'o4', 'p1', 'p2', 'p3');
+    };
+    $t->work = function (string $from = '2026-03-10', string $to = '2026-03-11') use ($t): void {
+        foreach ($t->days->range($from, $to) as $day) {
+            ($t->refresh)($day);
+        }
+    };
+    $t->numbers = fn (string $from = '2026-03-10', string $to = '2026-03-11', ?string $channel = null, ?string $method = null, ?string $locale = null): array => app(MetricCatalogue::class)->compute(
+        app(ReportReader::class)->inputs(new ReportFilter($from, $to, $channel, $method, $locale)),
+        true,
+    );
 }
