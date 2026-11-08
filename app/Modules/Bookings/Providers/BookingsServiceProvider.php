@@ -6,6 +6,7 @@ namespace App\Modules\Bookings\Providers;
 
 use App\Modules\Bookings\Actions\ClaimBookingHold;
 use App\Modules\Bookings\Console\BookingProbeCommand;
+use App\Modules\Bookings\Contracts\BookingFigures;
 use App\Modules\Bookings\Contracts\BookingHolds;
 use App\Modules\Bookings\Contracts\CancellationPolicyTexts;
 use App\Modules\Bookings\Events\BookingEnded;
@@ -15,6 +16,7 @@ use App\Modules\Bookings\Listeners\EndBookingsOfRefundedOrder;
 use App\Modules\Bookings\Listeners\ReleaseBookingsForCancelledOrder;
 use App\Modules\Bookings\Notifications\BookingTemplates;
 use App\Modules\Bookings\Privacy\BookingPersonalData;
+use App\Modules\Bookings\Services\DatabaseBookingFigures;
 use App\Modules\Bookings\Services\DatabaseCancellationPolicyTexts;
 use App\Modules\Notifications\Contracts\TemplateRegistry;
 use App\Modules\Orders\Events\OrderCancelled;
@@ -39,6 +41,7 @@ class BookingsServiceProvider extends ModuleServiceProvider
     public function register(): void
     {
         $this->app->bind(BookingHolds::class, ClaimBookingHold::class);
+        $this->app->bind(BookingFigures::class, DatabaseBookingFigures::class);
         $this->app->bind(CancellationPolicyTexts::class, DatabaseCancellationPolicyTexts::class);
     }
 

@@ -75,6 +75,40 @@ return [
             'coupon' => 'Coupon', 'uses' => 'Uses', 'discount' => 'Discount given', 'average_discount' => 'Average discount per use', 'gross_sales' => 'Goods price of those orders', 'discount_share' => 'Discount as share of goods price',
         ],
     ],
+    'customer_cohorts' => [
+        'title' => 'Customer cohorts',
+        'description' => 'Signed-in customers grouped by the month of their first order, and the share of each group that ordered again 1 to 6 months later. Guests are not included (there is no safe way to know two guest orders are one person), and cancelled orders do not count. Worked out again every night, so today’s orders show tomorrow. A month that has not started yet is left blank.',
+        'columns' => [
+            'cohort' => 'First order month', 'customers' => 'Customers', 'month_1' => 'Ordered again after 1 month', 'month_2' => 'After 2 months', 'month_3' => 'After 3 months', 'month_4' => 'After 4 months',
+            'month_5' => 'After 5 months', 'month_6' => 'After 6 months', 'orders' => 'Orders so far', 'sales' => 'Sales after discounts so far',
+        ],
+    ],
+    'booking_utilisation' => [
+        'title' => 'Booking utilisation and no-shows',
+        'description' => 'Each service resource over the period: bookings by what became of them, how much of its working time was booked, and the no-show rate (no-shows out of the bookings whose time came and were not cancelled). A booking belongs to the day its service starts. No-shows and cancelled bookings add no booked time, and bookings still held (not yet paid for) are not counted. Working time follows the weekly timetable, day exceptions and shop holidays.',
+        'columns' => [
+            'resource' => 'Resource', 'bookings' => 'Bookings', 'completed' => 'Completed', 'no_shows' => 'No-shows', 'cancelled' => 'Cancelled', 'no_show_rate' => 'No-show rate',
+            'booked_minutes' => 'Minutes booked', 'open_minutes' => 'Minutes open', 'utilisation' => 'Share of open time booked',
+        ],
+    ],
+    'search_gaps' => [
+        'title' => 'Searches with no results',
+        'description' => 'What customers searched for and did not find, most searched first, so you can add the product or a synonym. Only words searched at least twice are listed. Words that look like personal data (an email address, or seven or more digits) are added together in one hidden row, and everything searched once is one row at the end.',
+        'hidden' => '(hidden: looks like personal data)',
+        'other' => '(searched once: not listed)',
+        'columns' => ['query' => 'Searched for', 'language' => 'Language', 'times' => 'Times', 'last_searched' => 'Last searched'],
+    ],
+    'daily_close' => [
+        'title' => 'Daily close sheet',
+        'description' => 'One page to close a day (or a period): what was sold and taken off, what was cancelled, the money received by payment method (cash on delivery is its own method, so the cash recorded is its row), the money given back, and the net. It uses the same figures as the sales summary, so the two always agree.',
+        'columns' => ['section' => 'Part', 'line' => 'Line', 'count' => 'Count', 'amount' => 'Amount'],
+        'sections' => ['sales' => 'Sales', 'money' => 'Money received', 'result' => 'Result'],
+        'lines' => [
+            'orders' => 'Orders (amount: billed total)', 'gross_sales' => 'Gross sales', 'discounts' => 'Discounts', 'delivery_charges' => 'Delivery charges', 'cod_fees' => 'Cash-on-delivery fees', 'tax' => 'Tax billed',
+            'cancelled' => 'Cancelled orders', 'collected' => 'Total received', 'refunded' => 'Money given back', 'net_sales' => 'Net sales',
+        ],
+    ],
+    'language' => ['en' => 'English', 'bn' => 'Bangla'],
     'kind' => ['customer' => 'Customer', 'origin' => 'Courier brought it back'],
     'reason' => ['wrong_item' => 'Wrong item', 'damaged' => 'Damaged', 'not_as_described' => 'Not as described', 'changed_mind' => 'Changed their mind', 'other' => 'Other', 'undelivered' => 'Not delivered'],
     'common' => [

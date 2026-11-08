@@ -152,7 +152,7 @@ final class SlotSearch
     }
 
     /**
-     * The working windows of one resource on one day: the day's exception if there is one (nothing when closed), else the weekly rules valid on that date.
+     * The working windows of one resource on one day (see {@see OpeningHours}).
      *
      * @param  array<int, array<int, list<\stdClass>>>  $rules
      * @param  array<int, array<string, \stdClass>>  $exceptions
@@ -160,20 +160,7 @@ final class SlotSearch
      */
     private function windows(int $resourceId, string $date, int $weekday, array $rules, array $exceptions): array
     {
-        $exception = $exceptions[$resourceId][$date] ?? null;
-        if ($exception !== null) {
-            return (bool) $exception->is_closed ? [] : [[(string) $exception->start_time, (string) $exception->end_time]];
-        }
-
-        $out = [];
-        foreach ($rules[$resourceId][$weekday] ?? [] as $r) {
-            if (($r->valid_from === null || (string) $r->valid_from <= $date) && ($r->valid_to === null || (string) $r->valid_to >= $date)) {
-                $out[] = [(string) $r->start_time, (string) $r->end_time];
-            }
-        }
-        usort($out, fn (array $a, array $b): int => $a[0] <=> $b[0]);
-
-        return $out;
+        return (new OpeningHours)->windows($resourceId, $date, $weekday, $rules, $exceptions);
     }
 
     /** The start of a local day, as a Carbon in the shop's zone. @throws BookingException */

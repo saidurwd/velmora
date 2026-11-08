@@ -19,3 +19,4 @@ Service bookings (Phase 8, ADR P8-1, P8-2, P8-17). Cross-module use is limited t
 * The guard needs MariaDB >= 11.4 (`PERIOD FOR` + `WITHOUT OVERLAPS`).
 * Phase 9, slice 1b: booking messages go through the notifications platform (`BookingMessenger` claims each (booking, kind, channel, start time) once, then asks `NotificationSender`; templates in `Notifications/BookingTemplates`). `BookingMail` and its retry loop are gone; the platform retries and staff see failures under /admin/notifications.
 * Phase 9, slice 2: `Privacy/BookingPersonalData` exports a customer's bookings; a confirmed or in-progress booking blocks erasure.
+* Phase 10, slice 2d: `Contracts/BookingFigures` gives the Reporting module per-resource bookings by outcome, booked minutes and open minutes; the opening-hours rules moved into `Services/OpeningHours`, shared by slot search and the figures. Index `service_bookings(starts_at, resource_id)`.

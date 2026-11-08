@@ -9,6 +9,8 @@ use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use App\Modules\Search\Console\ReindexSearchCommand;
 use App\Modules\Search\Contracts\CatalogSearch;
+use App\Modules\Search\Contracts\SearchFigures;
+use App\Modules\Search\Services\DatabaseSearchFigures;
 use App\Modules\Search\Services\MariaDbCatalogSearch;
 use App\Modules\Search\Services\SearchIndexer;
 use Illuminate\Support\Facades\Event;
@@ -23,6 +25,7 @@ class SearchServiceProvider extends ModuleServiceProvider
     public function register(): void
     {
         $this->app->bind(CatalogSearch::class, MariaDbCatalogSearch::class);
+        $this->app->bind(SearchFigures::class, DatabaseSearchFigures::class);
     }
 
     public function boot(): void

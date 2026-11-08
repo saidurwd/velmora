@@ -12,7 +12,7 @@ final class ReportCatalogue
     /** @var list<class-string<ReportDefinition>> */
     private const REPORTS = [
         SalesByDay::class, PaymentMethods::class, ChannelsAndLanguages::class, RefundsAndCancellations::class, BestSellers::class, SalesByProduct::class, SalesByCategory::class, SalesByBrand::class,
-        TaxSummary::class, DeliveryPerformance::class, ReturnsByReason::class, CouponPerformance::class, CodAging::class, LowStock::class, StockAging::class,
+        TaxSummary::class, DeliveryPerformance::class, ReturnsByReason::class, CouponPerformance::class, CustomerCohorts::class, BookingUtilisation::class, SearchGaps::class, DailyClose::class, CodAging::class, LowStock::class, StockAging::class,
     ];
 
     /** @var list<ReportDefinition> reports added after the built-in ones */

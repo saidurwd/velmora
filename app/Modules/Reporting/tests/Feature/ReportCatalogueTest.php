@@ -30,8 +30,8 @@ describe('the list', function () {
     it('shows each person only the reports they may open', function () {
         $codes = fn (User $u) => array_map(fn ($r) => $r->code(), app(ReportCatalogue::class)->visibleFor($u));
 
-        expect($codes($this->finance))->toBe(['sales_by_day', 'payment_methods', 'channels_languages', 'refunds_cancellations', 'best_sellers', 'sales_by_product', 'sales_by_category', 'sales_by_brand', 'tax_summary', 'delivery_performance', 'returns_by_reason', 'coupon_performance', 'cod_aging', 'low_stock', 'stock_aging'])
-            ->and($codes($this->analyst))->toBe(['sales_by_day', 'payment_methods', 'channels_languages', 'refunds_cancellations', 'best_sellers', 'sales_by_product', 'sales_by_category', 'sales_by_brand', 'delivery_performance', 'returns_by_reason'])   // not tax, coupons or cash aging (finance), not stock (inventory)
+        expect($codes($this->finance))->toBe(['sales_by_day', 'payment_methods', 'channels_languages', 'refunds_cancellations', 'best_sellers', 'sales_by_product', 'sales_by_category', 'sales_by_brand', 'tax_summary', 'delivery_performance', 'returns_by_reason', 'coupon_performance', 'customer_cohorts', 'booking_utilisation', 'search_gaps', 'daily_close', 'cod_aging', 'low_stock', 'stock_aging'])
+            ->and($codes($this->analyst))->toBe(['sales_by_day', 'payment_methods', 'channels_languages', 'refunds_cancellations', 'best_sellers', 'sales_by_product', 'sales_by_category', 'sales_by_brand', 'delivery_performance', 'returns_by_reason', 'customer_cohorts', 'booking_utilisation', 'search_gaps'])   // not tax, coupons, the close sheet or cash aging (finance), not stock (inventory)
             ->and($codes($this->nobody))->toBe([]);
     });
 
@@ -59,6 +59,10 @@ describe('who may open which report', function () {
         'delivery_performance' => [200, 200, 403],
         'returns_by_reason' => [200, 200, 403],
         'coupon_performance' => [403, 200, 403],
+        'customer_cohorts' => [200, 200, 403],
+        'booking_utilisation' => [200, 200, 403],
+        'search_gaps' => [200, 200, 403],
+        'daily_close' => [403, 200, 403],
         'cod_aging' => [403, 200, 403],
         'low_stock' => [403, 200, 403],
         'stock_aging' => [403, 200, 403],

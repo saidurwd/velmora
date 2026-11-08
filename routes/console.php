@@ -26,6 +26,7 @@ use App\Modules\Payments\Jobs\ReconcilePendingPaymentsJob;
 use App\Modules\Platform\Jobs\DispatchOutboxMessages;
 use App\Modules\Privacy\Jobs\ExpireExportsJob;
 use App\Modules\Reporting\Jobs\ExpireReportExportsJob;
+use App\Modules\Reporting\Jobs\RefreshCohortsJob;
 use App\Modules\Reporting\Jobs\RefreshRecentReportsJob;
 use App\Modules\Reporting\Jobs\RefreshWindowReportsJob;
 use App\Modules\Search\Jobs\PruneSearchQueries;
@@ -46,6 +47,7 @@ Schedule::job(new PurgeExpiredOtpChallenges)->dailyAt('03:15')->name('otp:purge'
 Schedule::job(new NotifyBackInStockJob)->everyFiveMinutes()->name('engagement:back-in-stock')->withoutOverlapping();   // tells people who asked when an item is back
 Schedule::job(new RefreshRecentReportsJob)->everyFifteenMinutes()->name('reports:refresh-recent')->withoutOverlapping();   // works today and yesterday out again for the report screens
 Schedule::job(new RefreshWindowReportsJob)->dailyAt('02:45')->name('reports:refresh-window')->withoutOverlapping();   // the last 35 days, so late cancellations and refunds land on their day
+Schedule::job(new RefreshCohortsJob)->dailyAt('03:15')->name('reports:refresh-cohorts')->withoutOverlapping();   // customer cohorts, worked out again from the order history
 Schedule::job(new ExpireReportExportsJob)->hourly()->name('reports:expire-exports');   // deletes finished report files past their date, marks stuck ones failed
 Schedule::job(new SendCartRemindersJob)->everyFifteenMinutes()->name('engagement:cart-reminders')->withoutOverlapping();   // reminds opted-in customers about a forgotten cart (does nothing unless CART_RECOVERY_ENABLED)
 Schedule::job(new CheckSupportHealthJob)->hourly()->name('support:health');   // writes one error line when tickets were not answered in time
