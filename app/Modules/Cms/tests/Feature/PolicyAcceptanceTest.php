@@ -26,6 +26,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 
 /*
  * Phase 10, slice 3b: policy pages (terms, privacy, returns, shipping, COD), releases, and who accepted which release.
@@ -599,6 +600,8 @@ describe('the staff screen', function () {
     });
 
     it('seeds placeholder policy pages that nobody is asked to accept until they are published', function () {
+        Storage::fake('media');   // the demo data also makes banners with images; never touch the real object store
+        config(['catalog.media.disk' => 'media']);
         $this->seed(DemoCmsSeeder::class);
 
         expect(Page::query()->whereNotNull('kind')->count())->toBe(5)->and(Page::query()->whereNotNull('kind')->where('status', 'published')->count())->toBe(0)
