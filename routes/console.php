@@ -9,6 +9,7 @@ use App\Modules\Cart\Jobs\PurgeExpiredCarts;
 use App\Modules\Catalog\Jobs\PublishScheduledProducts;
 use App\Modules\Catalog\Jobs\ReconcileListing;
 use App\Modules\Cms\Jobs\GenerateSitemaps;
+use App\Modules\Cms\Jobs\PublishDuePagesJob;
 use App\Modules\DigitalProducts\Jobs\CheckKeyStockJob;
 use App\Modules\Engagement\Jobs\CheckSupportHealthJob;
 use App\Modules\Engagement\Jobs\NotifyBackInStockJob;
@@ -54,6 +55,7 @@ Schedule::job(new CheckSupportHealthJob)->hourly()->name('support:health');   //
 Schedule::job(new ExpireExportsJob)->dailyAt('03:20')->name('privacy:expire-exports');   // deletes data copies past their date
 Schedule::job(new ReconcileListing)->everyMinute()->name('catalog:reconcile-listing')->withoutOverlapping();
 Schedule::job(new PruneSearchQueries)->dailyAt('03:10')->name('search:prune-queries');
+Schedule::job(new PublishDuePagesJob)->everyMinute()->name('cms:publish-due')->withoutOverlapping();   // pages scheduled to go live now
 Schedule::job(new GenerateSitemaps)->dailyAt('04:00')->name('seo:sitemaps');
 Schedule::job(new PruneAnalyticsEvents)->dailyAt('03:20')->name('analytics:prune');
 Schedule::job(new ExpireUnpaidPaymentsJob)->everyMinute()->name('payments:expire-unpaid')->withoutOverlapping();

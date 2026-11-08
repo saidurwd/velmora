@@ -20,9 +20,14 @@
         <tbody>
         @forelse ($pages as $page)
             <tr class="border-b border-line">
-                <td class="py-2"><a class="underline" href="{{ route('admin.cms.pages.edit', $page) }}">{{ $page->translate('title') ?? '—' }}</a></td>
-                <td class="py-2">{{ $page->translations->pluck('locale')->map(fn ($l) => strtoupper($l))->join(', ') }}</td>
-                <td class="py-2">{{ __('cms::admin.statuses.'.$page->status) }}@if ($page->publish_at) · {{ \App\Modules\Platform\Support\Fmt::dateTime($page->publish_at) }}@endif</td>
+                <td class="py-2"><a class="underline" href="{{ route('admin.cms.pages.edit', $page) }}">{{ $page->draftVersion?->title() ?: '—' }}</a></td>
+                <td class="py-2">{{ ($page->draftVersion?->translations->pluck('locale') ?? collect())->map(fn ($l) => strtoupper($l))->join(', ') }}</td>
+                <td class="py-2">
+                    {{ __('cms::admin.statuses.'.$page->status) }}
+                    @if ($page->liveVersion) · {{ __('cms::admin.versions.number') }} {{ $page->liveVersion->number }} @endif
+                    @if ($page->scheduledVersion) · {{ __('cms::admin.versions.scheduled', ['time' => \App\Modules\Platform\Support\Fmt::dateTime($page->publish_at)]) }} @endif
+                    @if ($page->draftVersion && $page->draftVersion->id !== $page->live_version_id) · {{ __('cms::admin.versions.latest') }} {{ $page->draftVersion->number }} @endif
+                </td>
             </tr>
         @empty
             <tr><td colspan="3" class="py-6 text-center text-muted">{{ __('cms::admin.empty') }}</td></tr>

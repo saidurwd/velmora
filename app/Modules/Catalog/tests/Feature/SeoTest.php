@@ -14,6 +14,7 @@ use App\Modules\Catalog\Enums\ProductType;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Catalog\Models\Product;
 use App\Modules\Cms\Actions\SavePage;
+use App\Modules\Cms\Actions\TransitionPage;
 use App\Modules\Cms\Database\Seeders\DemoCmsSeeder;
 use App\Modules\Cms\Models\Page;
 use App\Modules\Inventory\Database\Seeders\StockLocationSeeder;
@@ -181,7 +182,10 @@ describe('changed slugs', function () {
         $this->get('/en/c/clothing')->assertStatus(301)->assertRedirect(url('/en/c/apparel'));
 
         $page = Page::findOrFail((int) DB::table('cms_page_translations')->where('slug', 'faq')->value('page_id'));
-        app(SavePage::class)->handle($this->actor, $page, ['en' => ['title' => 'Questions', 'slug' => 'questions', 'body' => '<p>x</p>']]);
+        $base = (int) $page->draftVersion->number;
+        $saved = app(SavePage::class)->handle($this->actor, $page, ['en' => ['title' => 'Questions', 'slug' => 'questions', 'body' => '<p>x</p>']], $base);   // a new draft version: nothing changes for visitors yet
+        $this->get('/en/pages/faq')->assertOk();
+        app(TransitionPage::class)->publish($this->actor, $saved, $base + 1);
         $this->get('/en/pages/faq')->assertStatus(301)->assertRedirect(url('/en/pages/questions'));
         $this->get('/en/pages/questions')->assertOk()->assertSee('<link rel="canonical" href="'.url('/en/pages/questions').'"', false);
     });

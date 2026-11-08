@@ -26,7 +26,7 @@ class PageController
         }
 
         $page = Page::query()->whereKey($translation->page_id)->firstOrFail();
-        abort_unless($page->isLive(), 404); // drafts and not-yet-scheduled pages do not exist publicly
+        abort_unless($page->isLive(), 404); // drafts and scheduled-but-not-yet-published pages do not exist publicly
 
         $alternates = [];
         foreach (PageTranslation::query()->where('page_id', $page->id)->get() as $t) {

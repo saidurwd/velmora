@@ -108,7 +108,7 @@ it('shows new banners, page links and facet labels immediately', function () {
 
     $page = app(SavePage::class)->handle($this->actor, null, ['en' => ['title' => 'Returns policy', 'body' => '<p>x</p>']]);
     $this->get('/en')->assertDontSee('Returns policy');
-    app(TransitionPage::class)->publish($this->actor, Page::findOrFail($page->id));
+    app(TransitionPage::class)->publish($this->actor, Page::findOrFail($page->id), 1);
     $this->get('/en')->assertSee('Returns policy');
 
     $brand = Brand::findOrFail((int) DB::table('brand_translations')->where('slug', 'dhaka-craft')->value('brand_id'));

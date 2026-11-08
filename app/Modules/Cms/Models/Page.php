@@ -8,6 +8,8 @@ use App\Modules\Platform\Concerns\HasPublicId;
 use App\Modules\Platform\Concerns\HasTranslations;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -16,6 +18,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $status
  * @property CarbonImmutable|null $publish_at
  * @property CarbonImmutable|null $published_at
+ * @property int|null $draft_version_id
+ * @property int|null $live_version_id
+ * @property int|null $scheduled_version_id
  */
 class Page extends Model
 {
@@ -40,8 +45,33 @@ class Page extends Model
         return 'page_id';
     }
 
-    public function isLive(?CarbonImmutable $now = null): bool
+    /** @return HasMany<PageVersion, $this> */
+    public function versions(): HasMany
     {
-        return $this->status === 'published' && ($this->publish_at === null || $this->publish_at->lessThanOrEqualTo($now ?? CarbonImmutable::now('UTC')));
+        return $this->hasMany(PageVersion::class, 'page_id')->orderByDesc('number');
+    }
+
+    /** @return BelongsTo<PageVersion, $this> */
+    public function draftVersion(): BelongsTo
+    {
+        return $this->belongsTo(PageVersion::class, 'draft_version_id');
+    }
+
+    /** @return BelongsTo<PageVersion, $this> */
+    public function liveVersion(): BelongsTo
+    {
+        return $this->belongsTo(PageVersion::class, 'live_version_id');
+    }
+
+    /** @return BelongsTo<PageVersion, $this> */
+    public function scheduledVersion(): BelongsTo
+    {
+        return $this->belongsTo(PageVersion::class, 'scheduled_version_id');
+    }
+
+    /** What the public sees. A scheduled version is not live until the job publishes it. */
+    public function isLive(): bool
+    {
+        return $this->status === 'published';
     }
 }

@@ -225,6 +225,9 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 | Table | Columns |
 |---|---|
 | cms_pages (+translations) | STD; slug via translation, status, publish_at; SD |
+| cms_pages (+translations) | STD; slug via translation, status, publish_at (= when the scheduled version goes live; CHECK pairs it with scheduled_version_id), draft_version_id / live_version_id / scheduled_version_id; SD. Translations are the live copy, written only on publish. Index publish_at serves the every-minute due job. |
+| cms_page_versions | id, page_id, number (unique per page, CHECK >= 1), created_by, created_at. Append-only (triggers). |
+| cms_page_version_translations | version_id, locale, title, slug, body, seo_title, seo_description, created_at; unique (version_id, locale); index (locale, slug) serves the "is this draft slug taken" check. Append-only (triggers). |
 | cms_page_versions / policy_versions | version, effective_from, body per locale; policy_acceptances(customer_id, policy_version_id, at) AO |
 | banners (+translations), menus, menu_items | placement, sort, window |
 | search_synonyms | locale, term, synonym; search_queries(normalised_query, locale, result_count, at; no PII) |

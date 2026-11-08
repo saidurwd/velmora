@@ -85,7 +85,7 @@ final class SitemapGenerator
         yield new SitemapEntry(array_combine($locales, array_map(fn ($l) => "/{$l}", $locales)));
         yield from $this->catalog->entries();
 
-        foreach (Page::query()->where('status', 'published')->where(fn ($q) => $q->whereNull('publish_at')->orWhere('publish_at', '<=', now('UTC')))->orderBy('id')->cursor() as $page) {
+        foreach (Page::query()->where('status', 'published')->orderBy('id')->cursor() as $page) {
             $paths = [];
             foreach (PageTranslation::query()->where('page_id', $page->id)->get() as $t) {
                 $paths[$t->locale] = "/{$t->locale}/pages/".rawurlencode($t->slug);

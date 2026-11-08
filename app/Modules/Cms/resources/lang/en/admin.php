@@ -10,6 +10,13 @@ return [
     'publishing' => 'Publishing', 'publish' => 'Publish now', 'unpublish' => 'Unpublish', 'schedule' => 'Schedule', 'publish_at' => 'Publish at (Dhaka time)', 'scheduled_for' => 'scheduled for',
     'fields' => ['title' => 'Title', 'slug' => 'URL slug (optional)', 'body' => 'Content (HTML)', 'seo_title' => 'SEO title', 'seo_description' => 'SEO description', 'sort_order' => 'Sort order'],
     'pages' => ['title' => 'Pages', 'add' => 'Add page', 'edit' => 'Edit page'],
+    'versions' => [
+        'title' => 'Versions', 'number' => 'Version', 'saved_at' => 'Saved', 'state' => 'State', 'live' => 'Live', 'scheduled' => 'Scheduled for :time', 'latest' => 'Latest draft', 'older' => 'Older',
+        'unpublished_changes' => 'The latest draft (version :draft) is not live. The public sees version :live.', 'never_published' => 'Not published yet.',
+        'preview' => 'Preview', 'publish' => 'Publish', 'rollback' => 'Publish this older version', 'schedule' => 'Schedule', 'cancel_schedule' => 'Cancel schedule', 'live_now' => 'Live now', 'none' => 'No versions yet.',
+        'editing' => 'You are editing from version :number. Saving makes version :next.',
+    ],
+    'preview' => ['banner' => 'Preview of version :number. Only staff can see this; visitors cannot.'],
     'banners' => [
         'title' => 'Banners', 'add' => 'Add banner', 'edit' => 'Edit banner', 'placement' => 'Where it appears', 'placements' => ['home_hero' => 'Home page — main banner', 'home_strip' => 'Home page — promotion strip'],
         'link' => 'Link', 'link_help' => 'A page on this site (e.g. /en/pages/delivery) or an https:// address.', 'subtitle' => 'Subtitle', 'cta' => 'Button text', 'alt' => 'Image description (alt text)',
@@ -17,6 +24,8 @@ return [
         'starts' => 'Show from', 'ends' => 'Show until', 'dhaka' => 'Dhaka time. Leave blank for no limit.',
     ],
     'errors' => [
+        'edit_conflict' => 'Someone else saved this page while you were editing. Reload it to see their version, then make your changes again.',
+        'version_not_found' => 'That version does not exist.', 'slug_taken' => 'The :locale address “:slug” is already used by another page. Change the address and save a new version.',
         'faq_invalid' => 'Choose a topic from the list.',
         'faq_half' => 'Give both a question and an answer for each language you fill in.',
         'faq_default_required' => 'The English question and answer are required.',

@@ -16,6 +16,7 @@ Route::middleware(['auth:admin', 'session.policy:admin'])->prefix('cms')->name('
         Route::get('/{page}/edit', [PageController::class, 'edit'])->middleware('permission:cms.view')->name('edit');
         Route::put('/{page}', [PageController::class, 'update'])->middleware('permission:cms.edit')->name('update');
         Route::post('/{page}/transition', [PageController::class, 'transition'])->middleware('permission:cms.publish')->name('transition');
+        Route::get('/{page}/versions/{number}/preview', [PageController::class, 'preview'])->whereNumber('number')->middleware('permission:cms.view')->name('preview');
         Route::delete('/{page}', [PageController::class, 'destroy'])->middleware('permission:cms.edit')->name('destroy');
     });
 

@@ -74,4 +74,19 @@ final class CmsException extends DomainException
     {
         return new self('faq_not_found');
     }
+
+    public static function editConflict(): self
+    {
+        return new self('edit_conflict');
+    }
+
+    public static function versionNotFound(): self
+    {
+        return new self('version_not_found');
+    }
+
+    public static function slugTaken(string $locale, string $slug): self
+    {
+        return new self('slug_taken', ['locale' => strtoupper($locale), 'slug' => $slug]);
+    }
 }

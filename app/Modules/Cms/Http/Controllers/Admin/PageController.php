@@ -8,6 +8,7 @@ use App\Modules\Cms\Actions\SavePage;
 use App\Modules\Cms\Actions\TransitionPage;
 use App\Modules\Cms\Exceptions\CmsException;
 use App\Modules\Cms\Models\Page;
+use App\Modules\Cms\Models\PageVersion;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\Enums\ActorType;
 use App\Modules\Platform\Support\StorefrontCache;
@@ -15,17 +16,18 @@ use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class PageController
 {
     public function index(): View
     {
-        return view('cms::admin.pages.index', ['pages' => Page::query()->with('translations')->latest('id')->paginate(30)]);
+        return view('cms::admin.pages.index', ['pages' => Page::query()->with(['draftVersion.translations', 'liveVersion', 'scheduledVersion'])->latest('id')->paginate(30)]);
     }
 
     public function create(): View
     {
-        return view('cms::admin.pages.form', ['page' => null]);
+        return view('cms::admin.pages.form', ['page' => null, 'draft' => null, 'versions' => collect()]);
     }
 
     public function store(Request $request, SavePage $save): RedirectResponse
@@ -35,7 +37,9 @@ class PageController
 
     public function edit(Page $page): View
     {
-        return view('cms::admin.pages.form', ['page' => $page->load('translations')]);
+        $page->load(['draftVersion.translations', 'liveVersion', 'scheduledVersion']);
+
+        return view('cms::admin.pages.form', ['page' => $page, 'draft' => $page->draftVersion, 'versions' => $page->versions()->limit(50)->get()]);
     }
 
     public function update(Request $request, Page $page, SavePage $save): RedirectResponse
@@ -45,13 +49,19 @@ class PageController
 
     public function transition(Request $request, Page $page, TransitionPage $transition): RedirectResponse
     {
-        $data = $request->validate(['action' => ['required', 'in:publish,schedule,unpublish'], 'publish_at' => ['required_if:action,schedule', 'nullable', 'date']]);
+        $data = $request->validate([
+            'action' => ['required', 'in:publish,schedule,cancel_schedule,unpublish'],
+            'version' => ['required_if:action,publish,schedule', 'nullable', 'integer', 'min:1'],
+            'publish_at' => ['required_if:action,schedule', 'nullable', 'date'],
+        ]);
+        $actor = $this->actor($request);
 
         try {
             match ($data['action']) {
-                'publish' => $transition->publish($this->actor($request), $page),
-                'schedule' => $transition->publish($this->actor($request), $page, CarbonImmutable::parse((string) $data['publish_at'], (string) config('app.display_timezone'))->utc()),
-                'unpublish' => $transition->unpublish($this->actor($request), $page),
+                'publish' => $transition->publish($actor, $page, (int) $data['version']),
+                'schedule' => $transition->schedule($actor, $page, (int) $data['version'], CarbonImmutable::parse((string) $data['publish_at'], (string) config('app.display_timezone'))->utc()),
+                'cancel_schedule' => $transition->cancelSchedule($actor, $page),
+                'unpublish' => $transition->unpublish($actor, $page),
                 default => abort(422),
             };
         } catch (CmsException $e) {
@@ -59,6 +69,20 @@ class PageController
         }
 
         return back()->with('status', __('cms::admin.saved'));
+    }
+
+    /** Staff only: any saved version, published or not, shown as the public page would look. Never cached or indexed. */
+    public function preview(Request $request, Page $page, int $number): Response
+    {
+        $version = PageVersion::query()->with('translations')->where('page_id', $page->id)->where('number', $number)->firstOrFail();
+        $supported = (array) config('app.supported_locales');
+        $locale = in_array($request->query('locale'), $supported, true) ? (string) $request->query('locale') : (string) config('app.default_locale');
+        $translation = $version->translations->firstWhere('locale', $locale) ?? $version->translations->firstWhere('locale', (string) config('app.default_locale'));
+        abort_if($translation === null, 404);
+        app()->setLocale($locale);
+
+        return response()->view('cms::page', ['translation' => $translation, 'preview' => ['number' => $version->number, 'page' => $page, 'locale' => $locale, 'locales' => $version->translations->pluck('locale')->all()]])
+            ->header('Cache-Control', 'no-store, private')->header('X-Robots-Tag', 'noindex, nofollow');
     }
 
     public function destroy(Page $page): RedirectResponse
@@ -74,6 +98,7 @@ class PageController
     {
         $default = (string) config('app.default_locale');
         $rules = ["translations.{$default}.title" => ['required', 'string', 'max:200']];
+        $page === null || $rules['base_version'] = ['required', 'integer', 'min:0'];
         foreach ((array) config('app.supported_locales') as $locale) {
             $rules["translations.{$locale}.title"] ??= ['nullable', 'string', 'max:200'];
             $rules["translations.{$locale}.slug"] = ['nullable', 'string', 'max:120'];
@@ -84,7 +109,7 @@ class PageController
         $data = $request->validate($rules);
 
         try {
-            $saved = $save->handle($this->actor($request), $page, (array) $data['translations']);
+            $saved = $save->handle($this->actor($request), $page, (array) $data['translations'], $page === null ? null : (int) $data['base_version']);
         } catch (CmsException $e) {
             return back()->withInput()->withErrors(['translations' => __('cms::admin.errors.'.$e->reason, $e->params)]);
         }

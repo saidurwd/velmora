@@ -1,2 +1,3 @@
 
 * Phase 9, slice 6: the help centre — `faq_entries` (+ translations), `Actions/SaveFaqEntry`, `Services/FaqReader`; public `/help` with search, staff `/admin/cms/faq`. Plain text; showing a question needs `cms.publish`.
+* Phase 10, slice 3a: page versions — `cms_page_versions` (+ translations), append-only; `Actions/SavePage` makes a version (needs `base_version`), `Actions/TransitionPage` publishes, schedules, cancels, unpublishes and runs one due page; `Actions/PublishDuePages` + `Jobs/PublishDuePagesJob` (every minute); staff preview at `/admin/cms/pages/{page}/versions/{n}/preview`. The public reads `cms_page_translations`, which is written only on publish.

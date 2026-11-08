@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Cms\Actions\PublishDuePages;
 use App\Modules\Cms\Contracts\BannerSource;
 use App\Modules\Cms\Contracts\PageDirectory;
 use App\Modules\Cms\Database\Seeders\DemoCmsSeeder;
@@ -47,11 +48,11 @@ describe('pages', function () {
         $staff = catalogStaff(['cms.view', 'cms.edit']);
         $this->actingAs($staff, 'admin')->post('/admin/cms/pages', pageForm())->assertRedirect();
 
-        $page = Page::firstOrFail();
-        expect($page->translations)->toHaveCount(2)
-            ->and($page->translations->firstWhere('locale', 'en')->slug)->toBe('delivery-information')
-            ->and($page->translations->firstWhere('locale', 'bn')->slug)->toBe('ডেলিভারি-তথ্য')
-            ->and($page->translations->firstWhere('locale', 'en')->body)->not->toContain('<script>')->toContain('2–4 days');
+        $draft = Page::firstOrFail()->draftVersion;   // content lives in the draft version until it is published
+        expect($draft->translations)->toHaveCount(2)
+            ->and($draft->translations->firstWhere('locale', 'en')->slug)->toBe('delivery-information')
+            ->and($draft->translations->firstWhere('locale', 'bn')->slug)->toBe('ডেলিভারি-তথ্য')
+            ->and($draft->translations->firstWhere('locale', 'en')->body)->not->toContain('<script>')->toContain('2–4 days');
     });
 
     it('requires the English title and keeps slugs unique per language', function () {
@@ -61,7 +62,7 @@ describe('pages', function () {
 
         $this->actingAs($staff, 'admin')->post('/admin/cms/pages', pageForm());
         $this->actingAs($staff, 'admin')->post('/admin/cms/pages', pageForm());
-        expect(DB::table('cms_page_translations')->where('locale', 'en')->pluck('slug')->sort()->values()->all())->toBe(['delivery-information', 'delivery-information-2']);
+        expect(DB::table('cms_page_version_translations')->where('locale', 'en')->pluck('slug')->sort()->values()->all())->toBe(['delivery-information', 'delivery-information-2']);
     });
 
     it('shows only live pages to the public, in the right language', function () {
@@ -71,7 +72,7 @@ describe('pages', function () {
 
         $this->get('/en/pages/delivery-information')->assertNotFound(); // draft
 
-        $this->actingAs($staff, 'admin')->post("/admin/cms/pages/{$page->public_id}/transition", ['action' => 'publish'])->assertRedirect();
+        $this->actingAs($staff, 'admin')->post("/admin/cms/pages/{$page->public_id}/transition", ['action' => 'publish', 'version' => 1])->assertRedirect();
         $this->get('/en/pages/delivery-information')->assertOk()->assertSee('Delivery information')->assertDontSee('alert(1)', false);
         $this->get('/bn/pages/'.rawurlencode('ডেলিভারি-তথ্য')) // browsers percent-encode non-ASCII paths
             ->assertOk()->assertSee('ডেলিভারি তথ্য');
@@ -89,12 +90,14 @@ describe('pages', function () {
         $this->actingAs($staff, 'admin')->post('/admin/cms/pages', pageForm());
         $page = Page::firstOrFail();
 
-        $this->actingAs($staff, 'admin')->post("/admin/cms/pages/{$page->public_id}/transition", ['action' => 'schedule', 'publish_at' => '2026-12-02T12:00'])->assertRedirect();
+        $this->actingAs($staff, 'admin')->post("/admin/cms/pages/{$page->public_id}/transition", ['action' => 'schedule', 'version' => 1, 'publish_at' => '2026-12-02T12:00'])->assertRedirect();
         $this->get('/en/pages/delivery-information')->assertNotFound();
 
         $this->travelTo(CarbonImmutable::parse('2026-12-02 07:00:00', 'UTC'));
         $clock->travelTo(CarbonImmutable::parse('2026-12-02 07:00:00', 'UTC')); // 13:00 Dhaka: past the 12:00 Dhaka go-live
-        expect($page->fresh()->isLive($clock->now()))->toBeTrue();
+        expect($page->fresh()->isLive())->toBeFalse();   // nothing goes live by the clock alone: the scheduler publishes it
+        app(PublishDuePages::class)->handle();
+        expect($page->fresh()->isLive())->toBeTrue();
         expect(app(PageDirectory::class)->published('en'))->toHaveCount(1);
     });
 
@@ -102,7 +105,7 @@ describe('pages', function () {
         $staff = catalogStaff(['cms.edit', 'cms.publish']);
         $this->actingAs($staff, 'admin')->post('/admin/cms/pages', ['translations' => ['en' => ['title' => 'Empty']]]);
 
-        $this->actingAs($staff, 'admin')->post('/admin/cms/pages/'.Page::firstOrFail()->public_id.'/transition', ['action' => 'publish'])->assertSessionHasErrors('transition');
+        $this->actingAs($staff, 'admin')->post('/admin/cms/pages/'.Page::firstOrFail()->public_id.'/transition', ['action' => 'publish', 'version' => 1])->assertSessionHasErrors('transition');
     });
 
     it('gates the page screens by permission', function () {

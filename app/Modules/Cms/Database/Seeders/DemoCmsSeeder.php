@@ -51,7 +51,7 @@ class DemoCmsSeeder extends Seeder
                 'en' => ['title' => $t['en'][0], 'slug' => $slug, 'body' => $t['en'][1]],
                 'bn' => ['title' => $t['bn'][0], 'body' => $t['bn'][1]],
             ]);
-            app(TransitionPage::class)->publish($actor, Page::query()->findOrFail($page->id));
+            app(TransitionPage::class)->publish($actor, Page::query()->findOrFail($page->id), 1);
         }
 
         if (DB::table('banners')->count() === 0) {
