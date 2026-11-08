@@ -9,12 +9,14 @@ use App\Modules\Platform\Support\ModuleServiceProvider;
 use App\Modules\Pricing\Actions\RedeemCoupons;
 use App\Modules\Pricing\Console\CouponProbeCommand;
 use App\Modules\Pricing\Contracts\CartPricer;
+use App\Modules\Pricing\Contracts\CouponFigures;
 use App\Modules\Pricing\Contracts\CouponRedeemer;
 use App\Modules\Pricing\Contracts\DiscountEvaluator;
 use App\Modules\Pricing\Contracts\PriceCatalog;
 use App\Modules\Pricing\Contracts\PriceWriter;
 use App\Modules\Pricing\Contracts\TaxRates;
 use App\Modules\Pricing\Services\ActionPriceWriter;
+use App\Modules\Pricing\Services\DatabaseCouponFigures;
 use App\Modules\Pricing\Services\DatabaseDiscountEvaluator;
 use App\Modules\Pricing\Services\DatabaseTaxRates;
 use App\Modules\Pricing\Services\EngineCartPricer;
@@ -46,6 +48,7 @@ class PricingServiceProvider extends ModuleServiceProvider
         $this->app->bind(CartPricer::class, EngineCartPricer::class);
         $this->app->bind(DiscountEvaluator::class, DatabaseDiscountEvaluator::class);
         $this->app->bind(CouponRedeemer::class, RedeemCoupons::class);
+        $this->app->bind(CouponFigures::class, DatabaseCouponFigures::class);
         $this->commands([CouponProbeCommand::class]);
     }
 }

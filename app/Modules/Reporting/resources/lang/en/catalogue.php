@@ -52,6 +52,31 @@ return [
         'title' => 'Tax summary',
         'description' => 'The tax billed on orders placed in the period, by kind of charge and rate. It is what the orders say, not a tax return: cancelled orders are left out, refunds are not taken off, and there are no credit notes.',
     ],
+    'delivery_performance' => [
+        'title' => 'Delivery performance',
+        'description' => 'How each courier did on the parcels handed to it in the period: delivered, failed, brought back and still on the way, with the average hours from handover to delivery. Parcels not yet handed over, and cancelled ones, are left out.',
+        'columns' => [
+            'courier' => 'Courier', 'parcels' => 'Parcels', 'delivered' => 'Delivered', 'failed' => 'Failed', 'returned' => 'Brought back', 'in_transit' => 'Still on the way',
+            'delivery_rate' => 'Delivered share', 'return_rate' => 'Brought-back share', 'failed_attempts' => 'Failed attempts', 'avg_hours' => 'Average hours to deliver', 'cod_value' => 'Cash to collect',
+        ],
+    ],
+    'returns_by_reason' => [
+        'title' => 'Returns by reason',
+        'description' => 'Return requests made in the period, by who started them (the customer, or the courier bringing a parcel back) and the reason chosen, most requests first. It does not show money: refunds are not linked to returns yet.',
+        'columns' => [
+            'kind' => 'Started by', 'reason' => 'Reason', 'requests' => 'Requests', 'units' => 'Units asked for', 'approved' => 'Approved', 'rejected' => 'Rejected', 'received' => 'Goods received',
+            'share' => 'Share of requests',
+        ],
+    ],
+    'coupon_performance' => [
+        'title' => 'Coupon performance',
+        'description' => 'What each coupon cost and what it was used on, for uses in the period, the dearest first. Uses on cancelled orders or in another currency are left out. An order that used two coupons counts in full under each, so do not add the goods price column up.',
+        'columns' => [
+            'coupon' => 'Coupon', 'uses' => 'Uses', 'discount' => 'Discount given', 'average_discount' => 'Average discount per use', 'gross_sales' => 'Goods price of those orders', 'discount_share' => 'Discount as share of goods price',
+        ],
+    ],
+    'kind' => ['customer' => 'Customer', 'origin' => 'Courier brought it back'],
+    'reason' => ['wrong_item' => 'Wrong item', 'damaged' => 'Damaged', 'not_as_described' => 'Not as described', 'changed_mind' => 'Changed their mind', 'other' => 'Other', 'undelivered' => 'Not delivered'],
     'common' => [
         'uncategorised' => 'Uncategorised',
         'no_brand' => 'No brand',

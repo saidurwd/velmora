@@ -7,6 +7,7 @@ namespace App\Modules\Orders\Services;
 use App\Modules\Orders\Contracts\SalesFigures;
 use App\Modules\Orders\DTOs\LineSalesRow;
 use App\Modules\Orders\DTOs\OrderFact;
+use App\Modules\Orders\DTOs\OrderTotals;
 use App\Modules\Orders\DTOs\SalesRow;
 use App\Modules\Orders\DTOs\TaxSalesRow;
 use Carbon\CarbonImmutable;
@@ -83,6 +84,18 @@ final class DatabaseSalesFigures implements SalesFigures
         foreach (array_chunk(array_values(array_unique($orderIds)), 1000) as $chunk) {
             foreach (DB::table('orders')->whereIn('id', $chunk)->get(['id', 'channel', 'locale', 'status']) as $r) {   // primary key
                 $out[(int) $r->id] = new OrderFact((string) $r->channel, (string) $r->locale, $r->status === 'cancelled');
+            }
+        }
+
+        return $out;
+    }
+
+    public function totals(array $orderIds): array
+    {
+        $out = [];
+        foreach (array_chunk(array_values(array_unique($orderIds)), 1000) as $chunk) {
+            foreach (DB::table('orders')->whereIn('id', $chunk)->get(['id', 'currency', 'status', 'subtotal_minor']) as $r) {   // primary key
+                $out[(int) $r->id] = new OrderTotals((string) $r->currency, $r->status === 'cancelled', (int) $r->subtotal_minor);
             }
         }
 

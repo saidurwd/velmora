@@ -1,2 +1,3 @@
 
 * Phase 9, slice 5: customer returns portal (`Http/Controllers/Web/ReturnPortalController`, `Services/ReturnPortal`, `Actions/WithdrawOwnReturn`; pages `/account/orders/{order}/return`, `/account/returns`); `Services/ReturnMessages` tells the customer when a return is allowed or refused (`Notifications/ReturnTemplates`); `Privacy/ReturnPersonalData` is this module's part of the data copy and erasure (an open return blocks erasure; `reason` may only be cleared).
+* Phase 10, slice 2c: `Contracts/DeliveryFigures` (parcels handed over in a window, per courier) and `Contracts/ReturnFigures` (return requests in a window, per kind and reason code) feed the Reporting module; indexes `shipments(handed_over_at, courier)` and `return_requests(created_at, kind, reason_code)`.

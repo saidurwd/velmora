@@ -10,6 +10,8 @@ use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use App\Modules\Privacy\Contracts\PersonalDataRegistry;
 use App\Modules\Shipping\Console\ShipmentProbeCommand;
+use App\Modules\Shipping\Contracts\DeliveryFigures;
+use App\Modules\Shipping\Contracts\ReturnFigures;
 use App\Modules\Shipping\Contracts\ShippingQuoter;
 use App\Modules\Shipping\Couriers\FakeCourier;
 use App\Modules\Shipping\Couriers\ManualCourier;
@@ -21,6 +23,8 @@ use App\Modules\Shipping\Listeners\OpenReturnForReturnedParcel;
 use App\Modules\Shipping\Notifications\ReturnTemplates;
 use App\Modules\Shipping\Privacy\ReturnPersonalData;
 use App\Modules\Shipping\Services\CourierRegistry;
+use App\Modules\Shipping\Services\DatabaseDeliveryFigures;
+use App\Modules\Shipping\Services\DatabaseReturnFigures;
 use App\Modules\Shipping\Services\DatabaseShippingQuoter;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -37,6 +41,8 @@ class ShippingServiceProvider extends ModuleServiceProvider
     public function register(): void
     {
         $this->app->bind(ShippingQuoter::class, DatabaseShippingQuoter::class);
+        $this->app->bind(DeliveryFigures::class, DatabaseDeliveryFigures::class);
+        $this->app->bind(ReturnFigures::class, DatabaseReturnFigures::class);
         $this->app->singleton(CourierRegistry::class);
     }
 
