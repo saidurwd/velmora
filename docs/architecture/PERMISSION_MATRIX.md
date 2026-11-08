@@ -62,6 +62,8 @@ Default grants for the seeded roles. Roles are created once; administrators may 
 | `reports.view` | ✔ | ✔ |  |  |  | ✔ |  |  | ✔ |
 | `reports.export` ⚠ | ✔ | ✔ |  |  |  | ✔ |  |  |  |
 | `reports.finance.view` ⚠ | ✔ | ✔ |  |  |  | ✔ |  |  |  |
+| `cms.policies.manage` ⚠ | ✔ | ✔ |  |  |  |  |  |  |  |
+| `policies.acceptance.view` | ✔ | ✔ |  |  |  |  |  |  |  |
 
 ## Rules enforced in code
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Cms\Http\Controllers\Admin\BannerController;
 use App\Modules\Cms\Http\Controllers\Admin\FaqController;
 use App\Modules\Cms\Http\Controllers\Admin\PageController;
+use App\Modules\Cms\Http\Controllers\Admin\PolicyController;
 use Illuminate\Support\Facades\Route;
 
 // Mounted under /admin with the `admin.` name prefix.
@@ -18,6 +19,11 @@ Route::middleware(['auth:admin', 'session.policy:admin'])->prefix('cms')->name('
         Route::post('/{page}/transition', [PageController::class, 'transition'])->middleware('permission:cms.publish')->name('transition');
         Route::get('/{page}/versions/{number}/preview', [PageController::class, 'preview'])->whereNumber('number')->middleware('permission:cms.view')->name('preview');
         Route::delete('/{page}', [PageController::class, 'destroy'])->middleware('permission:cms.edit')->name('destroy');
+    });
+
+    Route::prefix('policies')->name('policies.')->group(function (): void {
+        Route::get('/', [PolicyController::class, 'index'])->middleware('permission:cms.view')->name('index');
+        Route::post('/{kind}/assign', [PolicyController::class, 'assign'])->where('kind', 'terms|privacy|returns|shipping|cod')->middleware(['permission:cms.policies.manage', 'throttle:60,1'])->name('assign');
     });
 
     Route::prefix('faq')->name('faq.')->group(function (): void {

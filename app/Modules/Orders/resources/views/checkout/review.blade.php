@@ -59,6 +59,8 @@
                 @endforelse
             </fieldset>
 
+            @include('cms::policies.accept', ['notices' => $policyNotices])
+
             <div class="flex flex-wrap gap-3">
                 <button type="submit" formaction="{{ route('checkout.choose', ['locale' => $locale]) }}" class="min-h-11 rounded-md border border-line px-5 py-2">{{ __('orders::checkout.update_totals') }}</button>
             </div>

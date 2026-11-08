@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Modules\IdentityAccess\Http\Requests;
 
+use App\Modules\IdentityAccess\Http\Requests\Concerns\AsksForPolicies;
 use App\Modules\Platform\DTOs\PhoneNumber;
 use Illuminate\Foundation\Http\FormRequest;
 
 class PhoneRequest extends FormRequest
 {
+    use AsksForPolicies;
+
     public function authorize(): bool
     {
         return true;
@@ -23,7 +26,13 @@ class PhoneRequest extends FormRequest
                     $fail(__('identity-access::auth.phone.invalid'));
                 }
             }],
-        ];
+        ] + $this->policyRules();
+    }
+
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return $this->policyMessages();
     }
 
     public function phone(): PhoneNumber

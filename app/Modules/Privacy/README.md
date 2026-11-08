@@ -10,3 +10,4 @@ Customer privacy tools (Phase 9, slice 2): a copy of one's data, and erasure of 
 * The settings `privacy.export_days` (7), `privacy.export_cooldown_hours` (24) and `privacy.financial_retention_years` (6, informational; ledger rows are never deleted) override `config/privacy.php`.
 
 Cross-module use is limited to Contracts, DTOs, Enums and Events (BD-11).
+* Phase 10, slice 3b: Cms adds its part (`policy_acceptances`) to the data copy and, on erasure, unlinks a customer's acceptances (the rows stay as anonymous counts).

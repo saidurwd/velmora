@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\IdentityAccess\Actions;
 
+use App\Modules\Cms\Contracts\PolicyAcceptances;
 use App\Modules\IdentityAccess\Contracts\CustomerRegistration;
 use App\Modules\IdentityAccess\Enums\AccountType;
 use App\Modules\IdentityAccess\Enums\UserStatus;
@@ -26,11 +27,12 @@ use Illuminate\Support\Facades\Hash;
  */
 final class RegisterCustomerWithEmail implements CustomerRegistration
 {
-    public function __construct(private readonly Outbox $outbox, private readonly AuditLogger $audit) {}
+    public function __construct(private readonly Outbox $outbox, private readonly AuditLogger $audit, private readonly PolicyAcceptances $policies) {}
 
-    public function handle(string $name, string $email, string $password, string $locale): void
+    /** @param  list<int>  $policyReleaseIds */
+    public function handle(string $name, string $email, string $password, string $locale, array $policyReleaseIds = []): void
     {
-        $this->registerNew($name, $email, $password, $locale);
+        $this->registerNew($name, $email, $password, $locale, $policyReleaseIds);
     }
 
     public function passwordRule(): ValidationRule
@@ -38,9 +40,12 @@ final class RegisterCustomerWithEmail implements CustomerRegistration
         return new StrongPassword;
     }
 
-    public function registerNew(string $name, string $email, string $password, string $locale): ?int
+    public function registerNew(string $name, string $email, string $password, string $locale, ?array $policyReleaseIds = null): ?int
     {
         $email = mb_strtolower(trim($email));
+
+        // before anything else, so a new and an existing address are treated alike
+        $policyReleaseIds === null || $this->policies->assertShown(null, 'signup', null, $policyReleaseIds);
 
         $existing = User::query()->where('email', $email)->first();
         if ($existing !== null) {
@@ -51,12 +56,13 @@ final class RegisterCustomerWithEmail implements CustomerRegistration
         }
 
         try {
-            $user = Transactions::run(function () use ($name, $email, $password, $locale): User {
+            $user = Transactions::run(function () use ($name, $email, $password, $locale, $policyReleaseIds): User {
                 $user = new User;
                 $user->fill(['name' => $name, 'email' => $email, 'password' => $password, 'locale' => $locale]);
                 $user->forceFill(['account_type' => AccountType::Customer, 'status' => UserStatus::Active])->save();
 
                 $this->outbox->record(new UserRegistered($user->id, $user->public_id, $name, $email, null));
+                $policyReleaseIds === null || $policyReleaseIds === [] || $this->policies->accept($user->id, null, 'signup', $policyReleaseIds);
 
                 return $user;
             });

@@ -22,6 +22,9 @@ class PlaceOrderRequest extends FormRequest
             'payment' => ['required', 'string', 'max:30', 'regex:/^[a-z0-9_-]+$/'],
             'expected_total' => ['required', 'string', 'regex:/^\d{1,12}$/'],
             'place_token' => ['required', 'string', 'size:40'],
+            'accept_policies' => ['nullable', 'boolean'],
+            'policy_releases' => ['nullable', 'array', 'max:10'],
+            'policy_releases.*' => ['integer', 'min:1'],
         ];
     }
 

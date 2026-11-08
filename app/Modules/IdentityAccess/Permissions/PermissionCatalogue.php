@@ -16,7 +16,7 @@ final class PermissionCatalogue
     /** Permission name => true when using it is audited even for Super Admin (money, staff, settings, PII). */
     public const SENSITIVE = [
         'staff.create', 'staff.update', 'staff.disable', 'roles.manage', 'settings.manage', 'payments.refund', 'payments.reconcile',
-        'customers.view_pii', 'customers.export', 'privacy.manage', 'reports.finance.view', 'reports.export', 'inventory.adjust', 'audit.view',
+        'customers.view_pii', 'customers.export', 'privacy.manage', 'reports.finance.view', 'reports.export', 'inventory.adjust', 'audit.view', 'cms.policies.manage',
     ];
 
     /** @var array<string, list<string>> resource => actions */
@@ -46,7 +46,7 @@ final class PermissionCatalogue
     ];
 
     /** Three-segment permissions that do not fit resource.action. */
-    private const EXTRA = ['reports.finance.view'];
+    private const EXTRA = ['reports.finance.view', 'cms.policies.manage', 'policies.acceptance.view'];
 
     /** @var array<string, list<string>> default role => permissions ('*' = every permission). Applied only when the role is first created. */
     private const ROLES = [
@@ -57,7 +57,7 @@ final class PermissionCatalogue
         'Warehouse' => ['dashboard.view', 'inventory.*', 'orders.view', 'shipping.view', 'shipping.create_shipment', 'catalog.view'],
         'Finance' => ['dashboard.view', 'payments.*', 'orders.view', 'orders.export', 'reports.view', 'reports.export', 'reports.finance.view', 'customers.view'],
         'Support' => ['dashboard.view', 'support.*', 'orders.view', 'customers.view', 'customers.view_pii', 'reviews.moderate'],
-        'Content Editor' => ['dashboard.view', 'cms.*', 'catalog.view'],
+        'Content Editor' => ['dashboard.view', 'cms.view', 'cms.edit', 'cms.publish', 'catalog.view'],   // not cms.policies.manage: that decides what customers must accept
         'Read-only' => ['dashboard.view', 'catalog.view', 'orders.view', 'inventory.view', 'payments.view', 'shipping.view', 'reports.view', 'promotions.view', 'cms.view'],
     ];
 

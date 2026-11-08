@@ -23,6 +23,7 @@ return [
     'payment_due' => 'Please complete your payment of :total.', 'payment_checking' => 'We are confirming your payment. This usually takes a moment.', 'payment_not_completed' => 'The payment was not completed. You can try again.', 'payment_review' => 'We received your payment but need to check it before we can confirm the order. We will contact you shortly.',
     'pay_now' => 'Pay now', 'pay_again' => 'Try payment again', 'check_again' => 'Check again', 'paid_with' => 'Payment method: :method',
     'errors' => [
+        'policies_required' => 'Please accept our policies to place your order.', 'policies_changed' => 'A policy changed while you were checking out. Please read the new version, tick the box and place your order again.',
         'cart_empty' => 'Your cart is empty.', 'cart_problem' => 'Something in your cart changed. Please check it first.', 'address_missing' => 'Please choose or enter a delivery address.',
         'contact_required' => 'Please enter your name and a valid mobile number.', 'phone_invalid' => 'Enter a valid Bangladesh mobile number, like 01712 345678.',
         'cannot_deliver' => 'Sorry, we cannot deliver to this place yet.', 'shipping_method_invalid' => 'Please choose a delivery option.',

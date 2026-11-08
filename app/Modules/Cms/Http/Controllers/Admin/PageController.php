@@ -53,13 +53,16 @@ class PageController
             'action' => ['required', 'in:publish,schedule,cancel_schedule,unpublish'],
             'version' => ['required_if:action,publish,schedule', 'nullable', 'integer', 'min:1'],
             'publish_at' => ['required_if:action,schedule', 'nullable', 'date'],
+            'acceptance_required' => ['nullable', 'in:0,1'],
         ]);
         $actor = $this->actor($request);
+        // only someone who manages policies may call a release a minor edit; everyone else's release asks customers to accept again
+        $required = $page->kind === null || ! $request->user('admin')?->can('cms.policies.manage') || (string) ($data['acceptance_required'] ?? '1') === '1';
 
         try {
             match ($data['action']) {
-                'publish' => $transition->publish($actor, $page, (int) $data['version']),
-                'schedule' => $transition->schedule($actor, $page, (int) $data['version'], CarbonImmutable::parse((string) $data['publish_at'], (string) config('app.display_timezone'))->utc()),
+                'publish' => $transition->publish($actor, $page, (int) $data['version'], $required),
+                'schedule' => $transition->schedule($actor, $page, (int) $data['version'], CarbonImmutable::parse((string) $data['publish_at'], (string) config('app.display_timezone'))->utc(), $required),
                 'cancel_schedule' => $transition->cancelSchedule($actor, $page),
                 'unpublish' => $transition->unpublish($actor, $page),
                 default => abort(422),
@@ -88,6 +91,7 @@ class PageController
     public function destroy(Page $page): RedirectResponse
     {
         abort_if($page->status === 'published', 422, __('cms::admin.unpublish_first'));
+        abort_if($page->kind !== null, 422, __('cms::policies.errors.kind_locked'));
         $page->delete();
         app(StorefrontCache::class)->bump();
 

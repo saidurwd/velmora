@@ -204,7 +204,8 @@ it('seeds starter pages and banners, links pages in the footer, and refuses to r
     $this->seed(DemoCmsSeeder::class);
     $before = [Page::count(), Banner::count()];
 
-    expect($before)->toBe([3, 2]);
+    expect($before)->toBe([8, 2])   // three starter pages, plus five draft placeholders for the policies (see PolicyAcceptanceTest)
+        ->and(Page::query()->where('status', 'published')->count())->toBe(3);
     $this->seed(DemoCmsSeeder::class);
     expect([Page::count(), Banner::count()])->toBe($before); // re-runnable
 

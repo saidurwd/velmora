@@ -11,6 +11,7 @@
     <form method="POST" action="{{ route('login.phone') }}" class="space-y-4" novalidate>
         @csrf
         <x-platform::form.field name="phone" type="tel" inputmode="tel" :label="__('identity-access::auth.phone.label')" :help="__('identity-access::auth.phone.help')" autocomplete="tel" required />
+        @include('cms::policies.accept', ['notices' => $notices])
         <x-platform::form.button class="w-full">{{ __('identity-access::auth.phone.submit') }}</x-platform::form.button>
     </form>
 

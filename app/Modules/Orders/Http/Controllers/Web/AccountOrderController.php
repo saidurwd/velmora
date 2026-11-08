@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Orders\Http\Controllers\Web;
 
+use App\Modules\Cms\Contracts\PolicyAcceptances;
 use App\Modules\IdentityAccess\Contracts\CustomerRegistration;
 use App\Modules\Orders\Actions\CancelOwnOrder;
 use App\Modules\Orders\Actions\LinkOrderToCustomer;
@@ -72,12 +73,13 @@ class AccountOrderController
     }
 
     /** From the signed confirmation page: a guest makes an account and this order goes into it. Same answer whether or not the address already had an account. */
-    public function createAccount(CreateAccountFromOrderRequest $request, CustomerRegistration $accounts, LinkOrderToCustomer $link, string $order): RedirectResponse
+    public function createAccount(CreateAccountFromOrderRequest $request, CustomerRegistration $accounts, LinkOrderToCustomer $link, PolicyAcceptances $policies, string $order): RedirectResponse
     {
         $model = Order::query()->where('public_id', $order)->firstOrFail();
         if ($model->user_id === null) {
             $userId = $accounts->registerNew((string) $request->validated('name'), (string) $request->validated('email'), (string) $request->validated('password'), app()->getLocale());
             if ($userId !== null) {
+                $policies->carryOrderToUser($model->id, $userId); // what they accepted at checkout counts for the new account
                 try {
                     $link->handle(Actor::guest('order-confirmation'), $model->public_id, $userId);
                 } catch (OrderException) {

@@ -17,6 +17,7 @@
         @endphp
         <section aria-labelledby="pub-h" class="space-y-3 rounded-md border border-line p-4">
             <h2 id="pub-h" class="text-lg font-semibold">{{ __('cms::admin.publishing') }}</h2>
+            @if ($page->kind !== null)<p class="text-sm">{{ __('cms::policies.page_is', ['kind' => __('cms::policies.kinds.'.$page->kind)]) }}</p>@endif
             <p>{{ __('cms::admin.status') }}: <strong>{{ __('cms::admin.statuses.'.$page->status) }}</strong>@if ($live) · {{ __('cms::admin.versions.number') }} {{ $live }}@endif</p>
             @if ($live === null)<p class="text-muted">{{ __('cms::admin.versions.never_published') }}</p>@endif
             @if ($latest !== null && $latest !== $live)<p class="text-warning">{{ __('cms::admin.versions.unpublished_changes', ['draft' => $latest, 'live' => $live ?? '—']) }}</p>@endif
@@ -59,6 +60,12 @@
                                     <form method="POST" action="{{ route('admin.cms.pages.transition', $page) }}" class="flex flex-wrap items-end gap-2">
                                         @csrf
                                         <input type="hidden" name="version" value="{{ $v->number }}">
+                                        @if ($page->kind !== null && auth('admin')->user()?->can('cms.policies.manage'))
+                                            <fieldset class="text-xs"><legend class="font-medium">{{ __('cms::policies.acceptance.label') }}</legend>
+                                                <label class="me-3"><input type="radio" name="acceptance_required" value="1" checked> {{ __('cms::policies.acceptance.yes') }}</label>
+                                                <label><input type="radio" name="acceptance_required" value="0"> {{ __('cms::policies.acceptance.no') }}</label>
+                                            </fieldset>
+                                        @endif
                                         <button name="action" value="publish" class="min-h-11 rounded-md bg-brand-600 px-3 py-2 text-white">{{ $live !== null && $v->number < $live ? __('cms::admin.versions.rollback') : __('cms::admin.versions.publish') }}</button>
                                         <span><label for="publish_at_{{ $v->number }}" class="block text-xs font-medium">{{ __('cms::admin.publish_at') }}</label>
                                         <input id="publish_at_{{ $v->number }}" name="publish_at" type="datetime-local" class="rounded-md border border-line px-2 py-1"></span>

@@ -21,6 +21,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int|null $draft_version_id
  * @property int|null $live_version_id
  * @property int|null $scheduled_version_id
+ * @property string|null $kind
+ * @property bool $schedule_requires_acceptance
  */
 class Page extends Model
 {
@@ -32,7 +34,7 @@ class Page extends Model
 
     protected function casts(): array
     {
-        return ['publish_at' => 'immutable_datetime', 'published_at' => 'immutable_datetime'];
+        return ['publish_at' => 'immutable_datetime', 'published_at' => 'immutable_datetime', 'schedule_requires_acceptance' => 'boolean'];
     }
 
     protected function translationModel(): string

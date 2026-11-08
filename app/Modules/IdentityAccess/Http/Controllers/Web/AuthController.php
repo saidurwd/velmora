@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\IdentityAccess\Http\Controllers\Web;
 
+use App\Modules\Cms\Contracts\PolicyAcceptances;
 use App\Modules\IdentityAccess\Actions\LoginWithPassword;
 use App\Modules\IdentityAccess\Actions\RegisterCustomerWithEmail;
 use App\Modules\IdentityAccess\Enums\LoginStatus;
 use App\Modules\IdentityAccess\Http\Requests\LoginRequest;
 use App\Modules\IdentityAccess\Http\Requests\RegisterRequest;
+use DomainException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,19 +42,24 @@ class AuthController
         return redirect()->intended(route('account'));
     }
 
-    public function showRegister(): View
+    public function showRegister(PolicyAcceptances $policies): View
     {
-        return view('identity-access::auth.register');
+        return view('identity-access::auth.register', ['notices' => $policies->outstanding(null, 'signup', null, app()->getLocale())]);
     }
 
     public function register(RegisterRequest $request, RegisterCustomerWithEmail $register): RedirectResponse
     {
-        $register->handle(
-            (string) $request->validated('name'),
-            (string) $request->validated('email'),
-            (string) $request->validated('password'),
-            app()->getLocale(),
-        );
+        try {
+            $register->handle(
+                (string) $request->validated('name'),
+                (string) $request->validated('email'),
+                (string) $request->validated('password'),
+                app()->getLocale(),
+                $request->policyReleases(),
+            );
+        } catch (DomainException $e) { // a policy changed while they were reading it (the message is a cms::policies.errors key)
+            return back()->withInput($request->except('password', 'password_confirmation'))->withErrors(['policies' => __('cms::policies.errors.'.$e->getMessage())]);
+        }
 
         // identical for new and existing addresses
         return redirect()->route('register.sent');

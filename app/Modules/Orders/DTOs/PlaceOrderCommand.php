@@ -30,5 +30,7 @@ final readonly class PlaceOrderCommand
         public string $locale,
         public OrderChannel $channel = OrderChannel::Web,
         public bool $phoneConfirmed = false,   // the caller has verified an SMS code for this phone (see ConfirmCheckoutPhone)
+        /** @var list<int> the policy releases the shopper ticked the box for; empty when they did not (or none were shown) */
+        public array $acceptedPolicyReleases = [],
     ) {}
 }

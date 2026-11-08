@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\IdentityAccess\Http\Controllers\Web;
 
+use App\Modules\Cms\Contracts\PolicyAcceptances;
 use App\Modules\IdentityAccess\Actions\RequestPhoneOtp;
 use App\Modules\IdentityAccess\Actions\VerifyPhoneOtpAndSignIn;
 use App\Modules\IdentityAccess\Enums\OtpIssueStatus;
@@ -19,9 +20,12 @@ class PhoneAuthController
 {
     private const SESSION_KEY = 'otp_phone';
 
-    public function show(): View
+    /** What the person accepted on the phone page; used only if this first sign-in creates their account. */
+    private const POLICY_KEY = 'otp_policy_releases';
+
+    public function show(PolicyAcceptances $policies): View
     {
-        return view('identity-access::auth.phone');
+        return view('identity-access::auth.phone', ['notices' => $policies->outstanding(null, 'signup', null, app()->getLocale())]);
     }
 
     public function send(PhoneRequest $request, RequestPhoneOtp $action): RedirectResponse
@@ -38,7 +42,8 @@ class PhoneAuthController
         };
 
         if ($status === OtpIssueStatus::CoolingDown) {
-            $request->session()->put(self::SESSION_KEY, $phone->e164()); // the earlier code is still valid: let them enter it
+            $request->session()->put(self::SESSION_KEY, $phone->e164());
+            $request->session()->put(self::POLICY_KEY, $request->policyReleases()); // the earlier code is still valid: let them enter it
 
             return redirect()->route('login.phone.verify')->withErrors(['code' => $error]);
         }
@@ -48,6 +53,7 @@ class PhoneAuthController
         }
 
         $request->session()->put(self::SESSION_KEY, $phone->e164());
+        $request->session()->put(self::POLICY_KEY, $request->policyReleases());
 
         return redirect()->route('login.phone.verify');
     }
@@ -73,13 +79,13 @@ class PhoneAuthController
             return redirect()->route('login.phone');
         }
 
-        $outcome = $action->handle($phone, (string) $request->validated('code'), app()->getLocale());
+        $outcome = $action->handle($phone, (string) $request->validated('code'), app()->getLocale(), array_values(array_map('intval', (array) $request->session()->get(self::POLICY_KEY, []))));
 
         if (! $outcome->succeeded() || $outcome->user === null) {
             return back()->withErrors(['code' => __('identity-access::auth.otp.invalid')]);
         }
 
-        $request->session()->forget(self::SESSION_KEY);
+        $request->session()->forget([self::SESSION_KEY, self::POLICY_KEY]);
         Auth::guard('web')->login($outcome->user);
 
         return redirect()->intended(route('account'));

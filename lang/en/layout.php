@@ -20,4 +20,5 @@ return [
     'account_support' => 'Help from us',
     'account_preferences' => 'Messages & preferences',
     'account_privacy' => 'Privacy & your data',
+    'account_policies' => 'Policies',
 ];

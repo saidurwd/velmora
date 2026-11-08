@@ -26,9 +26,9 @@ final class TransitionPage
     public function __construct(private readonly AuditLogger $audit, private readonly Clock $clock, private readonly StorefrontCache $cache, private readonly SlugRedirects $redirects) {}
 
     /** Publishes version $number now. Doing it twice for the same version changes nothing. */
-    public function publish(Actor $actor, Page $page, int $number): Page
+    public function publish(Actor $actor, Page $page, int $number, bool $acceptanceRequired = true): Page
     {
-        $locked = Transactions::run(function () use ($actor, $page, $number): Page {
+        $locked = Transactions::run(function () use ($actor, $page, $number, $acceptanceRequired): Page {
             $locked = $this->lock($page);
             $version = $this->version($locked, $number);
             $this->assertReady($version);
@@ -40,6 +40,7 @@ final class TransitionPage
             }
 
             $this->makeLive($locked, $version);
+            $this->release($locked, $version, $acceptanceRequired, $actor->id);
             $locked->scheduled_version_id === $version->id && $this->clearSchedule($locked);
             $this->audit->record('cms.page_published', $locked, [], ['version' => $version->number], $actor);
 
@@ -51,16 +52,16 @@ final class TransitionPage
     }
 
     /** Version $number goes live at $at (UTC) by itself. One schedule per page; a new one replaces the old. */
-    public function schedule(Actor $actor, Page $page, int $number, CarbonInterface $at): Page
+    public function schedule(Actor $actor, Page $page, int $number, CarbonInterface $at, bool $acceptanceRequired = true): Page
     {
         $at->greaterThan($this->clock->now()) || throw CmsException::notPublishable('future');
 
-        return Transactions::run(function () use ($actor, $page, $number, $at): Page {
+        return Transactions::run(function () use ($actor, $page, $number, $at, $acceptanceRequired): Page {
             $locked = $this->lock($page);
             $version = $this->version($locked, $number);
             $this->assertReady($version);
 
-            $locked->forceFill(['scheduled_version_id' => $version->id, 'publish_at' => $at])->save();
+            $locked->forceFill(['scheduled_version_id' => $version->id, 'publish_at' => $at, 'schedule_requires_acceptance' => $acceptanceRequired])->save();
             $this->audit->record('cms.page_scheduled', $locked, [], ['version' => $version->number, 'publish_at' => $at->toIso8601String()], $actor);
 
             return $locked;
@@ -112,6 +113,7 @@ final class TransitionPage
                 DB::transaction(function () use ($locked, $version): void { // a savepoint: a failed go-live leaves nothing half done
                     $this->assertReady($version);
                     $this->makeLive($locked, $version);
+                    $this->release($locked, $version, (bool) $locked->schedule_requires_acceptance, null);
                 });
             } catch (CmsException $e) {
                 $this->clearSchedule($locked);
@@ -142,7 +144,7 @@ final class TransitionPage
 
     private function clearSchedule(Page $page): void
     {
-        $page->forceFill(['scheduled_version_id' => null, 'publish_at' => null])->save();
+        $page->forceFill(['scheduled_version_id' => null, 'publish_at' => null, 'schedule_requires_acceptance' => true])->save();
     }
 
     /** A page needs a title and body in the default language. */
@@ -150,6 +152,24 @@ final class TransitionPage
     {
         $row = $version->translations->firstWhere('locale', (string) config('app.default_locale'));
         ($row !== null && trim($row->title) !== '' && trim((string) $row->body) !== '') || throw CmsException::notPublishable('content');
+    }
+
+    /**
+     * A policy page going live is a release: customers may now have to accept it. The very first release of a kind always asks for
+     * acceptance (nobody has accepted anything yet); a later one may be marked a minor edit. Ordinary pages release nothing.
+     */
+    private function release(Page $page, PageVersion $version, bool $acceptanceRequired, ?int $actorId): void
+    {
+        if ($page->kind === null) {
+            return;
+        }
+
+        $first = ! DB::table('cms_policy_releases')->where('kind', $page->kind)->exists();
+        $now = $this->clock->now()->format('Y-m-d H:i:s.u');
+        DB::table('cms_policy_releases')->insert([
+            'page_id' => $page->id, 'version_id' => $version->id, 'kind' => $page->kind, 'effective_at' => $now,
+            'acceptance_required' => $first || $acceptanceRequired, 'released_by' => $actorId, 'created_at' => $now,
+        ]);
     }
 
     /** Copies the version into what the public reads and points the page at it. A slug another page already owns stops it. */

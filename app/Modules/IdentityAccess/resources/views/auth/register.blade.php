@@ -13,6 +13,7 @@
         <x-platform::form.field name="email" type="email" :label="__('identity-access::auth.register.email')" autocomplete="email" required />
         <x-platform::form.field name="password" type="password" :label="__('identity-access::auth.register.password')" :help="__('identity-access::auth.register.password_help')" autocomplete="new-password" required />
         <x-platform::form.field name="password_confirmation" type="password" :label="__('identity-access::auth.register.password_confirm')" autocomplete="new-password" required />
+        @include('cms::policies.accept', ['notices' => $notices])
         <x-platform::form.button class="w-full">{{ __('identity-access::auth.register.submit') }}</x-platform::form.button>
     </form>
 

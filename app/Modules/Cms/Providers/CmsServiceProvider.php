@@ -7,10 +7,14 @@ namespace App\Modules\Cms\Providers;
 use App\Modules\Cms\Console\GenerateSitemapsCommand;
 use App\Modules\Cms\Contracts\BannerSource;
 use App\Modules\Cms\Contracts\PageDirectory;
+use App\Modules\Cms\Contracts\PolicyAcceptances;
+use App\Modules\Cms\Privacy\PolicyPersonalData;
 use App\Modules\Cms\Services\DatabaseBannerSource;
 use App\Modules\Cms\Services\DatabasePageDirectory;
+use App\Modules\Cms\Services\DatabasePolicyAcceptances;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use App\Modules\Privacy\Contracts\PersonalDataRegistry;
 
 class CmsServiceProvider extends ModuleServiceProvider
 {
@@ -23,6 +27,7 @@ class CmsServiceProvider extends ModuleServiceProvider
     {
         $this->app->bind(BannerSource::class, DatabaseBannerSource::class);
         $this->app->bind(PageDirectory::class, DatabasePageDirectory::class);
+        $this->app->bind(PolicyAcceptances::class, DatabasePolicyAcceptances::class);
     }
 
     public function boot(): void
@@ -31,9 +36,15 @@ class CmsServiceProvider extends ModuleServiceProvider
 
         $this->commands([GenerateSitemapsCommand::class]);
 
+        // acceptances are part of a customer's data copy and are anonymised when the customer is erased
+        $registry = $this->app->make(PersonalDataRegistry::class);
+        $registry->addExporter(PolicyPersonalData::class);
+        $registry->addEraser(PolicyPersonalData::class, 55);
+
         $menu = $this->app->make(AdminMenu::class);
         $menu->add('cms::admin.menu.pages', 'admin.cms.pages.index', 'cms.view', 60);
         $menu->add('cms::admin.menu.banners', 'admin.cms.banners.index', 'cms.view', 61);
         $menu->add('cms::faq.menu', 'admin.cms.faq.index', 'cms.view', 62);
+        $menu->add('cms::policies.menu', 'admin.cms.policies.index', 'cms.view', 63);
     }
 }

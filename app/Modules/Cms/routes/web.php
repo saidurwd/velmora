@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 use App\Modules\Cms\Http\Controllers\Web\HelpController;
 use App\Modules\Cms\Http\Controllers\Web\PageController;
+use App\Modules\Cms\Http\Controllers\Web\PolicyController;
 use App\Modules\Cms\Http\Controllers\Web\SeoFilesController;
 use Illuminate\Support\Facades\Route;
 
 Route::localized(function (): void {
     Route::get('/help', [HelpController::class, 'show'])->middleware('throttle:public-read')->name('help');
+    Route::middleware(['auth:web', 'session.policy:web'])->group(function (): void {
+        Route::get('/account/policies', [PolicyController::class, 'show'])->name('account.policies');
+        Route::post('/account/policies', [PolicyController::class, 'accept'])->middleware('throttle:write')->name('account.policies.accept');
+    });
     Route::get('/pages/{slug}', [PageController::class, 'show'])->middleware('cache.headers:private;max_age=0;must_revalidate;etag')->name('cms.page');
 });
 

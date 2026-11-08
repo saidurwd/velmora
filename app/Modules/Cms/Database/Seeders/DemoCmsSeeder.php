@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Cms\Database\Seeders;
 
+use App\Modules\Cms\Actions\AssignPolicyKind;
 use App\Modules\Cms\Actions\SaveBanner;
 use App\Modules\Cms\Actions\SavePage;
 use App\Modules\Cms\Actions\TransitionPage;
+use App\Modules\Cms\Enums\PolicyKind;
 use App\Modules\Cms\Models\Page;
 use App\Modules\Platform\DTOs\Actor;
 use Illuminate\Database\Seeder;
@@ -52,6 +54,21 @@ class DemoCmsSeeder extends Seeder
                 'bn' => ['title' => $t['bn'][0], 'body' => $t['bn'][1]],
             ]);
             app(TransitionPage::class)->publish($actor, Page::query()->findOrFail($page->id), 1);
+        }
+
+        // Placeholder policy pages for development: made, but NOT published, so nothing asks customers to accept them until someone publishes them.
+        // The real wording must come from the shop owner or a lawyer; nothing here is legal text.
+        foreach (['terms', 'privacy', 'returns', 'shipping', 'cod'] as $kind) {
+            $slug = 'policy-'.$kind;
+            if (DB::table('cms_page_version_translations')->where('locale', 'en')->where('slug', $slug)->exists()) {
+                continue;
+            }
+            $label = ucfirst($kind);
+            $page = app(SavePage::class)->handle($actor, null, [
+                'en' => ['title' => "{$label} (placeholder)", 'slug' => $slug, 'body' => "<p>Placeholder for the {$kind} policy. Replace this text with the real policy before publishing.</p>"],
+                'bn' => ['title' => "{$label} (খসড়া)", 'body' => "<p>{$kind} নীতির খসড়া। প্রকাশের আগে এটি আসল নীতি দিয়ে বদলান।</p>"],
+            ]);
+            app(AssignPolicyKind::class)->handle($actor, $page, PolicyKind::from($kind));
         }
 
         if (DB::table('banners')->count() === 0) {

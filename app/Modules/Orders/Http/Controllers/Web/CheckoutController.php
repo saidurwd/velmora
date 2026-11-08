@@ -6,6 +6,7 @@ namespace App\Modules\Orders\Http\Controllers\Web;
 
 use App\Modules\Cart\Contracts\CartOwnerResolver;
 use App\Modules\Cart\Contracts\CartReader;
+use App\Modules\Cms\Contracts\PolicyAcceptances;
 use App\Modules\Customers\Contracts\AddressBook;
 use App\Modules\Customers\Contracts\AddressChecker;
 use App\Modules\Customers\Contracts\Geography;
@@ -136,7 +137,7 @@ class CheckoutController
         return redirect()->route('checkout.review', ['locale' => app()->getLocale()]);
     }
 
-    public function review(Request $request, ReviewCheckout $review): View|RedirectResponse
+    public function review(Request $request, ReviewCheckout $review, PolicyAcceptances $policies): View|RedirectResponse
     {
         $owner = $this->owners->fromRequest($request);
         $draft = $this->draft->get();
@@ -151,7 +152,7 @@ class CheckoutController
         }
 
         return view('orders::checkout.review', [
-            'review' => $result, 'token' => $this->draft->token(), 'phoneConfirmed' => $this->draft->isPhoneConfirmed($result->contactPhone),
+            'review' => $result, 'policyNotices' => $policies->outstanding($owner->userId, 'checkout', $result->paymentCode, app()->getLocale()), 'token' => $this->draft->token(), 'phoneConfirmed' => $this->draft->isPhoneConfirmed($result->contactPhone),
             'maskedPhone' => PhoneNumber::tryParse($result->contactPhone)?->masked() ?? '',
         ]);
     }
@@ -182,6 +183,7 @@ class CheckoutController
                 $this->actor($request), $owner, $owner->userId, $result->contactName, $result->contactPhone, $result->contactEmail, $result->address,
                 $result->shippingCode, $result->paymentCode, (int) $request->validated('expected_total'), (string) $request->validated('place_token'), $locale,
                 phoneConfirmed: $this->draft->isPhoneConfirmed($result->contactPhone),
+                acceptedPolicyReleases: $request->boolean('accept_policies') ? array_values(array_map('intval', (array) $request->validated('policy_releases', []))) : [],
             ));
         } catch (CheckoutException $e) {
             if ($e->reason === 'cart_empty' && ($last = $this->draft->lastOrder()) !== null) {

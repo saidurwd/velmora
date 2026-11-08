@@ -9,6 +9,7 @@ use App\Modules\Cart\Contracts\CartReader;
 use App\Modules\Cart\Contracts\CartWriter;
 use App\Modules\Cart\DTOs\CartLineView;
 use App\Modules\Catalog\Contracts\PurchasableVariants;
+use App\Modules\Cms\Contracts\PolicyAcceptances;
 use App\Modules\Inventory\Contracts\StockReservations;
 use App\Modules\Orders\DTOs\NewOrder;
 use App\Modules\Orders\DTOs\NewOrderAddress;
@@ -54,6 +55,7 @@ final class PlaceOrder
         private readonly CodRiskAssessor $risk,
         private readonly PhoneLock $phoneLock,
         private readonly BookingHolds $bookings,
+        private readonly PolicyAcceptances $policies,
     ) {}
 
     /** @throws CheckoutException */
@@ -128,6 +130,9 @@ final class PlaceOrder
             throw new CheckoutException('totals_changed', ['total' => $quote->breakdown->grandTotalMinor]); // prices, stock-driven sales or a code changed since the page was shown
         }
 
+        // the policies: asked only for those the shopper has not accepted; what they ticked must be exactly what the page showed
+        $this->assertPolicies($c);
+
         $risk = $this->risk->assess($phone, $c->address === null ? null : AddressFingerprint::of($c->address->addressLine, $c->address->area, $c->address->upazilaId), $quote->breakdown->grandTotalMinor, $c->paymentMethodCode, $c->phoneConfirmed);
         if ($risk->blocked) {
             Log::warning('orders.blocked_attempt', ['phone' => PhoneNumber::parse($phone)->masked()]);
@@ -155,6 +160,8 @@ final class PlaceOrder
             )],
             $risk->needsReview(), $key, $risk->flags,
         ), (bool) config('orders.auto_confirm_cod') && $c->paymentMethodCode === 'cod' && ! $risk->needsReview() ? OrderStatus::Confirmed : OrderStatus::Pending);
+
+        $this->recordPolicies($c, $order);
 
         // the stock: all lines or none, decided by one conditional UPDATE per line
         $tracked = [];
@@ -195,6 +202,30 @@ final class PlaceOrder
         $this->outbox->record(new OrderPlaced($order->id, $order->public_id, $order->order_number, $c->locale));
 
         return $order;
+    }
+
+    /** @throws CheckoutException */
+    private function assertPolicies(PlaceOrderCommand $c): void
+    {
+        try {
+            $this->policies->assertShown($c->userId, 'checkout', $c->paymentMethodCode, $c->acceptedPolicyReleases);
+        } catch (DomainException $e) { // the message is policies_required or policies_changed
+            throw new CheckoutException($e->getMessage());
+        }
+    }
+
+    /** The acceptance is written in the order's own transaction: no order without it, and no acceptance without an order. A guest's belongs to the order. */
+    private function recordPolicies(PlaceOrderCommand $c, Order $order): void
+    {
+        if ($this->policies->outstanding($c->userId, 'checkout', $c->paymentMethodCode, $c->locale) === []) {
+            return;
+        }
+
+        try {
+            $this->policies->accept($c->userId, $c->userId === null ? $order->id : null, 'checkout', $c->acceptedPolicyReleases);
+        } catch (DomainException $e) {
+            throw new CheckoutException($e->getMessage());
+        }
     }
 
     private function placementKey(PlaceOrderCommand $c): string

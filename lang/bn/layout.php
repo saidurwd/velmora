@@ -20,4 +20,5 @@ return [
     'account_support' => 'আমাদের সহায়তা',
     'account_preferences' => 'বার্তা ও পছন্দ',
     'account_privacy' => 'গোপনীয়তা ও আপনার তথ্য',
+    'account_policies' => 'নীতিমালা',
 ];
