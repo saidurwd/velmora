@@ -17,13 +17,17 @@
             <div class="flex items-center gap-2"><x-cart::link /><x-platform::language-switcher /></div>
         </div>
     </header>
+    @php($headerMenu = app(\App\Modules\Platform\Support\StorefrontCache::class)->remember('menu-header', fn () => app(\App\Modules\Cms\Contracts\MenuReader::class)->items('header', app()->getLocale())))
+    @if ($headerMenu !== [])@include('cms::menu.header', ['links' => $headerMenu])@endif
 
     <main id="main" class="mx-auto max-w-6xl px-4 py-8" tabindex="-1">
         @yield('content')
     </main>
 
     <footer class="mt-12 border-t border-line bg-surface-alt">
-        @php($pageLinks = app(\App\Modules\Platform\Support\StorefrontCache::class)->remember('footer-links', fn () => app(\App\Modules\Cms\Contracts\PageDirectory::class)->published(app()->getLocale())))
+        @php($footerMenu = app(\App\Modules\Platform\Support\StorefrontCache::class)->remember('menu-footer', fn () => app(\App\Modules\Cms\Contracts\MenuReader::class)->items('footer', app()->getLocale())))
+        @php($pageLinks = $footerMenu !== [] ? [] : app(\App\Modules\Platform\Support\StorefrontCache::class)->remember('footer-links', fn () => app(\App\Modules\Cms\Contracts\PageDirectory::class)->published(app()->getLocale())))
+        @if ($footerMenu !== [])@include('cms::menu.footer', ['links' => $footerMenu])@endif
         @if ($pageLinks !== [])
             <nav aria-label="{{ __('platform::ui.info_links') }}" class="mx-auto max-w-6xl px-4 pt-6">
                 <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm">

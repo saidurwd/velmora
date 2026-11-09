@@ -89,4 +89,34 @@ final class CmsException extends DomainException
     {
         return new self('slug_taken', ['locale' => strtoupper($locale), 'slug' => $slug]);
     }
+
+    public static function menuInvalid(): self
+    {
+        return new self('menu_invalid');
+    }
+
+    public static function menuDefaultRequired(string $locale): self
+    {
+        return new self('menu_default_required', ['locale' => strtoupper($locale)]);
+    }
+
+    public static function menuParentInvalid(): self
+    {
+        return new self('menu_parent_invalid');
+    }
+
+    public static function menuHasChildren(): self
+    {
+        return new self('menu_has_children');
+    }
+
+    public static function menuPageMissing(): self
+    {
+        return new self('menu_page_missing');
+    }
+
+    public static function menuNotFound(): self
+    {
+        return new self('menu_not_found');
+    }
 }

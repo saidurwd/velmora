@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 use App\Modules\Cms\Http\Controllers\Admin\BannerController;
 use App\Modules\Cms\Http\Controllers\Admin\FaqController;
+use App\Modules\Cms\Http\Controllers\Admin\MenuController;
 use App\Modules\Cms\Http\Controllers\Admin\PageController;
 use App\Modules\Cms\Http\Controllers\Admin\PolicyController;
+use App\Modules\Cms\Http\Controllers\Admin\TranslationGapController;
 use Illuminate\Support\Facades\Route;
 
 // Mounted under /admin with the `admin.` name prefix.
@@ -25,6 +27,18 @@ Route::middleware(['auth:admin', 'session.policy:admin'])->prefix('cms')->name('
         Route::get('/', [PolicyController::class, 'index'])->middleware('permission:cms.view')->name('index');
         Route::post('/{kind}/assign', [PolicyController::class, 'assign'])->where('kind', 'terms|privacy|returns|shipping|cod')->middleware(['permission:cms.policies.manage', 'throttle:60,1'])->name('assign');
     });
+
+    Route::prefix('menus')->name('menus.')->group(function (): void {
+        Route::get('/', [MenuController::class, 'index'])->middleware('permission:cms.view')->name('index');
+        Route::get('/create', [MenuController::class, 'create'])->middleware('permission:cms.edit')->name('create');
+        Route::post('/', [MenuController::class, 'store'])->middleware(['permission:cms.edit', 'throttle:60,1'])->name('store');
+        Route::get('/{item}/edit', [MenuController::class, 'edit'])->whereAlphaNumeric('item')->middleware('permission:cms.view')->name('edit');
+        Route::put('/{item}', [MenuController::class, 'update'])->whereAlphaNumeric('item')->middleware(['permission:cms.edit', 'throttle:60,1'])->name('update');
+        Route::delete('/{item}', [MenuController::class, 'destroy'])->whereAlphaNumeric('item')->middleware(['permission:cms.edit', 'throttle:60,1'])->name('destroy');
+        Route::post('/{item}/move', [MenuController::class, 'move'])->whereAlphaNumeric('item')->middleware(['permission:cms.edit', 'throttle:60,1'])->name('move');
+    });
+
+    Route::get('translations', [TranslationGapController::class, 'index'])->middleware('permission:cms.view')->name('translations');
 
     Route::prefix('faq')->name('faq.')->group(function (): void {
         Route::get('/', [FaqController::class, 'index'])->middleware('permission:cms.view')->name('index');
