@@ -119,4 +119,34 @@ final class CmsException extends DomainException
     {
         return new self('menu_not_found');
     }
+
+    public static function homeInvalid(): self
+    {
+        return new self('home_invalid');
+    }
+
+    public static function homeCollectionMissing(): self
+    {
+        return new self('home_collection_missing');
+    }
+
+    public static function homeBodyRequired(string $locale): self
+    {
+        return new self('home_body_required', ['locale' => strtoupper($locale)]);
+    }
+
+    public static function homeTooLong(string $locale): self
+    {
+        return new self('home_too_long', ['locale' => strtoupper($locale)]);
+    }
+
+    public static function homeFull(): self
+    {
+        return new self('home_full');
+    }
+
+    public static function homeNotFound(): self
+    {
+        return new self('home_not_found');
+    }
 }

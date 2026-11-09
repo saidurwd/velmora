@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Cms\Http\Controllers\Admin\BannerController;
 use App\Modules\Cms\Http\Controllers\Admin\FaqController;
+use App\Modules\Cms\Http\Controllers\Admin\HomeSectionController;
 use App\Modules\Cms\Http\Controllers\Admin\MenuController;
 use App\Modules\Cms\Http\Controllers\Admin\PageController;
 use App\Modules\Cms\Http\Controllers\Admin\PolicyController;
@@ -36,6 +37,16 @@ Route::middleware(['auth:admin', 'session.policy:admin'])->prefix('cms')->name('
         Route::put('/{item}', [MenuController::class, 'update'])->whereAlphaNumeric('item')->middleware(['permission:cms.edit', 'throttle:60,1'])->name('update');
         Route::delete('/{item}', [MenuController::class, 'destroy'])->whereAlphaNumeric('item')->middleware(['permission:cms.edit', 'throttle:60,1'])->name('destroy');
         Route::post('/{item}/move', [MenuController::class, 'move'])->whereAlphaNumeric('item')->middleware(['permission:cms.edit', 'throttle:60,1'])->name('move');
+    });
+
+    Route::prefix('home')->name('home.')->group(function (): void {
+        Route::get('/', [HomeSectionController::class, 'index'])->middleware('permission:cms.view')->name('index');
+        Route::get('/create', [HomeSectionController::class, 'create'])->middleware('permission:cms.edit')->name('create');
+        Route::post('/', [HomeSectionController::class, 'store'])->middleware(['permission:cms.edit', 'throttle:60,1'])->name('store');
+        Route::get('/{section}/edit', [HomeSectionController::class, 'edit'])->whereAlphaNumeric('section')->middleware('permission:cms.view')->name('edit');
+        Route::put('/{section}', [HomeSectionController::class, 'update'])->whereAlphaNumeric('section')->middleware(['permission:cms.edit', 'throttle:60,1'])->name('update');
+        Route::delete('/{section}', [HomeSectionController::class, 'destroy'])->whereAlphaNumeric('section')->middleware(['permission:cms.edit', 'throttle:60,1'])->name('destroy');
+        Route::post('/{section}/move', [HomeSectionController::class, 'move'])->whereAlphaNumeric('section')->middleware(['permission:cms.edit', 'throttle:60,1'])->name('move');
     });
 
     Route::get('translations', [TranslationGapController::class, 'index'])->middleware('permission:cms.view')->name('translations');

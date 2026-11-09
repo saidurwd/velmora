@@ -23,6 +23,7 @@ final class TranslationGaps
         'pages' => ['table' => 'cms_page_translations', 'parent' => 'cms_pages', 'key' => 'page_id', 'fields' => ['title', 'body'], 'where' => "p.status = 'published' AND p.deleted_at IS NULL", 'route' => 'admin.cms.pages.edit'],
         'banners' => ['table' => 'banner_translations', 'parent' => 'banners', 'key' => 'banner_id', 'fields' => ['title', 'subtitle', 'cta_label', 'alt'], 'where' => 'p.is_active = 1 AND p.deleted_at IS NULL', 'route' => 'admin.cms.banners.edit'],
         'faq' => ['table' => 'faq_entry_translations', 'parent' => 'faq_entries', 'key' => 'faq_entry_id', 'fields' => ['question', 'answer'], 'where' => 'p.is_published = 1', 'route' => 'admin.cms.faq.edit'],
+        'home_sections' => ['table' => 'cms_home_section_translations', 'parent' => 'cms_home_sections', 'key' => 'section_id', 'fields' => ['title', 'body'], 'where' => 'p.is_active = 1', 'route' => 'admin.cms.home.edit'],
         'menu_items' => ['table' => 'cms_menu_item_translations', 'parent' => 'cms_menu_items', 'key' => 'item_id', 'fields' => ['label'], 'where' => 'p.is_active = 1', 'route' => 'admin.cms.menus.edit'],
     ];
 
