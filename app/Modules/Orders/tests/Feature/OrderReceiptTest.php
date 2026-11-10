@@ -6,6 +6,7 @@ use App\Modules\IdentityAccess\Database\Seeders\RolesAndPermissionsSeeder;
 use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
 use App\Modules\IdentityAccess\Models\User;
 use App\Modules\Orders\Actions\TransitionOrder;
+use App\Modules\Orders\Enums\CancelReason;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Services\OrderReceipt;
@@ -81,7 +82,7 @@ describe('the figures', function () {
 
     it('say cancelled on a cancelled order', function () {
         $order = ($this->order)([$this->tee => 1]);
-        app(TransitionOrder::class)->status(Actor::system('t'), $order->id, OrderStatus::Cancelled, 'Changed my mind');
+        app(TransitionOrder::class)->status(Actor::system('t'), $order->id, OrderStatus::Cancelled, 'Changed my mind', CancelReason::Other);
 
         $this->get(($this->link)($order->public_id))->assertOk()->assertSee('Cancelled');
     });

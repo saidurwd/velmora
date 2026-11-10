@@ -237,6 +237,7 @@ describe('the order follows its payment', function () {
 
         $o = Order::findOrFail($this->orderRow->id);
         expect($o->status->value)->toBe('cancelled')->and($o->cancel_reason)->toBe('Payment not completed in time')
+            ->and(DB::table('order_status_history')->where('order_id', $o->id)->where('to_state', 'cancelled')->value('reason_code'))->toBe('payment_failed')
             ->and((int) DB::table('stock_levels')->where('variant_id', $this->tee)->value('reserved'))->toBe(0)
             ->and(DB::table('stock_reservations')->where('owner_ref', $o->public_id)->pluck('status')->unique()->all())->toBe(['released']);
         $this->get(URL::temporarySignedRoute('checkout.thanks', now()->addDay(), ['locale' => 'en', 'order' => $o->public_id]))->assertSee('This order was cancelled')->assertDontSee('Pay now');
@@ -315,7 +316,7 @@ describe('orders nobody confirmed', function () {
         expect(app(CancelStalePendingOrders::class)->handle())->toBe(1);
 
         $o = Order::findOrFail($this->o->id);
-        expect($o->status->value)->toBe('cancelled')->and($o->cancel_reason)->toBe('Not confirmed within 3 days')->and((int) DB::table('stock_levels')->where('variant_id', $this->tee)->value('reserved'))->toBe(0)
+        expect($o->status->value)->toBe('cancelled')->and($o->cancel_reason)->toBe('Not confirmed within 3 days')->and(DB::table('order_status_history')->where('order_id', $o->id)->where('to_state', 'cancelled')->value('reason_code'))->toBe('other')->and((int) DB::table('stock_levels')->where('variant_id', $this->tee)->value('reserved'))->toBe(0)
             ->and(count($this->sms->sent()))->toBe($this->smsBefore + 1)->and(collect($this->sms->sent())->last()['message'])->toContain($o->order_number)->toContain('cancelled')
             ->and(app(CancelStalePendingOrders::class)->handle())->toBe(0);   // and not again
     });

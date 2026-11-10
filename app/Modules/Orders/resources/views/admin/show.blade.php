@@ -121,6 +121,13 @@
                     </select>
                     <label for="reason-{{ $axis }}" class="block text-sm">{{ __('orders::orders.reason') }} <span class="text-muted">({{ __('orders::orders.reason_hint') }})</span></label>
                     <input id="reason-{{ $axis }}" name="reason" maxlength="255" class="block w-full rounded-md border border-line px-3 py-2">
+                    @if ($axis === 'status' && $canCancel)
+                        <label for="reason-code" class="block text-sm">{{ __('orders::orders.cancel_reason_label') }}</label>
+                        <select id="reason-code" name="reason_code" class="block w-full rounded-md border border-line px-3 py-2">
+                            <option value="">—</option>
+                            @foreach (\App\Modules\Orders\Enums\CancelReason::cases() as $code)<option value="{{ $code->value }}" @selected(old('reason_code') === $code->value)>{{ $code->label() }}</option>@endforeach
+                        </select>
+                    @endif
                     <x-platform::btn type="submit" size="sm">{{ __('orders::orders.apply') }}</x-platform::btn>
                 @endif
             </form>

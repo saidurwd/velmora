@@ -24,10 +24,15 @@ return [
     'flag' => ['velocity_phone' => 'Many orders from one phone in a day (:orders_24h so far; limit :limit)', 'address_many_phones' => 'One address used by many phones (:phones_30d in 30 days; limit :limit)'],
     'errors' => [
         'illegal_transition' => 'That change is not allowed from “:from” to “:to”.', 'already_in_state' => 'The order is already in that state.', 'cancel_after_shipping' => 'An order that has been shipped cannot be cancelled. Record a return instead.',
-        'cancel_needs_refund' => 'Money has been taken for this order. Refund it first, then cancel.', 'reason_required' => 'Please give a reason for cancelling.',
+        'cancel_needs_refund' => 'Money has been taken for this order. Refund it first, then cancel.', 'reason_code_required' => 'Please choose why the order is cancelled.', 'reason_required' => 'Please give a reason for cancelling.',
         'complete_needs_delivery_and_payment' => 'An order can be completed only when it is delivered and paid.', 'order_cancelled' => 'This order is cancelled.', 'confirm_before_shipping' => 'Confirm the order before shipping it.',
         'review_pending' => 'This order is flagged for review. Look at it and mark it as reviewed before confirming.', 'not_under_review' => 'This order is not waiting for review.',
         'changed_meanwhile' => 'The order was changed by someone else. Reload and try again.', 'breakdown_mismatch' => 'The order totals do not add up.', 'lines_mismatch' => 'The order lines do not match the priced lines.', 'address_required' => 'A delivery address is required.',
     ],
     'parcels_link' => 'Parcels for this order',
+    'cancel_reason_label' => 'Why (needed to cancel)',
+    'cancel_reasons' => [
+        'customer_request' => 'Customer asked', 'out_of_stock' => 'Out of stock', 'payment_failed' => 'Payment failed or expired', 'address_problem' => 'Address problem',
+        'fraud_or_risk' => 'Fraud or risk', 'duplicate_order' => 'Duplicate order', 'other' => 'Other',
+    ],
 ];

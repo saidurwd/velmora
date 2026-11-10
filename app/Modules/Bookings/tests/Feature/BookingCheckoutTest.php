@@ -17,6 +17,7 @@ use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
 use App\Modules\Orders\Actions\PlaceOrder;
 use App\Modules\Orders\Actions\TransitionOrder;
 use App\Modules\Orders\DTOs\PlaceOrderCommand;
+use App\Modules\Orders\Enums\CancelReason;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Enums\PaymentStatus;
 use App\Modules\Orders\Exceptions\CheckoutException;
@@ -161,7 +162,7 @@ describe('cancelling', function () {
         $booking = ($this->hold)($this->alice);
         $order = ($this->order)($this->alice);
 
-        app(TransitionOrder::class)->status(Actor::system('t'), $order->id, OrderStatus::Cancelled, 'changed mind');
+        app(TransitionOrder::class)->status(Actor::system('t'), $order->id, OrderStatus::Cancelled, 'changed mind', CancelReason::Other);
         app(OutboxDispatcher::class)->dispatchDue();
         app(OutboxDispatcher::class)->dispatchDue();
 

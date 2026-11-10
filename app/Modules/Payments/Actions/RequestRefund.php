@@ -6,6 +6,7 @@ namespace App\Modules\Payments\Actions;
 
 use App\Modules\Payments\Enums\PaymentState;
 use App\Modules\Payments\Enums\RefundMethod;
+use App\Modules\Payments\Enums\RefundReason;
 use App\Modules\Payments\Enums\RefundStatus;
 use App\Modules\Payments\Exceptions\PaymentException;
 use App\Modules\Payments\Models\Payment;
@@ -33,7 +34,7 @@ final class RequestRefund
      *
      * @throws PaymentException
      */
-    public function handle(Actor $actor, string $paymentPublicId, int $amountMinor, string $reason, ?string $transactionPublicId = null, bool $manual = false): Refund
+    public function handle(Actor $actor, string $paymentPublicId, int $amountMinor, string $reason, RefundReason $code, ?string $transactionPublicId = null, bool $manual = false): Refund
     {
         $reason = mb_substr(trim(BanglaText::input($reason)), 0, 255);
         if ($reason === '') {
@@ -43,7 +44,7 @@ final class RequestRefund
             throw new PaymentException('refund_amount_invalid');
         }
 
-        $refund = Transactions::run(function () use ($actor, $paymentPublicId, $amountMinor, $reason, $transactionPublicId, $manual): Refund {
+        $refund = Transactions::run(function () use ($actor, $paymentPublicId, $amountMinor, $reason, $code, $transactionPublicId, $manual): Refund {
             $payment = Payment::query()->where('public_id', $paymentPublicId)->lockForUpdate()->first() ?? throw new PaymentException('refund_not_found');
             if ($payment->captured_minor < 1 || ! in_array($payment->status, [PaymentState::Paid, PaymentState::NeedsReview], true)) {
                 throw new PaymentException('refund_nothing_captured'); // nothing has been received that we know of
@@ -63,14 +64,14 @@ final class RequestRefund
 
             $refund = Refund::query()->create([
                 'payment_id' => $payment->id, 'order_id' => $payment->order_id, 'payment_transaction_id' => $target->id, 'amount_minor' => $amountMinor, 'currency' => $payment->currency,
-                'status' => RefundStatus::Requested, 'method' => $this->routing->decide($target, $amountMinor, $manual), 'reason' => $reason,
+                'status' => RefundStatus::Requested, 'method' => $this->routing->decide($target, $amountMinor, $manual), 'reason' => $reason, 'reason_code' => $code,
                 'refund_ref' => 'RF-'.strtoupper(Str::random(20)), 'requested_by' => $actor->id,
             ]);
 
             return $refund;
         });
 
-        $this->audit->record('refund.requested', $refund, [], ['amount_minor' => $amountMinor, 'method' => $refund->method->value, 'reason' => $reason], $actor);
+        $this->audit->record('refund.requested', $refund, [], ['amount_minor' => $amountMinor, 'method' => $refund->method->value, 'reason' => $reason, 'reason_code' => $code->value], $actor);
 
         return $refund;
     }

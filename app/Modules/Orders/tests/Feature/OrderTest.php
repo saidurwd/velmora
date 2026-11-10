@@ -15,6 +15,7 @@ use App\Modules\Orders\Actions\TransitionOrder;
 use App\Modules\Orders\DTOs\NewOrder;
 use App\Modules\Orders\DTOs\NewOrderAddress;
 use App\Modules\Orders\DTOs\NewOrderLine;
+use App\Modules\Orders\Enums\CancelReason;
 use App\Modules\Orders\Enums\FulfillmentStatus;
 use App\Modules\Orders\Enums\OrderChannel;
 use App\Modules\Orders\Enums\OrderStatus;
@@ -208,9 +209,9 @@ describe('moving an order along', function () {
         $t = app(TransitionOrder::class);
 
         expect(fn () => $t->status($this->staff, $o->id, OrderStatus::Cancelled))->toThrow(OrderException::class, 'reason_required')
-            ->and(fn () => $t->status($this->staff, $o->id, OrderStatus::Cancelled, '   '))->toThrow(OrderException::class, 'reason_required');
+            ->and(fn () => $t->status($this->staff, $o->id, OrderStatus::Cancelled, '   ', CancelReason::Other))->toThrow(OrderException::class, 'reason_required');
 
-        $c = $t->status($this->staff, $o->id, OrderStatus::Cancelled, 'Customer called to cancel');
+        $c = $t->status($this->staff, $o->id, OrderStatus::Cancelled, 'Customer called to cancel', CancelReason::Other);
         expect($c->status)->toBe(OrderStatus::Cancelled)->and($c->cancelled_at)->not->toBeNull()->and($c->cancel_reason)->toBe('Customer called to cancel')
             ->and(fn () => $t->status($this->staff, $o->id, OrderStatus::Confirmed))->toThrow(OrderException::class, 'illegal_transition')
             ->and(fn () => $t->payment($this->staff, $o->id, PaymentStatus::Paid))->toThrow(OrderException::class, 'order_cancelled')
@@ -223,11 +224,11 @@ describe('moving an order along', function () {
         $shipped = ($this->place)();
         $t->status($this->staff, $shipped->id, OrderStatus::Confirmed);
         $t->fulfillment($this->staff, $shipped->id, FulfillmentStatus::PartiallyFulfilled);
-        expect(fn () => $t->status($this->staff, $shipped->id, OrderStatus::Cancelled, 'oops'))->toThrow(OrderException::class, 'cancel_after_shipping');
+        expect(fn () => $t->status($this->staff, $shipped->id, OrderStatus::Cancelled, 'oops', CancelReason::Other))->toThrow(OrderException::class, 'cancel_after_shipping');
 
         $paid = ($this->place)();
         $t->payment($this->staff, $paid->id, PaymentStatus::Paid);
-        expect(fn () => $t->status($this->staff, $paid->id, OrderStatus::Cancelled, 'oops'))->toThrow(OrderException::class, 'cancel_needs_refund');
+        expect(fn () => $t->status($this->staff, $paid->id, OrderStatus::Cancelled, 'oops', CancelReason::Other))->toThrow(OrderException::class, 'cancel_needs_refund');
     });
 
     it('completes only when delivered and paid, and ships only once confirmed', function () {
@@ -334,7 +335,7 @@ describe('admin', function () {
         $this->actingAs($updater, 'admin')->post("/admin/orders/{$o->public_id}/transition", ['axis' => 'status', 'to' => 'cancelled', 'reason' => 'x'])->assertForbidden();
         expect($o->fresh()->status)->toBe(OrderStatus::Pending);
 
-        $this->actingAs($canceller, 'admin')->post("/admin/orders/{$o->public_id}/transition", ['axis' => 'status', 'to' => 'cancelled', 'reason' => 'Duplicate order'])->assertRedirect()->assertSessionHas('status');
+        $this->actingAs($canceller, 'admin')->post("/admin/orders/{$o->public_id}/transition", ['axis' => 'status', 'to' => 'cancelled', 'reason' => 'Duplicate order', 'reason_code' => 'duplicate_order'])->assertRedirect()->assertSessionHas('status');
         expect($o->fresh()->status)->toBe(OrderStatus::Cancelled);
     });
 

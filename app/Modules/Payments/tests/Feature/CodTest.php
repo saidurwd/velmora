@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\IdentityAccess\Database\Seeders\RolesAndPermissionsSeeder;
 use App\Modules\Orders\Actions\TransitionOrder;
+use App\Modules\Orders\Enums\CancelReason;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Payments\Actions\ApproveRefund;
 use App\Modules\Payments\Actions\CompleteManualRefund;
@@ -11,6 +12,7 @@ use App\Modules\Payments\Actions\RecordCodCollection;
 use App\Modules\Payments\Actions\RecordCodRemittance;
 use App\Modules\Payments\Actions\RequestRefund;
 use App\Modules\Payments\Database\Seeders\PaymentMethodSeeder;
+use App\Modules\Payments\Enums\RefundReason;
 use App\Modules\Payments\Exceptions\PaymentException;
 use App\Modules\Payments\Models\CodCollection;
 use App\Modules\Payments\Services\CodAging;
@@ -133,7 +135,7 @@ describe('refunding cash that was collected', function () {
         ($this->collect)(($this->cod)());
         $payment = DB::table('payments')->first();
 
-        $r = app(RequestRefund::class)->handle($this->staffA, $payment->public_id, 120000, 'Customer returned the parcel');
+        $r = app(RequestRefund::class)->handle($this->staffA, $payment->public_id, 120000, 'Customer returned the parcel', RefundReason::Other);
         app(ApproveRefund::class)->handle($this->staffB, $r->public_id);
         app(CompleteManualRefund::class)->handle($this->staffB, $r->public_id, 'bKash TrxID 9A8B7C');
 
@@ -143,16 +145,16 @@ describe('refunding cash that was collected', function () {
     it('cannot refund more than the cash collected', function () {
         ($this->collect)(($this->cod)());
 
-        expect(fn () => app(RequestRefund::class)->handle($this->staffA, DB::table('payments')->value('public_id'), 120001, 'Too much'))->toThrow(PaymentException::class, 'refund_exceeds_captured');
+        expect(fn () => app(RequestRefund::class)->handle($this->staffA, DB::table('payments')->value('public_id'), 120001, 'Too much', RefundReason::Other))->toThrow(PaymentException::class, 'refund_exceeds_captured');
     });
 
     it('lets a fully refunded cash order be cancelled', function () {
         ($this->collect)(($this->cod)());
-        $r = app(RequestRefund::class)->handle($this->staffA, DB::table('payments')->value('public_id'), 120000, 'Returned');
+        $r = app(RequestRefund::class)->handle($this->staffA, DB::table('payments')->value('public_id'), 120000, 'Returned', RefundReason::Other);
         app(ApproveRefund::class)->handle($this->staffB, $r->public_id);
         app(CompleteManualRefund::class)->handle($this->staffB, $r->public_id, 'slip 7');
 
-        app(TransitionOrder::class)->status($this->staffA, 1, OrderStatus::Cancelled, 'Returned after delivery');
+        app(TransitionOrder::class)->status($this->staffA, 1, OrderStatus::Cancelled, 'Returned after delivery', CancelReason::Other);
 
         expect(($this->order)()->status)->toBe('cancelled');
     });

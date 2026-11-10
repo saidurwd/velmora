@@ -6,6 +6,7 @@ use App\Modules\Notifications\Sms\FakeSmsGateway;
 use App\Modules\Orders\Services\OrderCompletion;
 use App\Modules\Payments\Actions\RecordCodCollection;
 use App\Modules\Payments\Actions\RequestRefund;
+use App\Modules\Payments\Enums\RefundReason;
 use App\Modules\Payments\Exceptions\PaymentException;
 use App\Modules\Shipping\Actions\CreateShipment;
 use App\Modules\Shipping\Actions\HandOverShipment;
@@ -204,7 +205,7 @@ describe('delivery and the cash', function () {
 
         ($this->say)($p, 'DELIVERED', '2026-11-04 11:30:00');
         $payment = DB::table('payments')->first();
-        $refund = app(RequestRefund::class)->handle($this->staff, $payment->public_id, 10000, 'Customer returned a gift box');
+        $refund = app(RequestRefund::class)->handle($this->staff, $payment->public_id, 10000, 'Customer returned a gift box', RefundReason::Other);
 
         expect($refund->method->value)->toBe('manual')->and((int) DB::table('payments')->value('refunded_minor'))->toBe(10000);
     });

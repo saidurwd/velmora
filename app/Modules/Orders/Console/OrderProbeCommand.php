@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Orders\Console;
 
 use App\Modules\Orders\Actions\TransitionOrder;
+use App\Modules\Orders\Enums\CancelReason;
 use App\Modules\Orders\Enums\FulfillmentStatus;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Enums\PaymentStatus;
@@ -18,7 +19,7 @@ use Throwable;
 /** Concurrency-test entry point: each OS process does ONE thing to ONE order and prints a JSON line. Never in production. */
 class OrderProbeCommand extends Command
 {
-    protected $signature = 'orders:probe {action : status|payment|fulfillment|number} {--order=0} {--to=} {--reason=} {--start-at=}';
+    protected $signature = 'orders:probe {action : status|payment|fulfillment|number} {--order=0} {--to=} {--reason=} {--code=other} {--start-at=}';
 
     protected $description = 'Move an order once, or draw an order number, and print the outcome as JSON (concurrency testing only)';
 
@@ -56,7 +57,7 @@ class OrderProbeCommand extends Command
 
         try {
             $result = match ((string) $this->argument('action')) {
-                'status' => $this->did(fn () => $transition->status($actor, $id, OrderStatus::from($to), $reason)),
+                'status' => $this->did(fn () => $transition->status($actor, $id, OrderStatus::from($to), $reason, CancelReason::tryFrom((string) $this->option('code')) ?? CancelReason::Other)),
                 'payment' => $this->did(fn () => $transition->payment($actor, $id, PaymentStatus::from($to), $reason)),
                 'fulfillment' => $this->did(fn () => $transition->fulfillment($actor, $id, FulfillmentStatus::from($to), $reason)),
                 default => ['ok' => true, 'number' => $numbers->next($clock->now())],

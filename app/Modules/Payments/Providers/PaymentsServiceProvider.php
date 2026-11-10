@@ -12,6 +12,7 @@ use App\Modules\Payments\Contracts\CodAgingFigures;
 use App\Modules\Payments\Contracts\CodCashLedger;
 use App\Modules\Payments\Contracts\PaymentFigures;
 use App\Modules\Payments\Contracts\PaymentMethodCatalog;
+use App\Modules\Payments\Contracts\RefundReasonFigures;
 use App\Modules\Payments\Events\PaymentExpired;
 use App\Modules\Payments\Events\PaymentFailed;
 use App\Modules\Payments\Events\PaymentInitiated;
@@ -26,6 +27,7 @@ use App\Modules\Payments\Services\DatabaseCodAgingFigures;
 use App\Modules\Payments\Services\DatabaseCodCashLedger;
 use App\Modules\Payments\Services\DatabasePaymentFigures;
 use App\Modules\Payments\Services\DatabasePaymentMethodCatalog;
+use App\Modules\Payments\Services\DatabaseRefundReasonFigures;
 use App\Modules\Payments\Services\GatewayRegistry;
 use App\Modules\Payments\Services\OnlinePaymentInitiator;
 use App\Modules\Payments\Support\SslCommerzConnectionTest;
@@ -57,6 +59,7 @@ class PaymentsServiceProvider extends ModuleServiceProvider
         $this->app->bind(PaymentMethodCatalog::class, DatabasePaymentMethodCatalog::class);
         $this->app->bind(CodCashLedger::class, DatabaseCodCashLedger::class);
         $this->app->bind(PaymentFigures::class, DatabasePaymentFigures::class);
+        $this->app->bind(RefundReasonFigures::class, DatabaseRefundReasonFigures::class);
         $this->app->bind(CodAgingFigures::class, DatabaseCodAgingFigures::class);
         $this->app->tag([OnlinePaymentInitiator::class], 'orders.payment_initiators'); // Orders starts payment through this
     }

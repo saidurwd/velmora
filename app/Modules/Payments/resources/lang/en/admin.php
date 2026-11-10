@@ -267,4 +267,9 @@ return [
         'forged_notifications' => 'Messages that did not pass the payment service\'s own check',
     ],
     'alert_value' => ':value now, alert at :threshold',
+    'reason_code_label' => 'Why is the money going back?',
+    'refund_reasons' => [
+        'customer_changed_mind' => 'Customer changed their mind', 'item_returned' => 'Item sent back', 'item_damaged' => 'Item damaged', 'wrong_item' => 'Wrong item',
+        'not_delivered' => 'Not delivered', 'price_adjustment' => 'Price adjustment', 'duplicate_payment' => 'Paid twice', 'fraud_or_risk' => 'Fraud or risk', 'other' => 'Other',
+    ],
 ];

@@ -25,6 +25,7 @@ use App\Modules\Orders\Actions\ClearOrderReview;
 use App\Modules\Orders\Actions\PlaceOrder;
 use App\Modules\Orders\Actions\TransitionOrder;
 use App\Modules\Orders\DTOs\PlaceOrderCommand;
+use App\Modules\Orders\Enums\CancelReason;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Exceptions\CheckoutException;
 use App\Modules\Orders\Exceptions\OrderException;
@@ -134,7 +135,7 @@ describe('open cash-on-delivery orders per phone', function () {
         ($this->refused)('too_many_open_cod', fn () => ($this->orderFor)('01712345678'));
         expect(($this->orderFor)('01812345678')->id)->toBeInt();   // another phone is not affected
 
-        app(TransitionOrder::class)->status($this->staff, $orders[0]->id, OrderStatus::Cancelled, 'Customer cancelled');
+        app(TransitionOrder::class)->status($this->staff, $orders[0]->id, OrderStatus::Cancelled, 'Customer cancelled', CancelReason::Other);
         expect(($this->orderFor)('01712345678')->id)->toBeInt();   // a cancelled order frees a place
 
         ($this->refused)('too_many_open_cod', fn () => ($this->orderFor)('01712345678'));
@@ -272,7 +273,7 @@ describe('orders held for review', function () {
         ($this->orderFor)('01712345678');
         $flagged = ($this->orderFor)('01712345678');
 
-        expect(app(TransitionOrder::class)->status($this->staff, $flagged->id, OrderStatus::Cancelled, 'Fake order')->status)->toBe(OrderStatus::Cancelled);
+        expect(app(TransitionOrder::class)->status($this->staff, $flagged->id, OrderStatus::Cancelled, 'Fake order', CancelReason::Other)->status)->toBe(OrderStatus::Cancelled);
     });
 
     it('keeps the flags on record: they cannot be changed or removed', function () {

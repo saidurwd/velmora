@@ -267,4 +267,9 @@ return [
         'forged_notifications' => 'পেমেন্ট সেবার নিজের যাচাইয়ে উত্তীর্ণ না হওয়া বার্তা',
     ],
     'alert_value' => 'এখন :value, সতর্কতা :threshold-এ',
+    'reason_code_label' => 'টাকা কেন ফেরত যাচ্ছে?',
+    'refund_reasons' => [
+        'customer_changed_mind' => 'ক্রেতার মত বদলেছে', 'item_returned' => 'পণ্য ফেরত এসেছে', 'item_damaged' => 'পণ্য নষ্ট', 'wrong_item' => 'ভুল পণ্য',
+        'not_delivered' => 'পৌঁছায়নি', 'price_adjustment' => 'দামের সমন্বয়', 'duplicate_payment' => 'দুইবার পেমেন্ট', 'fraud_or_risk' => 'প্রতারণা বা ঝুঁকি', 'other' => 'অন্যান্য',
+    ],
 ];

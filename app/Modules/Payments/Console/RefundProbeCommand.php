@@ -8,6 +8,7 @@ use App\Modules\Payments\Actions\ApproveRefund;
 use App\Modules\Payments\Actions\ExecuteRefund;
 use App\Modules\Payments\Actions\RejectRefund;
 use App\Modules\Payments\Actions\RequestRefund;
+use App\Modules\Payments\Enums\RefundReason;
 use App\Modules\Payments\Exceptions\PaymentException;
 use App\Modules\Payments\Gateways\FakeGateway;
 use App\Modules\Platform\DTOs\Actor;
@@ -45,7 +46,7 @@ class RefundProbeCommand extends Command
 
         try {
             $refund = match ((string) $this->argument('action')) {
-                'request' => $request->handle($actor, (string) $this->option('payment'), (int) $this->option('amount'), 'concurrency probe'),
+                'request' => $request->handle($actor, (string) $this->option('payment'), (int) $this->option('amount'), 'concurrency probe', RefundReason::Other),
                 'approve' => $approve->handle($actor, (string) $this->option('refund')),
                 'reject' => $reject->handle($actor, (string) $this->option('refund'), 'concurrency probe'),
                 default => $execute->handle($actor, (string) $this->option('refund')),

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Orders\Actions\TransitionOrder;
 use App\Modules\Orders\DTOs\OrderPaymentRequest;
+use App\Modules\Orders\Enums\CancelReason;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Payments\Actions\ExpireUnpaidPayments;
 use App\Modules\Payments\Actions\InitiatePayment;
@@ -63,7 +64,7 @@ beforeEach(function () {
                 DB::table('payments')->where('order_id', 1)->whereIn('status', ['initiated', 'pending'])->update(['expires_at' => now()->subMinute()]);
                 app(ExpireUnpaidPayments::class)->handle();
             })(),
-            'cancel_order' => app(TransitionOrder::class)->status(Actor::system('staff'), 1, OrderStatus::Cancelled, 'Customer asked'),
+            'cancel_order' => app(TransitionOrder::class)->status(Actor::system('staff'), 1, OrderStatus::Cancelled, 'Customer asked', CancelReason::Other),
             'days' => $this->travel($step['n'])->days(),
             'down' => $this->gateway->failNext('verify'),
             'retry' => (function () {

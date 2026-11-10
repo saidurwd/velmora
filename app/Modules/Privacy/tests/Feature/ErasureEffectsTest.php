@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Orders\Actions\TransitionOrder;
+use App\Modules\Orders\Enums\CancelReason;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\Enums\ActorType;
@@ -42,7 +43,7 @@ describe('what an erased customer leaves behind', function () {
     it('keeps every amount, item and date of their orders, and nothing that says who they were', function () {
         // a second, physical order that was cancelled, so there is a delivery address to remove too
         $tee = ($this->place)([$this->tee => 1], $this->amina['user']->id, '+8801711111111', 'amina@example.com');
-        app(TransitionOrder::class)->status(Actor::system('t'), $tee->id, OrderStatus::Cancelled, 'test');
+        app(TransitionOrder::class)->status(Actor::system('t'), $tee->id, OrderStatus::Cancelled, 'test', CancelReason::Other);
         ($this->finish)($this->amina['order']->id);   // finished before the "before" snapshot: finishing changes the status
         $moneyBefore = ($this->money)($this->amina['user']->id);
         $itemsBefore = ($this->items)($this->amina['user']->id);
@@ -167,7 +168,7 @@ describe('when something happens between approving and erasing', function () {
         $row = DB::table('privacy_requests')->where('id', $request->id)->first();
         expect($row->status)->toBe('blocked')->and($row->failure)->toBe('orders.open')->and(DB::table('users')->where('id', $this->amina['user']->id)->value('email'))->toBe('amina@example.com');
 
-        app(TransitionOrder::class)->status(Actor::system('t'), $late->id, OrderStatus::Cancelled, 'test');
+        app(TransitionOrder::class)->status(Actor::system('t'), $late->id, OrderStatus::Cancelled, 'test', CancelReason::Other);
         app(DecideErasure::class)->approve($this->staff, $request->public_id, null);
         expect(DB::table('privacy_requests')->where('id', $request->id)->value('status'))->toBe('done');
     });

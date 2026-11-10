@@ -82,6 +82,12 @@
             <div><label for="reason" class="block text-sm font-medium">{{ __('payments::admin.reason_label') }}</label>
                 <input id="reason" name="reason" value="{{ old('reason') }}" maxlength="255" required class="block w-full rounded-md border border-line px-3 py-2">
                 @error('reason')<p class="text-sm text-danger">{{ $message }}</p>@enderror</div>
+            <div><label for="reason_code" class="block text-sm font-medium">{{ __('payments::admin.reason_code_label') }}</label>
+                <select id="reason_code" name="reason_code" required class="block w-full rounded-md border border-line px-3 py-2">
+                    <option value="">—</option>
+                    @foreach (\App\Modules\Payments\Enums\RefundReason::cases() as $code)<option value="{{ $code->value }}" @selected(old('reason_code') === $code->value)>{{ $code->label() }}</option>@endforeach
+                </select>
+                @error('reason_code')<p class="text-sm text-danger">{{ $message }}</p>@enderror</div>
             @if ($paidAttempts->count() > 1)
             <div><label for="attempt" class="block text-sm font-medium">{{ __('payments::admin.attempt_label') }}</label>
                 <select id="attempt" name="attempt" class="block w-full rounded-md border border-line px-3 py-2">

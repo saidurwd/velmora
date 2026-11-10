@@ -146,7 +146,8 @@ describe('cancelling my own order', function () {
         ($this->as)()->post("/en/account/orders/{$id}/cancel", ['note' => 'Ordered by mistake'])->assertRedirect()->assertSessionHas('status');
 
         $order = DB::table('orders')->first();
-        expect($order->status)->toBe('cancelled')->and($order->cancel_reason)->toBe('Cancelled by the customer: Ordered by mistake')->and(DB::table('order_status_history')->where('order_id', 1)->where('to_state', 'cancelled')->count())->toBe(1);
+        expect($order->status)->toBe('cancelled')->and($order->cancel_reason)->toBe('Cancelled by the customer: Ordered by mistake')->and(DB::table('order_status_history')->where('order_id', 1)->where('to_state', 'cancelled')->count())->toBe(1)
+            ->and(DB::table('order_status_history')->where('order_id', 1)->where('to_state', 'cancelled')->value('reason_code'))->toBe('customer_request');
         ($this->as)()->get("/en/account/orders/{$id}")->assertOk()->assertDontSee('Cancel this order');
     });
 

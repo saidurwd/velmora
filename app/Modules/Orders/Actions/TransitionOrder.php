@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Orders\Actions;
 
 use App\Modules\Inventory\Contracts\StockReservations;
+use App\Modules\Orders\Enums\CancelReason;
 use App\Modules\Orders\Enums\FulfillmentStatus;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Enums\PaymentStatus;
@@ -30,9 +31,9 @@ final class TransitionOrder
     public function __construct(private readonly Clock $clock, private readonly AuditLogger $audit, private readonly StockReservations $stock, private readonly Outbox $outbox) {}
 
     /** @throws OrderException */
-    public function status(Actor $actor, int $orderId, OrderStatus $to, ?string $reason = null): Order
+    public function status(Actor $actor, int $orderId, OrderStatus $to, ?string $reason = null, ?CancelReason $code = null): Order
     {
-        return $this->apply($actor, $orderId, 'status', $to->value, $reason, function (Order $o) use ($to, $reason): array {
+        return $this->apply($actor, $orderId, 'status', $to->value, $reason, function (Order $o) use ($to, $reason, $code): array {
             if (! $o->status->canMoveTo($to)) {
                 throw new OrderException($o->status === $to ? 'already_in_state' : 'illegal_transition', ['from' => $o->status->value, 'to' => $to->value]);
             }
@@ -51,13 +52,16 @@ final class TransitionOrder
                 if ($reason === null || trim($reason) === '') {
                     throw new OrderException('reason_required');
                 }
+                if ($code === null) {
+                    throw new OrderException('reason_code_required'); // the words are for people, the code is for the reports
+                }
             }
             if ($to === OrderStatus::Completed && ($o->fulfillment_status !== FulfillmentStatus::Fulfilled || $o->payment_status !== PaymentStatus::Paid)) {
                 throw new OrderException('complete_needs_delivery_and_payment');
             }
 
             return $to === OrderStatus::Cancelled ? ['status' => $to->value, 'cancelled_at' => $this->clock->now(), 'cancel_reason' => mb_substr(trim((string) $reason), 0, 255)] : ['status' => $to->value];
-        }, 'status', fn (Order $o) => $o->status->value);
+        }, 'status', fn (Order $o) => $o->status->value, $to === OrderStatus::Cancelled ? $code?->value : null);
     }
 
     /** @throws OrderException */
@@ -97,9 +101,9 @@ final class TransitionOrder
      * @param  callable(Order): array<string, mixed>  $decide  validates and returns the columns to set
      * @param  callable(Order): string  $current
      */
-    private function apply(Actor $actor, int $orderId, string $axis, string $to, ?string $reason, callable $decide, string $auditAxis, callable $current): Order
+    private function apply(Actor $actor, int $orderId, string $axis, string $to, ?string $reason, callable $decide, string $auditAxis, callable $current, ?string $reasonCode = null): Order
     {
-        $order = Transactions::run(function () use ($actor, $orderId, $axis, $to, $reason, $decide, $current): Order {
+        $order = Transactions::run(function () use ($actor, $orderId, $axis, $to, $reason, $decide, $current, $reasonCode): Order {
             /** @var Order $order */
             $order = Order::query()->whereKey($orderId)->lockForUpdate()->firstOrFail();
             $from = $current($order);
@@ -117,7 +121,7 @@ final class TransitionOrder
 
             DB::table('order_status_history')->insert([
                 'order_id' => $orderId, 'axis' => $axis, 'from_state' => $from, 'to_state' => $to,
-                'actor_type' => $actor->type->value, 'actor_id' => $actor->id, 'reason' => $reason === null || trim($reason) === '' ? null : mb_substr(trim($reason), 0, 255), 'created_at' => $this->clock->now(),
+                'actor_type' => $actor->type->value, 'actor_id' => $actor->id, 'reason' => $reason === null || trim($reason) === '' ? null : mb_substr(trim($reason), 0, 255), 'reason_code' => $reasonCode, 'created_at' => $this->clock->now(),
             ]);
 
             if ($axis === 'payment' && $to === PaymentStatus::Paid->value) {
@@ -136,7 +140,7 @@ final class TransitionOrder
             return $order->refresh();
         });
 
-        $this->audit->record("order.{$auditAxis}.changed", $order, ['state' => null], ['state' => $to, 'reason' => $reason], $actor);
+        $this->audit->record("order.{$auditAxis}.changed", $order, ['state' => null], ['state' => $to, 'reason' => $reason] + ($reasonCode === null ? [] : ['reason_code' => $reasonCode]), $actor);
 
         return $order;
     }

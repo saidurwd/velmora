@@ -11,6 +11,7 @@ use App\Modules\Payments\Actions\VerifyPayment;
 use App\Modules\Payments\Database\Seeders\PaymentMethodSeeder;
 use App\Modules\Payments\DTOs\Capabilities;
 use App\Modules\Payments\DTOs\VerifiedPayment;
+use App\Modules\Payments\Enums\RefundReason;
 use App\Modules\Payments\Enums\VerifiedStatus;
 use App\Modules\Payments\Gateways\FakeGateway;
 use App\Modules\Payments\Services\DatabasePaymentMethodCatalog;
@@ -94,7 +95,7 @@ describe('who can see and do what', function () {
 
     it('lets refund staff handle refunds but not cash, reconciliation, verify, freeze or settings', function () {
         $p = ($this->paid)(1);
-        ($this->as)($this->second)->post("/admin/payments/{$p->public_id}/refunds", ['amount' => '100', 'reason' => 'Returned'])->assertRedirect()->assertSessionHas('status');
+        ($this->as)($this->second)->post("/admin/payments/{$p->public_id}/refunds", ['amount' => '100', 'reason_code' => 'other', 'reason' => 'Returned'])->assertRedirect()->assertSessionHas('status');
         ($this->as)($this->second)->post("/admin/payments/{$p->public_id}/verify")->assertForbidden();
         ($this->as)($this->second)->post('/admin/payments/cod/collect', ['order_number' => 'VM-1'])->assertForbidden();
         ($this->as)($this->second)->post('/admin/payments/settings/freeze', ['frozen' => 1])->assertForbidden();
@@ -195,7 +196,7 @@ describe('refunds through the screens', function () {
         DB::table('settings')->updateOrInsert(['key' => 'payments.refund_second_approver_minor'], ['value' => json_encode(50000), 'scope' => 'app', 'is_secret' => false, 'updated_at' => now(), 'created_at' => now()]);
         app(Settings::class)->set('payments.refund_second_approver_minor', 50000);
 
-        ($this->as)()->post("/admin/payments/{$p->public_id}/refunds", ['amount' => '1500.00', 'reason' => 'Customer returned the item'])->assertRedirect()->assertSessionHas('status');
+        ($this->as)()->post("/admin/payments/{$p->public_id}/refunds", ['amount' => '1500.00', 'reason_code' => 'other', 'reason' => 'Customer returned the item'])->assertRedirect()->assertSessionHas('status');
         $refund = DB::table('refunds')->first();
         expect($refund->amount_minor)->toBe(150000)->and($refund->status)->toBe('requested');
         ($this->as)()->get('/admin/payments/refunds')->assertOk()->assertSee('Customer returned the item')->assertSee('Approve');
@@ -212,7 +213,7 @@ describe('refunds through the screens', function () {
 
     it('records a refund paid back by hand, with proof, and the order follows', function () {
         $p = ($this->paid)(1);
-        ($this->as)()->post("/admin/payments/{$p->public_id}/refunds", ['amount' => '100', 'reason' => 'Goodwill', 'manual' => '1'])->assertSessionHas('status');
+        ($this->as)()->post("/admin/payments/{$p->public_id}/refunds", ['amount' => '100', 'reason_code' => 'other', 'reason' => 'Goodwill', 'manual' => '1'])->assertSessionHas('status');
         $refund = DB::table('refunds')->first();
         ($this->as)($this->second)->post("/admin/payments/refunds/{$refund->public_id}/approve")->assertSessionHas('status');
 
@@ -224,8 +225,8 @@ describe('refunds through the screens', function () {
 
     it('rejects with a reason, and shows the reason of a refusal in plain words', function () {
         $p = ($this->paid)(1);
-        ($this->as)()->post("/admin/payments/{$p->public_id}/refunds", ['amount' => '99999.00', 'reason' => 'Too much'])->assertSessionHasErrors('refund');
-        ($this->as)()->post("/admin/payments/{$p->public_id}/refunds", ['amount' => '10', 'reason' => 'x'])->assertSessionHas('status');
+        ($this->as)()->post("/admin/payments/{$p->public_id}/refunds", ['amount' => '99999.00', 'reason_code' => 'other', 'reason' => 'Too much'])->assertSessionHasErrors('refund');
+        ($this->as)()->post("/admin/payments/{$p->public_id}/refunds", ['amount' => '10', 'reason_code' => 'other', 'reason' => 'x'])->assertSessionHas('status');
         $refund = DB::table('refunds')->first();
 
         ($this->as)($this->second)->post("/admin/payments/refunds/{$refund->public_id}/reject", ['reason' => ''])->assertSessionHasErrors('reason');
@@ -236,18 +237,18 @@ describe('refunds through the screens', function () {
 
     it('reads the amount exactly, including Bangla digits, and refuses anything else', function () {
         $p = ($this->paid)(1);
-        ($this->as)()->post("/admin/payments/{$p->public_id}/refunds", ['amount' => '১২০.৫০', 'reason' => 'Bangla digits'])->assertSessionHas('status');
+        ($this->as)()->post("/admin/payments/{$p->public_id}/refunds", ['amount' => '১২০.৫০', 'reason_code' => 'other', 'reason' => 'Bangla digits'])->assertSessionHas('status');
         expect((int) DB::table('refunds')->value('amount_minor'))->toBe(12050);
 
         foreach (['abc', '1.234', '-5', '1e3', '', '0'] as $bad) {
-            ($this->as)()->post("/admin/payments/{$p->public_id}/refunds", ['amount' => $bad, 'reason' => 'x'])->assertSessionHasErrors();
+            ($this->as)()->post("/admin/payments/{$p->public_id}/refunds", ['amount' => $bad, 'reason_code' => 'other', 'reason' => 'x'])->assertSessionHasErrors();
         }
         expect(DB::table('refunds')->count())->toBe(1);
     });
 
     it('escapes what staff type', function () {
         $p = ($this->paid)(1);
-        ($this->as)()->post("/admin/payments/{$p->public_id}/refunds", ['amount' => '10', 'reason' => '<script>alert(1)</script>'])->assertSessionHas('status');
+        ($this->as)()->post("/admin/payments/{$p->public_id}/refunds", ['amount' => '10', 'reason_code' => 'other', 'reason' => '<script>alert(1)</script>'])->assertSessionHas('status');
 
         ($this->as)()->get('/admin/payments/refunds')->assertOk()->assertDontSee('<script>alert(1)</script>', false)->assertSee('&lt;script&gt;', false);
     });
@@ -382,5 +383,27 @@ describe('rate limits', function () {
         ($this->as)()->post('/admin/payments/reconciliation/import', $form())->assertStatus(429);
         $other = catalogStaff(['payments.view', 'payments.reconcile']);
         ($this->as)($other)->post('/admin/payments/reconciliation/import', $form())->assertStatus(302);
+    });
+});
+
+describe('the reason code on a refund', function () {
+    it('is required, must be one of the list, and is stored with the refund', function () {
+        $p = ($this->paid)(1);
+        $url = "/admin/payments/{$p->public_id}/refunds";
+
+        ($this->as)()->post($url, ['amount' => '10', 'reason' => 'Returned'])->assertSessionHasErrors('reason_code');
+        ($this->as)()->post($url, ['amount' => '10', 'reason' => 'Returned', 'reason_code' => 'because'])->assertSessionHasErrors('reason_code');
+        expect(DB::table('refunds')->count())->toBe(0);
+
+        ($this->as)()->post($url, ['amount' => '10', 'reason' => 'Returned', 'reason_code' => 'item_damaged'])->assertSessionHas('status');
+        expect(DB::table('refunds')->value('reason_code'))->toBe('item_damaged')->and(DB::table('refunds')->value('reason'))->toBe('Returned')
+            ->and(json_decode((string) DB::table('audit_events')->where('action', 'refund.requested')->value('after'), true))->toMatchArray(['reason_code' => 'item_damaged']);
+    });
+
+    it('shows the choices in both languages', function () {
+        $p = ($this->paid)(1);
+        ($this->as)()->get("/admin/payments/{$p->public_id}")->assertOk()->assertSee('Item damaged')->assertSee('name="reason_code"', false);
+        app()->setLocale('bn');
+        expect(RefundReason::ItemDamaged->label())->toBe('পণ্য নষ্ট');
     });
 });

@@ -8,6 +8,7 @@ use App\Modules\Orders\Actions\AddOrderNote;
 use App\Modules\Orders\Actions\BlockContact;
 use App\Modules\Orders\Actions\ClearOrderReview;
 use App\Modules\Orders\Actions\TransitionOrder;
+use App\Modules\Orders\Enums\CancelReason;
 use App\Modules\Orders\Enums\FulfillmentStatus;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Enums\PaymentStatus;
@@ -83,7 +84,7 @@ class OrderController
         try {
             $actor = $this->actor($request);
             match ($axis) {
-                'status' => $transition->status($actor, $order->id, OrderStatus::tryFrom($to) ?? throw new OrderException('illegal_transition'), $reason),
+                'status' => $transition->status($actor, $order->id, OrderStatus::tryFrom($to) ?? throw new OrderException('illegal_transition'), $reason, CancelReason::tryFrom((string) $request->validated('reason_code'))),
                 'payment' => $transition->payment($actor, $order->id, PaymentStatus::tryFrom($to) ?? throw new OrderException('illegal_transition'), $reason),
                 default => $transition->fulfillment($actor, $order->id, FulfillmentStatus::tryFrom($to) ?? throw new OrderException('illegal_transition'), $reason),
             };

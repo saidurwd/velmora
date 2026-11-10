@@ -6,6 +6,7 @@ use App\Modules\IdentityAccess\Database\Seeders\RolesAndPermissionsSeeder;
 use App\Modules\Notifications\Sms\FakeSmsGateway;
 use App\Modules\Orders\Actions\TransitionOrder;
 use App\Modules\Orders\DTOs\OrderPaymentRequest;
+use App\Modules\Orders\Enums\CancelReason;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Exceptions\OrderException;
 use App\Modules\Orders\Listeners\ApplyPaymentEvent;
@@ -21,6 +22,7 @@ use App\Modules\Payments\Database\Seeders\PaymentMethodSeeder;
 use App\Modules\Payments\DTOs\Capabilities;
 use App\Modules\Payments\DTOs\VerifiedPayment;
 use App\Modules\Payments\Enums\RefundMethod;
+use App\Modules\Payments\Enums\RefundReason;
 use App\Modules\Payments\Enums\RefundStatus;
 use App\Modules\Payments\Enums\VerifiedStatus;
 use App\Modules\Payments\Events\RefundSucceeded;
@@ -60,7 +62,7 @@ beforeEach(function () {
 
         return DB::table('payments')->where('order_id', $id)->first();
     };
-    $this->request = fn (string $paymentId, int $minor, ?Actor $by = null, array $more = []) => app(RequestRefund::class)->handle($by ?? $this->staffA, $paymentId, $minor, 'Customer returned the item', ...$more);
+    $this->request = fn (string $paymentId, int $minor, ?Actor $by = null, array $more = []) => app(RequestRefund::class)->handle($by ?? $this->staffA, $paymentId, $minor, 'Customer returned the item', RefundReason::ItemReturned, ...$more);
     $this->approve = fn (Refund $r, ?Actor $by = null) => app(ApproveRefund::class)->handle($by ?? $this->staffB, $r->public_id);
     $this->send = fn (Refund $r) => app(ExecuteRefund::class)->handle($this->staffB, $r->public_id);
     $this->poll = fn () => app(PollRefunds::class)->handle();
@@ -119,7 +121,7 @@ describe('asking for a refund', function () {
 
         ($this->refuses)(fn () => ($this->request)($p->public_id, 0), 'refund_amount_invalid');
         ($this->refuses)(fn () => ($this->request)($p->public_id, -5), 'refund_amount_invalid');
-        ($this->refuses)(fn () => app(RequestRefund::class)->handle($this->staffA, $p->public_id, 1000, '   '), 'refund_reason_required');
+        ($this->refuses)(fn () => app(RequestRefund::class)->handle($this->staffA, $p->public_id, 1000, '   ', RefundReason::Other), 'refund_reason_required');
         ($this->refuses)(fn () => ($this->request)('01nosuchpayment0000000000000', 1000), 'refund_not_found');
 
         fakeOrders([2], ['payment_method_code' => 'online']);
@@ -448,12 +450,12 @@ describe('refunds paid by hand', function () {
 
     it('let a fully refunded order be cancelled (a paid one still cannot be)', function () {
         $p = ($this->paid)();
-        expect(fn () => app(TransitionOrder::class)->status(Actor::system('staff'), 1, OrderStatus::Cancelled, 'x'))->toThrow(OrderException::class, 'cancel_needs_refund');
+        expect(fn () => app(TransitionOrder::class)->status(Actor::system('staff'), 1, OrderStatus::Cancelled, 'x', CancelReason::Other))->toThrow(OrderException::class, 'cancel_needs_refund');
 
         $r = ($this->approve)(($this->request)($p->public_id, 150000, null, [null, true]));
         app(CompleteManualRefund::class)->handle($this->staffB, $r->public_id, 'slip 1');
 
-        expect(app(TransitionOrder::class)->status(Actor::system('staff'), 1, OrderStatus::Cancelled, 'Refunded and cancelled')->status)->toBe(OrderStatus::Cancelled);
+        expect(app(TransitionOrder::class)->status(Actor::system('staff'), 1, OrderStatus::Cancelled, 'Refunded and cancelled', CancelReason::Other)->status)->toBe(OrderStatus::Cancelled);
     });
 
     it('do not stop a partly refunded order from needing the rest back first', function () {
@@ -462,7 +464,7 @@ describe('refunds paid by hand', function () {
         app(CompleteManualRefund::class)->handle($this->staffB, $r->public_id, 'slip 1');
 
         expect(($this->order)()->payment_status)->toBe('partially_refunded')
-            ->and(fn () => app(TransitionOrder::class)->status(Actor::system('staff'), 1, OrderStatus::Cancelled, 'x'))->toThrow(OrderException::class, 'cancel_needs_refund');
+            ->and(fn () => app(TransitionOrder::class)->status(Actor::system('staff'), 1, OrderStatus::Cancelled, 'x', CancelReason::Other))->toThrow(OrderException::class, 'cancel_needs_refund');
     });
 });
 

@@ -60,6 +60,12 @@ return [
             'delivery_rate' => 'Delivered share', 'return_rate' => 'Brought-back share', 'failed_attempts' => 'Failed attempts', 'avg_hours' => 'Average hours to deliver', 'cod_value' => 'Cash to collect',
         ],
     ],
+    'refund_cancel_reasons' => [
+        'title' => 'Reasons for refunds and cancellations',
+        'description' => 'Why orders were cancelled (by the day they were cancelled) and why money was given back (by the day the refund went through), by reason chosen, most first in each part. Cancellations and refunds made before reasons were recorded are shown together as “Not recorded”. Other currencies are left out.',
+        'columns' => ['type' => 'Type', 'reason' => 'Reason', 'count' => 'Count', 'value' => 'Value', 'share' => 'Share'],
+    ],
+    'reason_types' => ['cancellation' => 'Cancelled orders', 'refund' => 'Refunds', 'not_recorded' => 'Not recorded'],
     'returns_by_reason' => [
         'title' => 'Returns by reason',
         'description' => 'Return requests made in the period, by who started them (the customer, or the courier bringing a parcel back) and the reason chosen, most requests first. It does not show money: refunds are not linked to returns yet.',

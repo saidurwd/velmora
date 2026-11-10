@@ -21,6 +21,7 @@ use App\Modules\Inventory\Database\Seeders\StockLocationSeeder;
 use App\Modules\Orders\Actions\PlaceOrder;
 use App\Modules\Orders\Actions\TransitionOrder;
 use App\Modules\Orders\DTOs\PlaceOrderCommand;
+use App\Modules\Orders\Enums\CancelReason;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Exceptions\CheckoutException;
 use App\Modules\Orders\Models\Order;
@@ -323,7 +324,7 @@ describe('cancelling releases the stock', function () {
         $order = ($this->place)();
         expect((int) DB::table('stock_levels')->where('variant_id', $this->tee['variantId'])->value('reserved'))->toBe(3);
 
-        app(TransitionOrder::class)->status(Actor::system('staff'), $order->id, OrderStatus::Cancelled, 'Customer asked');
+        app(TransitionOrder::class)->status(Actor::system('staff'), $order->id, OrderStatus::Cancelled, 'Customer asked', CancelReason::Other);
 
         expect((int) DB::table('stock_levels')->where('variant_id', $this->tee['variantId'])->value('reserved'))->toBe(0)
             ->and(DB::table('stock_reservations')->where('owner_ref', $order->public_id)->pluck('status')->unique()->all())->toBe(['released']);

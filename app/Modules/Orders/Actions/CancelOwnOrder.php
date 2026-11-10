@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Orders\Actions;
 
+use App\Modules\Orders\Enums\CancelReason;
 use App\Modules\Orders\Enums\FulfillmentStatus;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Enums\PaymentStatus;
@@ -40,6 +41,6 @@ final class CancelOwnOrder
         }
 
         $note = $note === null ? '' : mb_substr(trim(BanglaText::input($note)), 0, 150);
-        $this->transition->status($customer, $order->id, OrderStatus::Cancelled, 'Cancelled by the customer'.($note === '' ? '' : ': '.$note));
+        $this->transition->status($customer, $order->id, OrderStatus::Cancelled, 'Cancelled by the customer'.($note === '' ? '' : ': '.$note), CancelReason::CustomerRequest);
     }
 }

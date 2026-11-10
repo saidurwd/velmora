@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Orders\Http\Requests;
 
+use App\Modules\Orders\Enums\CancelReason;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /** Authorised by the route's permission middleware (orders.update / orders.cancel is checked again in the controller for cancellations). */
 class TransitionOrderRequest extends FormRequest
@@ -21,6 +23,7 @@ class TransitionOrderRequest extends FormRequest
             'axis' => ['required', 'in:status,payment,fulfillment'],
             'to' => ['required', 'string', 'max:24', 'in:pending,confirmed,processing,completed,cancelled,unpaid,paid,partially_refunded,refunded,failed,unfulfilled,partially_fulfilled,fulfilled,partially_returned,returned'],
             'reason' => ['nullable', 'string', 'max:255'],
+            'reason_code' => ['nullable', 'string', Rule::in(CancelReason::values())],
         ];
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Payments\Models;
 
 use App\Modules\Payments\Enums\RefundMethod;
+use App\Modules\Payments\Enums\RefundReason;
 use App\Modules\Payments\Enums\RefundStatus;
 use App\Modules\Platform\Concerns\HasPublicId;
 use Carbon\CarbonImmutable;
@@ -21,6 +22,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property RefundStatus $status
  * @property RefundMethod $method
  * @property string $reason
+ * @property RefundReason|null $reason_code
  * @property string $refund_ref
  * @property string|null $provider_refund_id
  * @property int|null $requested_by
@@ -37,6 +39,6 @@ class Refund extends Model
 
     protected function casts(): array
     {
-        return ['status' => RefundStatus::class, 'method' => RefundMethod::class, 'updated_at' => 'immutable_datetime'];
+        return ['status' => RefundStatus::class, 'method' => RefundMethod::class, 'reason_code' => RefundReason::class, 'updated_at' => 'immutable_datetime'];
     }
 }

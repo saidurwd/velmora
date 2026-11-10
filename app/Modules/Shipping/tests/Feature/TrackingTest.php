@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
 use App\Modules\IdentityAccess\Models\User;
 use App\Modules\Orders\Actions\TransitionOrder;
+use App\Modules\Orders\Enums\CancelReason;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Payments\Database\Seeders\PaymentMethodSeeder;
 use App\Modules\Platform\DTOs\Actor;
@@ -49,7 +50,7 @@ describe('what a customer sees', function () {
         $this->get(($this->link)($order->public_id))->assertOk()->assertSee('We are preparing your order');
 
         $cancelled = ($this->order)([$this->mug => 1]);
-        app(TransitionOrder::class)->status(Actor::system('t'), $cancelled->id, OrderStatus::Cancelled, 'Changed my mind');
+        app(TransitionOrder::class)->status(Actor::system('t'), $cancelled->id, OrderStatus::Cancelled, 'Changed my mind', CancelReason::Other);
         $this->get(($this->link)($cancelled->public_id))->assertOk()->assertSee('This order was cancelled.')->assertDontSee('Not sent yet');
     });
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Orders\Listeners;
 
 use App\Modules\Orders\Actions\TransitionOrder;
+use App\Modules\Orders\Enums\CancelReason;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Enums\PaymentStatus;
 use App\Modules\Orders\Exceptions\OrderException;
@@ -80,7 +81,7 @@ final class ApplyPaymentEvent
 
     public function expired(PaymentExpired $e): void
     {
-        $this->once('orders.payment_expired', $e, fn () => $this->status($e->orderId, OrderStatus::Cancelled, 'Payment not completed in time'));
+        $this->once('orders.payment_expired', $e, fn () => $this->status($e->orderId, OrderStatus::Cancelled, 'Payment not completed in time', CancelReason::PaymentFailed));
     }
 
     /**
@@ -130,9 +131,9 @@ final class ApplyPaymentEvent
         $this->apply(fn () => $this->transition->payment(Actor::system('payments'), $orderId, $to, $reason), $orderId);
     }
 
-    private function status(int $orderId, OrderStatus $to, string $reason): void
+    private function status(int $orderId, OrderStatus $to, string $reason, ?CancelReason $code = null): void
     {
-        $this->apply(fn () => $this->transition->status(Actor::system('payments'), $orderId, $to, $reason), $orderId);
+        $this->apply(fn () => $this->transition->status(Actor::system('payments'), $orderId, $to, $reason, $code), $orderId);
     }
 
     /** @param  callable(): mixed  $move */

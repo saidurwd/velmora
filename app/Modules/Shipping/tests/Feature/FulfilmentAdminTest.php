@@ -6,6 +6,7 @@ use App\Modules\IdentityAccess\Database\Seeders\RolesAndPermissionsSeeder;
 use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
 use App\Modules\IdentityAccess\Models\User;
 use App\Modules\Orders\Actions\TransitionOrder;
+use App\Modules\Orders\Enums\CancelReason;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Payments\Database\Seeders\PaymentMethodSeeder;
 use App\Modules\Platform\DTOs\Actor;
@@ -117,7 +118,7 @@ describe('making and moving a parcel', function () {
         $post($order->public_id, ['quantities' => [$tee => 0]])->assertSessionHasErrors(['parcel' => 'Choose what goes in the parcel.']);
         $post('01zzzzzzzzzzzzzzzzzzzzzzzz', ['quantities' => [1 => 1]])->assertSessionHasErrors(['parcel' => 'That order was not found.']);
         $post($order->public_id, ['quantities' => [$tee => 'abc']])->assertSessionHasErrors('quantities.'.$tee);
-        app(TransitionOrder::class)->status(Actor::system('t'), $order->id, OrderStatus::Cancelled, 'Changed my mind');
+        app(TransitionOrder::class)->status(Actor::system('t'), $order->id, OrderStatus::Cancelled, 'Changed my mind', CancelReason::Other);
         $post($order->public_id, ['quantities' => [$tee => 1]])->assertSessionHasErrors(['parcel' => 'This order is cancelled.']);
         ($this->as)($this->warehouse)->get("/admin/shipping/orders/{$order->public_id}")->assertOk()->assertSee('Parcels cannot be made yet')->assertSee('This order is cancelled.');
         expect(DB::table('shipments')->count())->toBe(0);

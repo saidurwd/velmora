@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Orders\Actions;
 
+use App\Modules\Orders\Enums\CancelReason;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Exceptions\OrderException;
 use App\Modules\Orders\Models\Order;
@@ -35,7 +36,7 @@ final class CancelStalePendingOrders
 
         foreach ($stale as $order) {
             try {
-                $this->transition->status(Actor::system('auto-cancel'), $order->id, OrderStatus::Cancelled, "Not confirmed within {$days} days");
+                $this->transition->status(Actor::system('auto-cancel'), $order->id, OrderStatus::Cancelled, "Not confirmed within {$days} days", CancelReason::Other);
             } catch (OrderException) {
                 continue; // it moved on while we were looking: leave it
             }

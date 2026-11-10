@@ -14,6 +14,7 @@ use App\Modules\Payments\Actions\VerifyPayment;
 use App\Modules\Payments\Database\Seeders\PaymentMethodSeeder;
 use App\Modules\Payments\DTOs\Capabilities;
 use App\Modules\Payments\DTOs\VerifiedPayment;
+use App\Modules\Payments\Enums\RefundReason;
 use App\Modules\Payments\Enums\VerifiedStatus;
 use App\Modules\Payments\Gateways\FakeGateway;
 use App\Modules\Payments\Services\PaymentExceptions;
@@ -112,7 +113,7 @@ describe('the signals', function () {
     it('count a refund the gateway refused, and a refund stuck, but not an old failure', function () {
         $p = ($this->paid)(1);
         $this->gateway->refuseNextRefund();
-        $r = app(RequestRefund::class)->handle($this->a, $p->public_id, 150000, 'Returned');
+        $r = app(RequestRefund::class)->handle($this->a, $p->public_id, 150000, 'Returned', RefundReason::Other);
         app(ApproveRefund::class)->handle($this->b, $r->public_id);
         app(ExecuteRefund::class)->handle($this->b, $r->public_id);
         expect(DB::table('refunds')->value('status'))->toBe('failed')->and(($this->snap)()['refund_failures'])->toMatchArray(['value' => 1, 'breached' => true]);

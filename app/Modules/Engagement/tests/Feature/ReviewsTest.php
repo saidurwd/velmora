@@ -10,6 +10,7 @@ use App\Modules\IdentityAccess\Database\Seeders\RolesAndPermissionsSeeder;
 use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
 use App\Modules\IdentityAccess\Models\User;
 use App\Modules\Orders\Actions\TransitionOrder;
+use App\Modules\Orders\Enums\CancelReason;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\Enums\ActorType;
@@ -78,7 +79,7 @@ describe('who may review', function () {
 
     it('is refused for a cancelled or refunded order', function () {
         $cancelled = ($this->orderFor)($this->amina->id, [$this->tee['variantId'] => 1]);
-        app(TransitionOrder::class)->status(Actor::system('t'), $cancelled->id, OrderStatus::Cancelled, 'test');
+        app(TransitionOrder::class)->status(Actor::system('t'), $cancelled->id, OrderStatus::Cancelled, 'test', CancelReason::Other);
         $refunded = ($this->orderFor)($this->amina->id, [$this->ebook['variantId'] => 1]);
         ($this->payOrder)($refunded->id);
         DB::table('orders')->where('id', $refunded->id)->update(['payment_status' => 'refunded']);

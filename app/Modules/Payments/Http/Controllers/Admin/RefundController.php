@@ -11,6 +11,7 @@ use App\Modules\Payments\Actions\CompleteManualRefund;
 use App\Modules\Payments\Actions\ExecuteRefund;
 use App\Modules\Payments\Actions\RejectRefund;
 use App\Modules\Payments\Actions\RequestRefund;
+use App\Modules\Payments\Enums\RefundReason;
 use App\Modules\Payments\Exceptions\PaymentException;
 use App\Modules\Payments\Http\Concerns\ActsAsStaff;
 use App\Modules\Payments\Http\Concerns\ParsesMoney;
@@ -48,7 +49,7 @@ class RefundController
     public function request(RequestRefundRequest $request, RequestRefund $refund, string $payment): RedirectResponse
     {
         try {
-            $refund->handle($this->actor($request), $payment, $this->minor((string) $request->validated('amount')), (string) $request->validated('reason'), $request->validated('attempt') ?: null, $request->boolean('manual'));
+            $refund->handle($this->actor($request), $payment, $this->minor((string) $request->validated('amount')), (string) $request->validated('reason'), RefundReason::from((string) $request->validated('reason_code')), $request->validated('attempt') ?: null, $request->boolean('manual'));
         } catch (PaymentException $e) {
             return back()->withErrors(['refund' => __('payments::payments.errors.'.$e->reason, $e->params)])->withInput();
         }

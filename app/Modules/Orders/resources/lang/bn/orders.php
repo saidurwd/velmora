@@ -24,10 +24,15 @@ return [
     'flag' => ['velocity_phone' => 'একদিনে একই ফোন থেকে অনেক অর্ডার (এখন পর্যন্ত :orders_24h; সীমা :limit)', 'address_many_phones' => 'একই ঠিকানা অনেক ফোনে ব্যবহার (৩০ দিনে :phones_30d; সীমা :limit)'],
     'errors' => [
         'illegal_transition' => '“:from” থেকে “:to”-তে যাওয়া অনুমোদিত নয়।', 'already_in_state' => 'অর্ডার আগেই ওই অবস্থায় আছে।', 'cancel_after_shipping' => 'পাঠানো হয়ে গেছে এমন অর্ডার বাতিল করা যায় না। বরং ফেরত লিখে রাখুন।',
-        'cancel_needs_refund' => 'এই অর্ডারের টাকা নেওয়া হয়েছে। আগে ফেরত দিন, তারপর বাতিল করুন।', 'reason_required' => 'বাতিলের কারণ লিখুন।',
+        'cancel_needs_refund' => 'এই অর্ডারের টাকা নেওয়া হয়েছে। আগে ফেরত দিন, তারপর বাতিল করুন।', 'reason_code_required' => 'অর্ডার কেন বাতিল হচ্ছে তা বেছে নিন।', 'reason_required' => 'বাতিলের কারণ লিখুন।',
         'complete_needs_delivery_and_payment' => 'ডেলিভারি ও পেমেন্ট দুটোই হলে তবেই অর্ডার সম্পন্ন করা যায়।', 'order_cancelled' => 'এই অর্ডার বাতিল হয়েছে।', 'confirm_before_shipping' => 'পাঠানোর আগে অর্ডার নিশ্চিত করুন।',
         'review_pending' => 'অর্ডারটি পর্যালোচনার জন্য চিহ্নিত। নিশ্চিত করার আগে দেখে নিয়ে “যাচাই সম্পন্ন” করুন।', 'not_under_review' => 'এই অর্ডার পর্যালোচনার অপেক্ষায় নেই।',
         'changed_meanwhile' => 'অন্য কেউ অর্ডারটি বদলেছেন। পাতা নতুন করে খুলে আবার চেষ্টা করুন।', 'breakdown_mismatch' => 'অর্ডারের হিসাব মিলছে না।', 'lines_mismatch' => 'অর্ডারের পণ্যের সাথে দামের লাইন মিলছে না।', 'address_required' => 'ডেলিভারির ঠিকানা দিতে হবে।',
     ],
     'parcels_link' => 'এই অর্ডারের পার্সেল',
+    'cancel_reason_label' => 'কেন (বাতিল করতে লাগবে)',
+    'cancel_reasons' => [
+        'customer_request' => 'ক্রেতা চেয়েছেন', 'out_of_stock' => 'স্টক নেই', 'payment_failed' => 'পেমেন্ট হয়নি বা সময় শেষ', 'address_problem' => 'ঠিকানায় সমস্যা',
+        'fraud_or_risk' => 'প্রতারণা বা ঝুঁকি', 'duplicate_order' => 'একই অর্ডার দুইবার', 'other' => 'অন্যান্য',
+    ],
 ];

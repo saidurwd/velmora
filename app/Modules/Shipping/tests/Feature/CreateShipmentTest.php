@@ -17,6 +17,7 @@ use App\Modules\Orders\Actions\TransitionOrder;
 use App\Modules\Orders\DTOs\NewOrder;
 use App\Modules\Orders\DTOs\NewOrderAddress;
 use App\Modules\Orders\DTOs\NewOrderLine;
+use App\Modules\Orders\Enums\CancelReason;
 use App\Modules\Orders\Enums\OrderChannel;
 use App\Modules\Orders\Enums\OrderStatus;
 use App\Modules\Orders\Enums\PaymentStatus;
@@ -169,7 +170,7 @@ describe('what is refused', function () {
         ($this->refuses)(fn () => ($this->ship)($review, [$this->tee => 1]), 'order_under_review');
 
         $cancelled = ($this->order)([$this->tee => 1]);
-        app(TransitionOrder::class)->status(Actor::system('t'), $cancelled->id, OrderStatus::Cancelled, 'test');
+        app(TransitionOrder::class)->status(Actor::system('t'), $cancelled->id, OrderStatus::Cancelled, 'test', CancelReason::Other);
         ($this->refuses)(fn () => ($this->ship)($cancelled, [$this->tee => 1]), 'order_cancelled');
 
         expect(DB::table('shipments')->count())->toBe(0)->and(DB::table('stock_movements')->where('reason', 'shipment')->count())->toBe(0);
@@ -269,10 +270,10 @@ describe('cancelling a parcel before it leaves', function () {
         $order = ($this->order)([$this->tee => 1]);
         $shipment = ($this->ship)($order, [$this->tee => 1]);
 
-        expect(fn () => app(TransitionOrder::class)->status(Actor::system('t'), $order->id, OrderStatus::Cancelled, 'Changed my mind'))->toThrow(OrderException::class, 'cancel_after_shipping');
+        expect(fn () => app(TransitionOrder::class)->status(Actor::system('t'), $order->id, OrderStatus::Cancelled, 'Changed my mind', CancelReason::Other))->toThrow(OrderException::class, 'cancel_after_shipping');
 
         app(CancelShipment::class)->handle($this->staff, $shipment->public_id, 'Wrong parcel');
-        app(TransitionOrder::class)->status(Actor::system('t'), $order->id, OrderStatus::Cancelled, 'Changed my mind');
+        app(TransitionOrder::class)->status(Actor::system('t'), $order->id, OrderStatus::Cancelled, 'Changed my mind', CancelReason::Other);
 
         expect(($this->state)($order->id)->status)->toBe('cancelled')->and(($this->stock)($this->tee))->toMatchArray(['on_hand' => 20, 'reserved' => 0])->and(app(StockLedgerVerifier::class)->verify())->toBe([]);
     });
