@@ -22,6 +22,7 @@ use App\Modules\Orders\Events\OrderCancelled;
 use App\Modules\Orders\Events\OrderPaid;
 use App\Modules\Orders\Events\OrderPlaced;
 use App\Modules\Orders\Events\OrderRefunded;
+use App\Modules\Orders\Integrity\OrderLinesAddUpCheck;
 use App\Modules\Orders\Listeners\ApplyPaymentEvent;
 use App\Modules\Orders\Listeners\ApplyShipmentEvent;
 use App\Modules\Orders\Listeners\SendOrderConfirmation;
@@ -47,6 +48,7 @@ use App\Modules\Payments\Events\PaymentSucceeded;
 use App\Modules\Payments\Events\RefundSucceeded;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
+use App\Modules\Platform\Support\IntegrityRegistry;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use App\Modules\Privacy\Contracts\PersonalDataRegistry;
 use App\Modules\Shipping\Events\ShipmentDelivered;
@@ -81,6 +83,10 @@ class OrdersServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+
+        // data-integrity checks this module owns (run from the staff Operations page and nightly)
+        $integrity = $this->app->make(IntegrityRegistry::class);
+        $integrity->add(OrderLinesAddUpCheck::class);
         // This module's part of a customer's data export and erasure (the Privacy module asks every module for its own).
         $registry = $this->app->make(PersonalDataRegistry::class);
         $registry->addExporter(OrderPersonalData::class);

@@ -13,6 +13,8 @@ use App\Modules\Inventory\Contracts\StockInitialiser;
 use App\Modules\Inventory\Contracts\StockReportFigures;
 use App\Modules\Inventory\Contracts\StockReservations;
 use App\Modules\Inventory\Events\StockLow;
+use App\Modules\Inventory\Integrity\LedgerMatchesLevelsCheck;
+use App\Modules\Inventory\Integrity\ReservationsMatchCheck;
 use App\Modules\Inventory\Services\DatabaseAvailability;
 use App\Modules\Inventory\Services\DatabaseStockReportFigures;
 use App\Modules\Inventory\Services\LedgerReturnStock;
@@ -21,6 +23,7 @@ use App\Modules\Inventory\Services\OrderShipmentStock;
 use App\Modules\Inventory\Services\OrderStockReservations;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
+use App\Modules\Platform\Support\IntegrityRegistry;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -47,6 +50,11 @@ class InventoryServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+
+        // data-integrity checks this module owns (run from the staff Operations page and nightly)
+        $integrity = $this->app->make(IntegrityRegistry::class);
+        $integrity->add(LedgerMatchesLevelsCheck::class);
+        $integrity->add(ReservationsMatchCheck::class);
 
         $this->app->make(OutboxRegistry::class)->register(StockLow::class);
         RateLimiter::for('inventory-actions', fn (Request $r) => Limit::perMinute(60)->by('inventory-actions|'.$r->route()?->getName().'|'.($r->user('admin')?->getAuthIdentifier() ?? $r->ip())));

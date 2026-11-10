@@ -20,6 +20,7 @@ use App\Modules\Payments\Events\PaymentSucceeded;
 use App\Modules\Payments\Events\RefundSucceeded;
 use App\Modules\Payments\Gateways\FakeGateway;
 use App\Modules\Payments\Gateways\SslCommerzGateway;
+use App\Modules\Payments\Integrity\RefundsWithinCapturedCheck;
 use App\Modules\Payments\Listeners\CollectCashOnDelivery;
 use App\Modules\Payments\Services\DatabaseCodAgingFigures;
 use App\Modules\Payments\Services\DatabaseCodCashLedger;
@@ -29,6 +30,7 @@ use App\Modules\Payments\Services\GatewayRegistry;
 use App\Modules\Payments\Services\OnlinePaymentInitiator;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
+use App\Modules\Platform\Support\IntegrityRegistry;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use App\Modules\Shipping\Events\ShipmentDelivered;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -58,6 +60,10 @@ class PaymentsServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+
+        // data-integrity checks this module owns (run from the staff Operations page and nightly)
+        $integrity = $this->app->make(IntegrityRegistry::class);
+        $integrity->add(RefundsWithinCapturedCheck::class);
 
         $registry = $this->app->make(GatewayRegistry::class);
         if (! $this->app->environment('production')) {

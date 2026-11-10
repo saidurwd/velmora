@@ -25,6 +25,7 @@ use App\Modules\Payments\Jobs\ExpireUnpaidPaymentsJob;
 use App\Modules\Payments\Jobs\PollRefundsJob;
 use App\Modules\Payments\Jobs\ReconcilePendingPaymentsJob;
 use App\Modules\Platform\Jobs\DispatchOutboxMessages;
+use App\Modules\Platform\Jobs\RunIntegrityChecksJob;
 use App\Modules\Privacy\Jobs\ExpireExportsJob;
 use App\Modules\Reporting\Jobs\ExpireReportExportsJob;
 use App\Modules\Reporting\Jobs\RefreshCohortsJob;
@@ -44,6 +45,7 @@ Artisan::command('inspire', function () {
 
 Schedule::job(new DispatchOutboxMessages)->everyMinute()->name('outbox:dispatch')->withoutOverlapping();
 Schedule::call(fn () => Cache::put('scheduler:heartbeat', now()->toIso8601String(), 600))->everyMinute()->name('scheduler:heartbeat');
+Schedule::job(new RunIntegrityChecksJob)->dailyAt('03:40')->name('ops:integrity')->withoutOverlapping();   // data-integrity checks, read-only; the last results show on the staff page
 Schedule::job(new PurgeExpiredOtpChallenges)->dailyAt('03:15')->name('otp:purge');
 Schedule::job(new NotifyBackInStockJob)->everyFiveMinutes()->name('engagement:back-in-stock')->withoutOverlapping();   // tells people who asked when an item is back
 Schedule::job(new RefreshRecentReportsJob)->everyFifteenMinutes()->name('reports:refresh-recent')->withoutOverlapping();   // works today and yesterday out again for the report screens

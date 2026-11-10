@@ -9,6 +9,8 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 | settings | typed key/value | key s100 UNIQUE(scope,key), scope s50, value j, is_secret b | audit on change |
 | audit_events | who did what | actor_type, actor_id, action s100, subject_type, subject_id, before j, after j, ip s45, user_agent s255, request_id s36, created_at; idx(subject_type,subject_id,created_at),(actor_id,created_at) | AO, no updated_at |
 | audit_events (indexes) | Slice 4a adds (created_at) for the viewer's date range and (action, created_at) for "everything of this kind in a period". The rows stay append-only. |
+| scheduled_task_runs | id, name (unique), last_started_at, last_finished_at, last_status (CHECK started/ok/failed/skipped), last_error (first line, secrets removed), last_runtime_ms, updated_at. Upserted by task name from the scheduler's events. |
+| integrity_check_runs | id, code (unique), status (CHECK ok/problem/error), problems, samples (JSON, a few examples), note, duration_ms, ran_at. Upserted by check code; the only thing the data checks write. |
 | idempotency_keys | replay protection | scope s50, key s100, request_hash CHAR(64), response_status, response_body j, expires_at; UNIQUE(scope,key) | purge on expiry |
 | outbox_messages | reliable events | event_type s100, payload j, status (pending/done/failed), attempts, available_at, processed_at, last_error; idx(status,available_at) | purge done after 30 d |
 | sequences | `order_number_seq` etc. | MariaDB SEQUENCE objects | — |

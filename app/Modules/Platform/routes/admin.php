@@ -5,9 +5,14 @@ declare(strict_types=1);
 use App\Modules\Platform\Http\Controllers\Admin\AuditController;
 use App\Modules\Platform\Http\Controllers\Admin\BrandingController;
 use App\Modules\Platform\Http\Controllers\Admin\DashboardController;
+use App\Modules\Platform\Http\Controllers\Admin\FailedJobController;
 use App\Modules\Platform\Http\Controllers\Admin\FeatureFlagController;
+use App\Modules\Platform\Http\Controllers\Admin\IntegrityController;
 use App\Modules\Platform\Http\Controllers\Admin\MaintenanceController;
+use App\Modules\Platform\Http\Controllers\Admin\OpsController;
+use App\Modules\Platform\Http\Controllers\Admin\SchedulerController;
 use App\Modules\Platform\Http\Controllers\Admin\SettingsController;
+use App\Modules\Platform\Http\Controllers\Admin\SystemHealthController;
 use App\Modules\Platform\Support\FeatureFlags;
 use Illuminate\Support\Facades\Route;
 
@@ -31,6 +36,15 @@ Route::middleware(['auth:admin', 'session.policy:admin'])->group(function (): vo
     Route::get('/audit', [AuditController::class, 'index'])->middleware('permission:audit.view')->name('audit.index');
     Route::get('/audit/export', [AuditController::class, 'export'])->middleware(['permission:audit.view', 'throttle:6,1,audit-export'])->name('audit.export');
     Route::get('/audit/{event}', [AuditController::class, 'show'])->whereNumber('event')->middleware('permission:audit.view')->name('audit.show');
+
+    Route::get('/ops', [OpsController::class, 'index'])->middleware('permission:system.view,queues.view')->name('ops.index');
+    Route::get('/ops/health', [SystemHealthController::class, 'index'])->middleware('permission:system.view')->name('ops.health');
+    Route::get('/ops/scheduler', [SchedulerController::class, 'index'])->middleware('permission:system.view')->name('ops.scheduler');
+    Route::get('/ops/integrity', [IntegrityController::class, 'index'])->middleware('permission:system.view')->name('ops.integrity');
+    Route::post('/ops/integrity/run', [IntegrityController::class, 'run'])->middleware(['permission:system.view', 'throttle:6,1,ops-integrity'])->name('ops.integrity.run');
+    Route::get('/ops/failed-jobs', [FailedJobController::class, 'index'])->middleware('permission:queues.view')->name('ops.failed');
+    Route::post('/ops/failed-jobs/{failed}/retry', [FailedJobController::class, 'retry'])->whereNumber('failed')->middleware(['permission:queues.manage', 'throttle:30,1,ops-failed-write'])->name('ops.failed.retry');
+    Route::post('/ops/failed-jobs/{failed}/forget', [FailedJobController::class, 'forget'])->whereNumber('failed')->middleware(['permission:queues.manage', 'throttle:30,1,ops-failed-write'])->name('ops.failed.forget');
 
     Route::get('/', DashboardController::class)->middleware('permission:dashboard.view')->name('dashboard');
 });

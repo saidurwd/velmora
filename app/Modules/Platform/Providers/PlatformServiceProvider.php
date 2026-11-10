@@ -15,15 +15,22 @@ use App\Modules\Platform\Http\Middleware\EnsureIdempotency;
 use App\Modules\Platform\Http\Middleware\SecureHeaders;
 use App\Modules\Platform\Http\Middleware\SetLocale;
 use App\Modules\Platform\Listeners\AcknowledgeOutboxProbe;
+use App\Modules\Platform\Listeners\RecordScheduledTask;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\Branding;
+use App\Modules\Platform\Support\Integrity\StuckOutboxCheck;
+use App\Modules\Platform\Support\IntegrityRegistry;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use App\Modules\Platform\Support\PageSeo;
 use App\Modules\Platform\Support\StorefrontCache;
 use App\Modules\Platform\Support\SystemClock;
 use Closure;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Console\Events\ScheduledTaskFailed;
+use Illuminate\Console\Events\ScheduledTaskFinished;
+use Illuminate\Console\Events\ScheduledTaskSkipped;
+use Illuminate\Console\Events\ScheduledTaskStarting;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Routing\Events\RouteMatched;
@@ -51,6 +58,7 @@ class PlatformServiceProvider extends ModuleServiceProvider
 
         $this->app->singleton(Clock::class, SystemClock::class);
         $this->app->singleton(OutboxRegistry::class);
+        $this->app->singleton(IntegrityRegistry::class);
         $this->app->singleton(AdminMenu::class);
         $this->app->singleton(Branding::class);
         $this->app->scoped(PageSeo::class);
@@ -85,6 +93,15 @@ class PlatformServiceProvider extends ModuleServiceProvider
         $this->app->make(AdminMenu::class)->add('platform::admin.dashboard', 'admin.dashboard', 'dashboard.view', 10);
         $this->app->make(AdminMenu::class)->add('platform::settings.menu', 'admin.settings.index', 'settings.view', 89);
         $this->app->make(AdminMenu::class)->add('platform::audit.menu', 'admin.audit.index', 'audit.view', 91);
+        $this->app->make(AdminMenu::class)->add('platform::ops.menu', 'admin.ops.index', 'system.view', 92);
+        $this->app->make(IntegrityRegistry::class)->add(StuckOutboxCheck::class);
+
+        // keep one row per scheduled task: when it last started and finished
+        $recorder = RecordScheduledTask::class;
+        Event::listen(ScheduledTaskStarting::class, [$recorder, 'starting']);
+        Event::listen(ScheduledTaskFinished::class, [$recorder, 'finished']);
+        Event::listen(ScheduledTaskFailed::class, [$recorder, 'failed']);
+        Event::listen(ScheduledTaskSkipped::class, [$recorder, 'skipped']);
 
         $this->defineRateLimiters();
         $this->assertSafeConfiguration();
