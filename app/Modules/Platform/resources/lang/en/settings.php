@@ -6,7 +6,7 @@ return [
     'menu' => 'Settings', 'title' => 'Settings', 'saved' => 'Saved.',
     'blurbs' => [
         'branding' => 'Name, logo and colour.', 'business' => 'Legal name, address, BIN and TIN for receipts.', 'tax' => 'The tax switches.', 'locale' => 'Currency and languages (fixed).',
-        'features' => 'Switches for features you can turn on and off.', 'maintenance' => 'Close the shop for a while.', 'audit' => 'Who changed what, and when.',
+        'features' => 'Switches for features you can turn on and off.', 'maintenance' => 'Close the shop for a while.', 'integrations' => 'Payment, SMS and email credentials.', 'audit' => 'Who changed what, and when.',
     ],
     'business' => [
         'title' => 'Business profile', 'intro' => 'Printed on receipts and packing slips. Only what you fill in is shown.',

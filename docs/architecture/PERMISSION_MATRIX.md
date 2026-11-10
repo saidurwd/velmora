@@ -17,6 +17,7 @@ Default grants for the seeded roles. Roles are created once; administrators may 
 | `settings.view` | ✔ | ✔ |  |  |  |  |  |  |  |
 | `settings.manage` ⚠ | ✔ | ✔ |  |  |  |  |  |  |  |
 | `features.manage` ⚠ | ✔ | ✔ |  |  |  |  |  |  |  |
+| `integrations.manage` ⚠ | ✔ | ✔ |  |  |  |  |  |  |  |
 | `queues.view` | ✔ | ✔ |  |  |  |  |  |  |  |
 | `queues.manage` ⚠ | ✔ | ✔ |  |  |  |  |  |  |  |
 | `system.view` | ✔ | ✔ |  |  |  |  |  |  |  |

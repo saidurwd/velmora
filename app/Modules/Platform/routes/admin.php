@@ -7,6 +7,7 @@ use App\Modules\Platform\Http\Controllers\Admin\BrandingController;
 use App\Modules\Platform\Http\Controllers\Admin\DashboardController;
 use App\Modules\Platform\Http\Controllers\Admin\FailedJobController;
 use App\Modules\Platform\Http\Controllers\Admin\FeatureFlagController;
+use App\Modules\Platform\Http\Controllers\Admin\IntegrationsController;
 use App\Modules\Platform\Http\Controllers\Admin\IntegrityController;
 use App\Modules\Platform\Http\Controllers\Admin\MaintenanceController;
 use App\Modules\Platform\Http\Controllers\Admin\OpsController;
@@ -14,6 +15,7 @@ use App\Modules\Platform\Http\Controllers\Admin\SchedulerController;
 use App\Modules\Platform\Http\Controllers\Admin\SettingsController;
 use App\Modules\Platform\Http\Controllers\Admin\SystemHealthController;
 use App\Modules\Platform\Support\FeatureFlags;
+use App\Modules\Platform\Support\IntegrationCatalogue;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:admin', 'session.policy:admin'])->group(function (): void {
@@ -25,6 +27,10 @@ Route::middleware(['auth:admin', 'session.policy:admin'])->group(function (): vo
     Route::get('/settings/tax', [SettingsController::class, 'tax'])->middleware('permission:settings.view')->name('settings.tax');
     Route::put('/settings/tax', [SettingsController::class, 'updateTax'])->middleware(['permission:settings.manage', 'throttle:30,1,settings-write'])->name('settings.tax.update');
     Route::get('/settings/locale', [SettingsController::class, 'locale'])->middleware('permission:settings.view')->name('settings.locale');
+
+    Route::get('/settings/integrations', [IntegrationsController::class, 'index'])->middleware('permission:integrations.manage')->name('integrations.index');
+    Route::put('/settings/integrations/{provider}', [IntegrationsController::class, 'update'])->where('provider', implode('|', IntegrationCatalogue::PROVIDERS))->middleware(['permission:integrations.manage', 'throttle:10,1,integrations-write'])->name('integrations.update');
+    Route::post('/settings/integrations/{provider}/test', [IntegrationsController::class, 'test'])->where('provider', implode('|', IntegrationCatalogue::PROVIDERS))->middleware(['permission:integrations.manage', 'throttle:6,1,integrations-test'])->name('integrations.test');
 
     Route::get('/features', [FeatureFlagController::class, 'index'])->middleware('permission:settings.view')->name('features.index');
     Route::put('/features/{flag}', [FeatureFlagController::class, 'update'])->where('flag', implode('|', FeatureFlags::names()))->middleware(['permission:features.manage', 'throttle:30,1,features-write'])->name('features.update');

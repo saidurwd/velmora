@@ -19,6 +19,9 @@ use App\Modules\Platform\Listeners\RecordScheduledTask;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\Branding;
+use App\Modules\Platform\Support\IntegrationCredentials;
+use App\Modules\Platform\Support\Integrations\MailHandshakeTest;
+use App\Modules\Platform\Support\IntegrationTests;
 use App\Modules\Platform\Support\Integrity\StuckOutboxCheck;
 use App\Modules\Platform\Support\IntegrityRegistry;
 use App\Modules\Platform\Support\ModuleServiceProvider;
@@ -36,9 +39,11 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use Throwable;
 
 class PlatformServiceProvider extends ModuleServiceProvider
 {
@@ -59,6 +64,8 @@ class PlatformServiceProvider extends ModuleServiceProvider
         $this->app->singleton(Clock::class, SystemClock::class);
         $this->app->singleton(OutboxRegistry::class);
         $this->app->singleton(IntegrityRegistry::class);
+        $this->app->singleton(IntegrationTests::class);
+        $this->app->singleton(IntegrationCredentials::class);
         $this->app->singleton(AdminMenu::class);
         $this->app->singleton(Branding::class);
         $this->app->scoped(PageSeo::class);
@@ -95,6 +102,16 @@ class PlatformServiceProvider extends ModuleServiceProvider
         $this->app->make(AdminMenu::class)->add('platform::audit.menu', 'admin.audit.index', 'audit.view', 91);
         $this->app->make(AdminMenu::class)->add('platform::ops.menu', 'admin.ops.index', 'system.view', 92);
         $this->app->make(IntegrityRegistry::class)->add(StuckOutboxCheck::class);
+        $this->app->make(IntegrationTests::class)->add('mail', MailHandshakeTest::class);
+
+        // saved e-mail settings are applied when Laravel first builds its mail manager; if they cannot be read the server's own settings stay in force
+        $this->app->resolving('mail.manager', function (): void {
+            try {
+                $this->app->make(IntegrationCredentials::class)->applyMail();
+            } catch (Throwable $e) {
+                Log::warning('integrations.mail_overrides_skipped', ['kind' => $e::class]);
+            }
+        });
 
         // keep one row per scheduled task: when it last started and finished
         $recorder = RecordScheduledTask::class;

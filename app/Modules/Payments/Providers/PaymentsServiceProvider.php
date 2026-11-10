@@ -28,11 +28,15 @@ use App\Modules\Payments\Services\DatabasePaymentFigures;
 use App\Modules\Payments\Services\DatabasePaymentMethodCatalog;
 use App\Modules\Payments\Services\GatewayRegistry;
 use App\Modules\Payments\Services\OnlinePaymentInitiator;
+use App\Modules\Payments\Support\SslCommerzConnectionTest;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
+use App\Modules\Platform\Support\IntegrationCredentials;
+use App\Modules\Platform\Support\IntegrationTests;
 use App\Modules\Platform\Support\IntegrityRegistry;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use App\Modules\Shipping\Events\ShipmentDelivered;
+use Closure;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -64,13 +68,20 @@ class PaymentsServiceProvider extends ModuleServiceProvider
         // data-integrity checks this module owns (run from the staff Operations page and nightly)
         $integrity = $this->app->make(IntegrityRegistry::class);
         $integrity->add(RefundsWithinCapturedCheck::class);
+        $this->app->make(IntegrationTests::class)->add('sslcommerz', SslCommerzConnectionTest::class);
 
         $registry = $this->app->make(GatewayRegistry::class);
         if (! $this->app->environment('production')) {
             $registry->register('fake', fn () => $this->app->make(FakeGateway::class)); // never available in production
         }
 
-        $this->registerSslCommerz($registry, (array) config('payments.sslcommerz'), $this->app->environment('production'), (bool) config('payments.allow_live'));
+        // SSLCommerz: its credentials may be saved by staff (Settings → Integrations) or set in the server's environment, so availability is decided on first use
+        $registry->registerResolver(SslCommerzGateway::NAME, function (): ?Closure {
+            $probe = new GatewayRegistry;
+            $this->registerSslCommerz($probe, $this->app->make(IntegrationCredentials::class)->sslcommerz(), $this->app->environment('production'), (bool) config('payments.allow_live'));
+
+            return $probe->has(SslCommerzGateway::NAME) ? fn () => $probe->for(SslCommerzGateway::NAME) : null;
+        });
 
         $outbox = $this->app->make(OutboxRegistry::class);
         foreach ([PaymentInitiated::class, PaymentSucceeded::class, PaymentFailed::class, PaymentExpired::class, PaymentNeedsReview::class, RefundSucceeded::class] as $event) {
