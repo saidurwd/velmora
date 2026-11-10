@@ -33,6 +33,7 @@
         </tbody>
     </table>
     <p class="text-sm text-muted">{{ __($slip.'note') }}</p>
+    <x-platform::business-block />
     <p class="print:hidden"><button type="button" x-data @click="window.print()" class="rounded-md border border-line px-4 py-2 text-sm hover:bg-surface-alt">{{ __('shipping::fulfilment.documents.print') }}</button></p>
 </article>
 @endsection

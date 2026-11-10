@@ -16,6 +16,7 @@ Default grants for the seeded roles. Roles are created once; administrators may 
 | `audit.view` ⚠ | ✔ | ✔ |  |  |  |  |  |  |  |
 | `settings.view` | ✔ | ✔ |  |  |  |  |  |  |  |
 | `settings.manage` ⚠ | ✔ | ✔ |  |  |  |  |  |  |  |
+| `features.manage` ⚠ | ✔ | ✔ |  |  |  |  |  |  |  |
 | `queues.view` | ✔ | ✔ |  |  |  |  |  |  |  |
 | `catalog.view` | ✔ | ✔ | ✔ |  | ✔ |  |  | ✔ | ✔ |
 | `catalog.create` | ✔ | ✔ | ✔ |  |  |  |  |  |  |

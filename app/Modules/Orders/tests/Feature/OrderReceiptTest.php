@@ -11,6 +11,7 @@ use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Services\OrderReceipt;
 use App\Modules\Payments\Database\Seeders\PaymentMethodSeeder;
 use App\Modules\Platform\DTOs\Actor;
+use App\Modules\Platform\Support\Settings;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
@@ -141,5 +142,21 @@ describe('both languages', function () {
         $html = $this->get(($this->link)($order->public_id, 'bn'))->assertOk()->assertSee('অর্ডারের রসিদ')->assertSee('পণ্য')->assertSee('এটি ভ্যাট চালান নয়')->getContent();
 
         expect($html)->not->toContain('orders::documents');
+    });
+});
+
+describe('the business profile', function () {
+    it('appears on the receipt, in the customer\'s language, only once staff have filled it in', function () {
+        $order = ($this->order)([$this->tee => 1]);
+        $this->get(($this->link)($order->public_id))->assertOk()->assertDontSee('BIN:');
+
+        $settings = app(Settings::class);
+        $settings->set('business.legal_name.en', 'Velmora Trading');
+        $settings->set('business.legal_name.bn', 'ভেলমোরা ট্রেডিং');
+        $settings->set('business.bin', '000123456-0101');
+        $settings->set('business.invoice_footer.en', 'Thank you for shopping.');
+
+        $this->get(($this->link)($order->public_id))->assertOk()->assertSee('Velmora Trading')->assertSee('BIN: 000123456-0101')->assertSee('Thank you for shopping.');
+        $this->get(($this->link)($order->public_id, 'bn'))->assertOk()->assertSee('ভেলমোরা ট্রেডিং')->assertSee('BIN: 000123456-0101')->assertSee('Thank you for shopping.');   // no Bangla footer: the English one
     });
 });

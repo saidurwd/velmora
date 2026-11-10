@@ -16,7 +16,7 @@ final class PermissionCatalogue
     /** Permission name => true when using it is audited even for Super Admin (money, staff, settings, PII). */
     public const SENSITIVE = [
         'staff.create', 'staff.update', 'staff.disable', 'roles.manage', 'settings.manage', 'payments.refund', 'payments.reconcile',
-        'customers.view_pii', 'customers.export', 'privacy.manage', 'reports.finance.view', 'reports.export', 'inventory.adjust', 'audit.view', 'cms.policies.manage',
+        'customers.view_pii', 'customers.export', 'privacy.manage', 'reports.finance.view', 'reports.export', 'inventory.adjust', 'audit.view', 'cms.policies.manage', 'features.manage',
     ];
 
     /** @var array<string, list<string>> resource => actions */
@@ -26,6 +26,7 @@ final class PermissionCatalogue
         'roles' => ['view', 'manage'],
         'audit' => ['view'],
         'settings' => ['view', 'manage'],
+        'features' => ['manage'],
         'queues' => ['view'],
         'catalog' => ['view', 'create', 'update', 'publish', 'delete'],
         'pricing' => ['view', 'update'],

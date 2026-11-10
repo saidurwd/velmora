@@ -17,6 +17,7 @@ use App\Modules\Notifications\Contracts\MarketingConsent;
 use App\Modules\Notifications\Contracts\NotificationSender;
 use App\Modules\Notifications\DTOs\Recipient;
 use App\Modules\Platform\Contracts\Clock;
+use App\Modules\Platform\Support\FeatureFlags;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\DB;
@@ -244,7 +245,7 @@ describe('how often', function () {
                 return 'x';
             }
         };
-        $action = new SendCartReminders(app(AbandonedCarts::class), app(CustomerProfiles::class), app(AccountLocales::class), app(MarketingConsent::class), $capture, app(Clock::class));
+        $action = new SendCartReminders(app(AbandonedCarts::class), app(CustomerProfiles::class), app(AccountLocales::class), app(MarketingConsent::class), $capture, app(Clock::class), app(FeatureFlags::class));
 
         expect($action->remind($cart, app(CustomerProfiles::class)->findByUserId($this->amina->id), 'xx'))->toBeTrue()
             ->and($seen['locale'])->toBe('en')
@@ -271,7 +272,7 @@ describe('how often', function () {
             }
         };
         Log::spy();
-        $action = new SendCartReminders(app(AbandonedCarts::class), app(CustomerProfiles::class), app(AccountLocales::class), app(MarketingConsent::class), $broken, app(Clock::class));
+        $action = new SendCartReminders(app(AbandonedCarts::class), app(CustomerProfiles::class), app(AccountLocales::class), app(MarketingConsent::class), $broken, app(Clock::class), app(FeatureFlags::class));
 
         expect($action->handle())->toBe(0)->and(($this->claims)())->toBe(0);
         Log::shouldHaveReceived('warning')->with('engagement.cart_reminder_not_recorded', Mockery::type('array'))->once();

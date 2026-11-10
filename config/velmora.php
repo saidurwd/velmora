@@ -31,6 +31,10 @@ return [
         'base_backoff_seconds' => 10,
     ],
 
+    'audit' => [
+        'export_cap' => (int) env('AUDIT_EXPORT_CAP', 50_000),   // most rows one audit-log export holds
+    ],
+
     'idempotency' => [
         'ttl_hours' => 24,
         'max_body_bytes' => 1_000_000,

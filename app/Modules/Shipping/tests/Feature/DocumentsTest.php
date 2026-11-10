@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\IdentityAccess\Database\Seeders\RolesAndPermissionsSeeder;
 use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
 use App\Modules\Payments\Database\Seeders\PaymentMethodSeeder;
+use App\Modules\Platform\Support\Settings;
 use Illuminate\Support\Facades\DB;
 
 beforeEach(function () {
@@ -18,6 +19,19 @@ beforeEach(function () {
 });
 
 describe('the packing slip', function () {
+    it('carries the business profile once staff have filled it in, and nothing before', function () {
+        $order = ($this->order)([$this->tee => 1]);
+        $parcel = ($this->parcel)($order, [$this->tee => 1], false);
+        $url = "/admin/shipping/shipments/{$parcel->public_id}/packing-slip";
+        ($this->as)($this->viewer)->get($url)->assertOk()->assertDontSee('TIN:');
+
+        $settings = app(Settings::class);
+        $settings->set('business.legal_name.en', 'Velmora Trading');
+        $settings->set('business.tin', '123456789012');
+
+        ($this->as)($this->viewer)->get($url)->assertOk()->assertSee('Velmora Trading')->assertSee('TIN: 123456789012');
+    });
+
     it('lists who gets the parcel, where, what is in it and the cash to collect, and shows no price', function () {
         $order = ($this->order)([$this->tee => 2, $this->mug => 1]);
         $parcel = ($this->parcel)($order, [$this->tee => 2], false);

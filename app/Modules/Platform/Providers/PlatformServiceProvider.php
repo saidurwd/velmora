@@ -83,7 +83,8 @@ class PlatformServiceProvider extends ModuleServiceProvider
         Event::listen(OutboxProbe::class, [AcknowledgeOutboxProbe::class, 'handle']);
 
         $this->app->make(AdminMenu::class)->add('platform::admin.dashboard', 'admin.dashboard', 'dashboard.view', 10);
-        $this->app->make(AdminMenu::class)->add('platform::branding.menu', 'admin.settings.branding', 'settings.view', 90);
+        $this->app->make(AdminMenu::class)->add('platform::settings.menu', 'admin.settings.index', 'settings.view', 89);
+        $this->app->make(AdminMenu::class)->add('platform::audit.menu', 'admin.audit.index', 'audit.view', 91);
 
         $this->defineRateLimiters();
         $this->assertSafeConfiguration();

@@ -13,6 +13,7 @@ use App\Modules\Notifications\Contracts\MarketingConsent;
 use App\Modules\Notifications\Contracts\NotificationSender;
 use App\Modules\Notifications\DTOs\Recipient;
 use App\Modules\Platform\Contracts\Clock;
+use App\Modules\Platform\Support\FeatureFlags;
 use App\Modules\Platform\Support\Transactions;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
@@ -40,12 +41,13 @@ final class SendCartReminders
         private readonly MarketingConsent $consent,
         private readonly NotificationSender $sender,
         private readonly Clock $clock,
+        private readonly FeatureFlags $flags,
     ) {}
 
     /** @return int how many customers were reminded */
     public function handle(): int
     {
-        if (! (bool) config('engagement.cart_recovery.enabled')) {
+        if (! $this->flags->enabled('cart_recovery')) {
             return 0;
         }
 

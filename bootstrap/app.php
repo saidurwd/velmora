@@ -23,6 +23,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: env('TRUSTED_PROXIES') ? explode(',', (string) env('TRUSTED_PROXIES')) : null);
+        // Maintenance mode shuts the storefront but never the admin area or the health checks, so nobody can lock staff out.
+        $middleware->preventRequestsDuringMaintenance(except: ['admin', 'admin/*', 'up', 'healthz', 'readyz']);
         $middleware->append(AssignRequestContext::class);
         $middleware->append(SecureHeaders::class);
         $middleware->appendToGroup('web', SetLocale::class);
