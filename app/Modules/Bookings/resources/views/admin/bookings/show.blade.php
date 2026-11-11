@@ -27,7 +27,7 @@
         <div><dt class="text-muted">{{ __('bookings::admin.col.resource') }}</dt><dd>{{ $b['resource'] }}</dd></div>
         <div><dt class="text-muted">{{ __('bookings::admin.col.order') }}</dt><dd>@if ($b['order_public_id'])<a href="{{ route('admin.orders.show', ['order' => $b['order_public_id']]) }}" class="underline">{{ $b['order_number'] }}</a>@endif</dd></div>
         <div><dt class="text-muted">{{ __('bookings::admin.col.paid') }}</dt><dd>{{ $money($b['paid']) }}</dd></div>
-        <div><dt class="text-muted">{{ __('bookings::admin.col.phone') }}</dt><dd>{{ $b['customer_phone'] }}@if ($b['customer_email']) · {{ $b['customer_email'] }}@endif</dd></div>
+        <div><dt class="text-muted">{{ __('bookings::admin.col.phone') }}</dt><dd>{{ $b['customer_phone'] }}@if ($b['customer_email'] && $canSeePii) · {{ $b['customer_email'] }}@endif</dd></div>
         <div><dt class="text-muted">{{ __('bookings::admin.moved') }}</dt><dd>{{ $b['moved'] }} / {{ $t['max_reschedules'] }}</dd></div>
         @if ($b['completed_at'])<div><dt class="text-muted">{{ __('bookings::admin.completed') }}</dt><dd>{{ $fmt($b['completed_at']) }} ({{ __('bookings::admin.by.'.$b['completed_by']) }})</dd></div>@endif
     </dl>

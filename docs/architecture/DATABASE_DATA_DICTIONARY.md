@@ -131,6 +131,7 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 | shipment_exceptions | STD; type (unknown_status/attempts_exhausted/stuck/unknown_consignment/returned_to_origin), shipment_id NULL, reference, details j, status (open/resolved/ignored), resolved_by/at, resolution; UNIQUE(type,reference) so a problem is raised once | |
 | (shipments) | also `polled_at` (when the courier was last asked; index status,polled_at) | |
 | (shipments) | also index `shipments_handed_over_at_courier_index` (handed_over_at, courier) = the delivery performance report | |
+| (shipments) | also covering index `shipments_delivery_report_cover_index(handed_over_at, courier, status, attempts, delivered_at, currency, cod_amount_minor)` = the delivery performance report read from the index alone; the older `shipments_handed_over_at_courier_index` stays until a later contract step | |
 | (return_requests) | also index `return_requests_created_at_kind_reason_index` (created_at, kind, reason_code) = the returns-by-reason report | |
 | (coupon_redemptions) | also index `coupon_redemptions_redeemed_at_coupon_index` (redeemed_at, coupon_id) = the coupon performance report | |
 | (service_bookings) | also index `service_bookings_starts_at_resource_index` (starts_at, resource_id) = the booking utilisation report | |
@@ -214,6 +215,7 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 | report_cohort_months | cohort_month CHAR(7) (Y-m, Dhaka month of a signed-in customer's first live order), months_since (0 = that month), customers, orders, sales_minor (goods price after discounts; CHECK customers > 0, orders ≥ customers, sales ≥ 0). UNIQUE(cohort_month, months_since). No customer id. Replaced whole every night. |
 | report_cohort_status | id = 1 (CHECK), refreshed_at, cohort_rows, customers. The rebuild locks this row first. |
 | (orders) | also index `orders_placed_at_index(placed_at)`: one day of orders for reports |
+| (orders) | also indexes `orders_status_fulfillment_created_at_index(status, fulfillment_status, created_at)` = the dashboard count and the list filter of orders to ship, and `orders_cod_awaiting_index(payment_method_code, payment_status, status, created_at)` = cash on delivery aging (Phase 10 scale test) |
 | (payments) | also index `payments_paid_at_index(paid_at)`; (refunds) `refunds_status_updated_at_index(status, updated_at)`: one day of money for reports |
 | support_tickets | public_id, reference (a short random code the customer quotes, UNIQUE), user_id FK (customers only), order_id NULL FK (one of the customer's own), subject, category (order/delivery/payment/return/account/other), status (open/answered/closed; moves enforced by trigger; closed ⇔ closed_at), assignee_id NULL FK, locale, sla_due_at (first answer due), first_responded_at, last_message_at, closed_at; deleted on the customer's erasure |
 | support_messages | public_id, ticket_id FK, author_type (customer/staff), author_id FK, body (≤5,000), is_internal (a note for staff only: never shown to the customer; CHECK staff-only), created_at; never edited; deleted with the ticket on erasure |

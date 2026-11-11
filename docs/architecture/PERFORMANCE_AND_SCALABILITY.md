@@ -58,3 +58,24 @@ k6 scenarios: browse, search, add-to-cart, checkout (COD + prepaid sandbox), web
 
 ## Checkout, measured (Phase 5)
 Measured in the test suite on the development machine (MariaDB 12.1.2, PHP 8.4, one request in-process, so it excludes the web server and network): placing a three-line cash-on-delivery order with a delivery quote and the full transaction (re-price, stock hold, coupon, cart clear, outbox) took a **median of 66 ms (max 86 ms), 96–98 queries**; with 3,000 earlier orders in the table the median was still **66 ms**. Target (§1) is p95 ≤ 800 ms. The ~97 queries are mostly the repeated reads of cart, prices, shipping and the OTP-free risk rules; they are bounded (the count does not grow with the number of orders) and can be reduced later without a design change. A load test with k6 and a 1 M-order dataset remains a Phase 10 task.
+
+## Back office on one million orders, measured (Phase 10 gate)
+`RUN_SCALE_TESTS=1 vendor/bin/pest tests/Database/ReportScaleTest.php` (needs MariaDB with the SEQUENCE engine, as 11.4 has). It builds 1,000,000 orders (2,000,000 lines, 900,000 payments, 27,273 refunds, 550,000 parcels, 100,000 coupon uses) in about 6 minutes, works out all 366 report days like the nightly job (about 10 minutes; the slowest single day took 5.1 s), then times each request in-process and explains every query. Measured on the development machine (MariaDB 11.4 in Docker, PHP 8.4, busy laptop; one request without web server or network, so a lower bound):
+
+| What | A year | A month | A week | Budget |
+|---|---|---|---|---|
+| Sales by day, payments, channels, refunds, reasons, products, categories, brands, tax, returns, cohorts, bookings, search gaps, close sheet, stock reports | 49 to 385 ms | 40 to 115 ms | 39 to 112 ms | 5 s |
+| Delivery performance | 2.2 s | 0.18 s | 0.08 s | 5 s |
+| Coupon performance | 4.0 s | 0.44 s | 0.07 s | 5 s |
+| Cash on delivery aging | 0.07 s | | | 5 s |
+
+| Page | Measured | Budget |
+|---|---|---|
+| Orders list (first page / page 500 / status filter / payment filter) | 413 / 293 / 105 / 141 ms | 1 s |
+| Dashboard (all tiles) | 169 ms | 1 s |
+| Global search (order number / phone) | 40 / 30 ms | 1 s |
+| Payments list | 497 ms | 1 s |
+| Orders file screen (a month) | 136 ms | file |
+| Customers file screen (a year) | 52 s | file (background build); **above the 5 s interactive budget as a screen** |
+
+Found and fixed by this run (indexes only): dashboard "orders to ship" 1.8 s (now index-only), cash on delivery aging 3.6 s (was reading the whole orders table), delivery performance (the old index still needed a row fetch per parcel, so the planner read the whole table; a covering index now serves it). Known limits, not fixed: the coupon report reads each coupon use of the period (4.0 s for 100,000 uses in a year; a summary table would be the next step, and is a design decision); the customers file groups a whole year before its first row (52 s), fine as a background file but too slow as a screen preview. Synthetic data on one laptop: it shows query plans and rough size, not production figures.

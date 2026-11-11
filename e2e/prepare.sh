@@ -42,6 +42,7 @@ php artisan tinker --execute="require base_path('e2e/seed-customer.php');" >/dev
 php artisan tinker --execute="require base_path('e2e/seed-shipment.php');" >/dev/null
 php artisan tinker --execute="require base_path('e2e/seed-phase8.php');" >/dev/null
 php artisan tinker --execute="require base_path('e2e/seed-phase9.php');" >/dev/null
+php artisan tinker --execute="require base_path('e2e/seed-admin.php');" >/dev/null
 php artisan catalog:reindex --quiet
 php artisan search:reindex --quiet
 php artisan cache:clear --quiet

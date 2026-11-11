@@ -47,7 +47,7 @@ class BookingController
         $date = $request->query('date');
         $detail = $this->bookings->detail($booking, is_string($date) ? $date : null) ?? abort(404);
 
-        return view('bookings::admin.bookings.show', ['b' => $detail, 'can' => $request->user('admin')?->can('bookings.manage') === true]);
+        return view('bookings::admin.bookings.show', ['b' => $detail, 'can' => $request->user('admin')?->can('bookings.manage') === true, 'canSeePii' => $request->user('admin')?->can('customers.view_pii') === true]);
     }
 
     public function calendar(Request $request, Clock $clock): View
