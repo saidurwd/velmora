@@ -188,7 +188,7 @@ it('keeps the back office within its budgets on a million orders', function () {
     // ---- the two big files (built in the background, so only a ceiling) --------------------------------------------------------------------------------------------------
     foreach (['orders_file' => '?from=2026-02-18&to=2026-03-19', 'customers_file' => '?from=2025-03-21&to=2026-03-19'] as $code => $query) {
         [$res, $ms] = scaleTimed($this, $finance, "/admin/reports/{$code}{$query}");
-        fwrite(STDERR, sprintf("  file   %-26s %6.0f ms  (status %d, screen: first rows only)\n", $code, $ms, $res->getStatusCode()));
+        fwrite(STDERR, sprintf("  file   %-26s %6.0f ms  (status %d, screen: no rows for the customers file)\n", $code, $ms, $res->getStatusCode()));
         if ($res->getStatusCode() !== 200 || $ms > 120_000) {
             $problems[] = sprintf('%s screen answered %d in %.0f ms', $code, $res->getStatusCode(), $ms);
         }

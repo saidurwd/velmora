@@ -74,7 +74,9 @@
     </form>
     @endif
 
-    @if ($rows === [])
+    @if ($fileOnly)
+        <p class="text-muted">{{ __('reporting::reports.file_only') }}</p>
+    @elseif ($rows === [])
         <p class="text-muted">{{ __('reporting::reports.no_figures') }}</p>
     @else
     <div class="overflow-x-auto"><table class="w-full text-left text-sm">

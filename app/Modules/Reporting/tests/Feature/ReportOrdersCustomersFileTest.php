@@ -177,6 +177,15 @@ describe('the customers file', function () {
             ->and(collect($file['rows'])->pluck(2)->sort()->values()->all())->toBe(['1', '2']);
     });
 
+    it('shows no rows on screen (too big for a year), only the way to ask for the file', function () {
+        $user = catalogStaff([...$this->base, 'customers.export', 'orders.export', 'customers.view_pii']);
+
+        ($this->as)($user)->get('/admin/reports/customers_file?from=2026-03-10&to=2026-03-11')->assertOk()
+            ->assertSee(__('reporting::reports.file_only'))->assertSee(__('reporting::exports.ask'))
+            ->assertDontSee('Amina Rahman')->assertDontSee('<table', false);
+        ($this->as)($user)->get('/admin/reports/orders_file?from=2026-03-10&to=2026-03-11')->assertOk()->assertSee('VM-A-1')->assertDontSee(__('reporting::reports.file_only'));
+    });
+
     it('renders in Bangla', function () {
         $user = catalogStaff([...$this->base, 'customers.export']);
 

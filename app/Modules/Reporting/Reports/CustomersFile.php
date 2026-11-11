@@ -10,7 +10,7 @@ use App\Modules\Reporting\DTOs\ReportFilter;
 use App\Modules\Reporting\Services\ReportDays;
 
 /** One row per customer who ordered in the period, for staff who may export customers: masked name, masked phone and order count unless the person may see personal data. */
-final class CustomersFile implements ReportDefinition
+final class CustomersFile implements FileOnlyReport, ReportDefinition
 {
     public function __construct(private readonly OrderExportRows $rows, private readonly ReportDays $days) {}
 

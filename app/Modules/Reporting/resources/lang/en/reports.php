@@ -25,6 +25,7 @@ return [
     'by_day' => 'Day by day',
     'day' => 'Day',
     'no_figures' => 'No figures',
+    'file_only' => 'This report is too big to read on screen. Choose the period, then ask for the file: it is built in the background and every row is in it.',
     'finance_note' => 'Payments received, refunds and net sales are shown only to people who may see finance figures.',
     'how' => 'How it is worked out',
     'money_note' => 'All amounts are in taka.',
