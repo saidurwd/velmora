@@ -8,3 +8,4 @@
 * Phase 10, slice 4b: `Integrity/OrderLinesAddUpCheck` (read-only) reports recent orders whose lines do not add up to the stored subtotal.
 * Reason codes: `Enums/CancelReason`; `TransitionOrder::status` needs one to cancel and keeps it on the history entry (`order_status_history.reason_code`). `Contracts/CancellationFigures` gives Reporting cancellations per code.
 * Phase 10, slice 5a: `Dashboard/*Tile` (to confirm, to ship, held for review), `Search/OrderSearch` (number prefix or exact phone, phone masked without `customers.view_pii`) and the `orders` saved-filter screen.
+* Phase 10, slice 5b: `Bulk/ConfirmOrders` (bulk action, same `TransitionOrder::status` as the order page) and `Contracts/OrderExportRows` (rows of the orders and customers files for Reporting, streamed).

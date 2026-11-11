@@ -19,6 +19,7 @@ use App\Modules\Platform\Listeners\RecordScheduledTask;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\Branding;
+use App\Modules\Platform\Support\BulkActions;
 use App\Modules\Platform\Support\DashboardRegistry;
 use App\Modules\Platform\Support\IntegrationCredentials;
 use App\Modules\Platform\Support\Integrations\MailHandshakeTest;
@@ -71,6 +72,7 @@ class PlatformServiceProvider extends ModuleServiceProvider
         $this->app->singleton(DashboardRegistry::class);
         $this->app->singleton(SearchProviders::class);
         $this->app->singleton(SavedFilterScreens::class);
+        $this->app->singleton(BulkActions::class);
         $this->app->singleton(IntegrationCredentials::class);
         $this->app->singleton(AdminMenu::class);
         $this->app->singleton(Branding::class);

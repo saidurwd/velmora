@@ -17,7 +17,7 @@ beforeEach(function () {
     reportWorld($this);
     $this->seed(RolesAndPermissionsSeeder::class);
     $this->withoutMiddleware(EnforceSessionPolicy::class);
-    $this->finance = catalogStaff(['reports.view', 'reports.export', 'reports.finance.view', 'inventory.view']);
+    $this->finance = catalogStaff(['reports.view', 'reports.export', 'reports.finance.view', 'inventory.view', 'orders.export', 'customers.export']);
     $this->analyst = catalogStaff(['reports.view', 'reports.export']);
     $this->nobody = catalogStaff(['catalog.view']);
     $this->as = fn (User $u) => $this->flushSession()->actingAs($u, 'admin');
@@ -30,8 +30,8 @@ describe('the list', function () {
     it('shows each person only the reports they may open', function () {
         $codes = fn (User $u) => array_map(fn ($r) => $r->code(), app(ReportCatalogue::class)->visibleFor($u));
 
-        expect($codes($this->finance))->toBe(['sales_by_day', 'payment_methods', 'channels_languages', 'refunds_cancellations', 'refund_cancel_reasons', 'best_sellers', 'sales_by_product', 'sales_by_category', 'sales_by_brand', 'tax_summary', 'delivery_performance', 'returns_by_reason', 'coupon_performance', 'customer_cohorts', 'booking_utilisation', 'search_gaps', 'daily_close', 'cod_aging', 'low_stock', 'stock_aging'])
-            ->and($codes($this->analyst))->toBe(['sales_by_day', 'payment_methods', 'channels_languages', 'refunds_cancellations', 'refund_cancel_reasons', 'best_sellers', 'sales_by_product', 'sales_by_category', 'sales_by_brand', 'delivery_performance', 'returns_by_reason', 'customer_cohorts', 'booking_utilisation', 'search_gaps'])   // not tax, coupons, the close sheet or cash aging (finance), not stock (inventory)
+        expect($codes($this->finance))->toBe(['sales_by_day', 'payment_methods', 'channels_languages', 'refunds_cancellations', 'refund_cancel_reasons', 'best_sellers', 'sales_by_product', 'sales_by_category', 'sales_by_brand', 'tax_summary', 'delivery_performance', 'returns_by_reason', 'coupon_performance', 'customer_cohorts', 'booking_utilisation', 'search_gaps', 'daily_close', 'cod_aging', 'low_stock', 'stock_aging', 'orders_file', 'customers_file'])
+            ->and($codes($this->analyst))->toBe(['sales_by_day', 'payment_methods', 'channels_languages', 'refunds_cancellations', 'refund_cancel_reasons', 'best_sellers', 'sales_by_product', 'sales_by_category', 'sales_by_brand', 'delivery_performance', 'returns_by_reason', 'customer_cohorts', 'booking_utilisation', 'search_gaps'])   // not tax, coupons, the close sheet or cash aging (finance), not stock (inventory), not the orders and customers files (own export rights)
             ->and($codes($this->nobody))->toBe([]);
     });
 
@@ -67,6 +67,8 @@ describe('who may open which report', function () {
         'cod_aging' => [403, 200, 403],
         'low_stock' => [403, 200, 403],
         'stock_aging' => [403, 200, 403],
+        'orders_file' => [403, 200, 403],
+        'customers_file' => [403, 200, 403],
     ];
 
     it('answers every report according to the permissions it needs', function () use ($matrix) {

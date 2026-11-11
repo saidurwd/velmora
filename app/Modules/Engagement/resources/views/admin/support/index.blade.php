@@ -8,6 +8,8 @@
     <p class="text-sm text-muted">{{ __('engagement::support.desk_help') }}</p>
     @if (session('status'))<x-platform::alert type="success">{{ session('status') }}</x-platform::alert>@endif
     <x-platform::saved-filters screen="support" />
+    @php $canBulk = app(\App\Modules\Platform\Support\BulkActions::class)->forScreen('support', auth('admin')->user()) !== []; @endphp
+    <x-platform::bulk-bar screen="support" />
     <form method="GET" action="{{ route('admin.support.index') }}" class="grid items-end gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <div><label for="status" class="block text-sm font-medium">{{ __('engagement::support.status_label') }}</label>
             <select id="status" name="status" class="mt-1 block w-full rounded-md border border-line px-3 py-2">@foreach (['active', 'open', 'answered', 'closed'] as $s)<option value="{{ $s }}" @selected(($filters['status'] ?? 'active') === $s)>{{ __('engagement::support.filter.'.$s) }}</option>@endforeach</select></div>
@@ -24,10 +26,13 @@
     @else
         <div class="overflow-x-auto"><table class="w-full text-left text-sm">
             <caption class="sr-only">{{ __('engagement::support.desk_title') }}</caption>
-            <thead><tr class="border-b border-line"><th scope="col" class="py-2 pr-3">{{ __('engagement::support.reference') }}</th><th scope="col" class="py-2 pr-3">{{ __('engagement::support.subject_label') }}</th><th scope="col" class="py-2 pr-3">{{ __('engagement::support.customer') }}</th><th scope="col" class="py-2 pr-3">{{ __('engagement::support.status_label') }}</th><th scope="col" class="py-2 pr-3">{{ __('engagement::support.assignee_label') }}</th><th scope="col" class="py-2 pr-3">{{ __('engagement::support.due') }}</th></tr></thead>
+            <thead><tr class="border-b border-line">@if ($canBulk)<th scope="col" class="py-2 pr-3"><span class="sr-only">{{ __('engagement::bulk.select_all') }}</span></th>@endif<th scope="col" class="py-2 pr-3">{{ __('engagement::support.reference') }}</th><th scope="col" class="py-2 pr-3">{{ __('engagement::support.subject_label') }}</th><th scope="col" class="py-2 pr-3">{{ __('engagement::support.customer') }}</th><th scope="col" class="py-2 pr-3">{{ __('engagement::support.status_label') }}</th><th scope="col" class="py-2 pr-3">{{ __('engagement::support.assignee_label') }}</th><th scope="col" class="py-2 pr-3">{{ __('engagement::support.due') }}</th></tr></thead>
             <tbody>
             @foreach ($page as $t)
                 <tr class="border-b border-line align-top">
+                    @if ($canBulk)
+                    <td class="py-2 pr-3"><input type="checkbox" class="size-4" form="bulk-form-support" name="ids[]" value="{{ $t->public_id }}" aria-label="{{ __('engagement::bulk.select', ['name' => $t->reference]) }}"></td>
+                    @endif
                     <td class="py-2 pr-3"><a class="underline" href="{{ route('admin.support.show', $t->public_id) }}">{{ $t->reference }}</a></td>
                     <td class="py-2 pr-3">{{ $t->subject }}<div class="text-xs text-muted">{{ __('engagement::support.category.'.$t->category) }}@if ($t->order_number) · {{ $t->order_number }}@endif</div></td>
                     <td class="py-2 pr-3">{{ $t->customer ?? __('engagement::support.erased') }}</td>

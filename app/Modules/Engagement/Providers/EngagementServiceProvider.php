@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Engagement\Providers;
 
 use App\Modules\Engagement\Actions\OpenSupportTicket;
+use App\Modules\Engagement\Bulk\ApproveReviews;
+use App\Modules\Engagement\Bulk\AssignTickets;
+use App\Modules\Engagement\Bulk\RejectReviews;
 use App\Modules\Engagement\Dashboard\LateTicketsTile;
 use App\Modules\Engagement\Dashboard\OpenTicketsTile;
 use App\Modules\Engagement\Dashboard\ReviewsWaitingTile;
@@ -15,6 +18,7 @@ use App\Modules\Engagement\Privacy\SupportPersonalData;
 use App\Modules\Engagement\Search\TicketSearch;
 use App\Modules\Notifications\Contracts\TemplateRegistry;
 use App\Modules\Platform\Support\AdminMenu;
+use App\Modules\Platform\Support\BulkActions;
 use App\Modules\Platform\Support\DashboardRegistry;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use App\Modules\Platform\Support\SavedFilterScreens;
@@ -40,6 +44,9 @@ class EngagementServiceProvider extends ModuleServiceProvider
             $dashboard->add($tile);
         }
         $this->app->make(SearchProviders::class)->add(TicketSearch::class);
+        foreach ([ApproveReviews::class, RejectReviews::class, AssignTickets::class] as $bulk) {
+            $this->app->make(BulkActions::class)->add($bulk);
+        }
         $this->app->make(SavedFilterScreens::class)->add('support', 'admin.support.index', 'support.view', [
             'status' => ['nullable', 'in:active,open,answered,closed'], 'assignee' => ['nullable', 'in:mine,none'], 'category' => ['nullable', 'in:'.implode(',', OpenSupportTicket::CATEGORIES)],
             'overdue' => ['nullable', 'in:1'], 'q' => ['nullable', 'string', 'max:12'],

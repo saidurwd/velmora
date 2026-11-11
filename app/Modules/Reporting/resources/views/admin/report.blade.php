@@ -7,9 +7,12 @@
     use App\Modules\Platform\Support\Fmt;
     use Carbon\CarbonImmutable;
     $supports = fn (string $f) => in_array($f, $report->filters(), true);
-    $cell = function ($column, $value) {
+    $cell = function ($column, $value) use ($canPii, $values) {
         if ($value === null) {
             return '—';
+        }
+        if ($column->pii && ! $canPii) {
+            return $values->mask((string) $value);
         }
         return match ($column->kind) {
             'money' => Fmt::money(Money::of((int) $value, 'BDT')),

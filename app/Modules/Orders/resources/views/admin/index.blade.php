@@ -18,6 +18,8 @@
     <h1 class="text-2xl font-bold">{{ __('orders::orders.title') }}</h1>
 
     <x-platform::saved-filters screen="orders" />
+    @php $canBulk = app(\App\Modules\Platform\Support\BulkActions::class)->forScreen('orders', auth('admin')->user()) !== []; @endphp
+    <x-platform::bulk-bar screen="orders" />
     <form method="GET" role="search" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <div class="lg:col-span-2"><label for="q" class="block text-sm font-medium">{{ __('orders::orders.search') }}</label>
             <input id="q" name="q" value="{{ $filters['q'] ?? '' }}" maxlength="60" class="block w-full rounded-md border border-line px-3 py-2"></div>
@@ -38,11 +40,15 @@
     <table class="w-full text-sm">
         <caption class="sr-only">{{ __('orders::orders.title') }}</caption>
         <thead><tr class="border-b border-line">
+            @if ($canBulk)<th scope="col" class="py-2 pe-3"><span class="sr-only">{{ __('orders::bulk.select_all') }}</span></th>@endif
             @foreach (['number', 'placed', 'customer', 'total', 'status', 'payment', 'fulfillment'] as $col)<th scope="col" class="py-2 pe-3 text-start">{{ __('orders::orders.cols.'.$col) }}</th>@endforeach
         </tr></thead>
         <tbody>
         @forelse ($orders as $order)
             <tr class="border-b border-line">
+                @if ($canBulk)
+                <td class="py-2 pe-3"><input type="checkbox" class="size-4" form="bulk-form-orders" name="ids[]" value="{{ $order->public_id }}" aria-label="{{ __('orders::bulk.select', ['number' => $order->order_number]) }}"></td>
+                @endif
                 <td class="py-2 pe-3"><a class="underline" href="{{ route('admin.orders.show', $order) }}">{{ $order->order_number }}</a>@if ($order->needs_review) <x-platform::badge tone="danger">{{ __('orders::orders.needs_review') }}</x-platform::badge>@endif</td>
                 <td class="py-2 pe-3">{{ \App\Modules\Platform\Support\Fmt::dateTime($order->placed_at) }}</td>
                 <td class="py-2 pe-3">{{ $order->contact_name }}<br><span class="text-muted">{{ $phone($order->contact_phone) }}</span></td>
@@ -52,7 +58,7 @@
                 <td class="py-2 pe-3"><x-platform::badge :tone="$tone('fulfillment', $order->fulfillment_status->value)">{{ __('orders::orders.fulfillment.'.$order->fulfillment_status->value) }}</x-platform::badge></td>
             </tr>
         @empty
-            <tr><td colspan="7" class="py-6 text-center text-muted">{{ __('orders::orders.empty') }}</td></tr>
+            <tr><td colspan="{{ $canBulk ? 8 : 7 }}" class="py-6 text-center text-muted">{{ __('orders::orders.empty') }}</td></tr>
         @endforelse
         </tbody>
     </table>

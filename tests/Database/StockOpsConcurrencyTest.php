@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Modules\Inventory\Actions\PreviewStockImport;
 use App\Modules\Inventory\Contracts\StockReservations;
 use App\Modules\Inventory\Services\StockLedgerVerifier;
+use App\Modules\Platform\DTOs\Actor;
+use App\Modules\Platform\Enums\ActorType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Symfony\Component\Process\Process;
@@ -103,4 +106,52 @@ it('approves a stock-take once and corrects stock once, even when two people app
         expect(($this->level)($this->tee)->on_hand)->toBe(50)->and(DB::table('stock_movements')->where('reason', 'count')->count())->toBe(0);
     }
     expect(app(StockLedgerVerifier::class)->verify())->toBe([]);
+});
+
+/** A stock file already read (previewed), by the first staff member; returns the import's public id. */
+function previewedStockFile(object $t, string $csv): string
+{
+    $path = tempnam(sys_get_temp_dir(), 'stock');
+    file_put_contents($path, $csv);
+
+    try {
+        return app(PreviewStockImport::class)->handle(new Actor(ActorType::Staff, $t->people[0], null, 'probe'), $path, 'file.csv', 'main', 'set', 'Concurrency test');
+    } finally {
+        @unlink($path);
+    }
+}
+
+it('applies a stock file once, however many people press apply at the same instant', function () {
+    $file = previewedStockFile($this, "sku,quantity\nTEE-1,60\nMUG-1,45\n");
+
+    $results = runStockOpsProbes(array_map(fn ($i) => ['inventory:ops-probe', ['apply-import', "--import={$file}", '--actor-id='.$this->people[$i % 3]]], range(1, 5)));
+
+    expect(count(array_filter($results, fn ($r) => $r['ok'])))->toBe(1)->and(array_unique(array_column(array_filter($results, fn ($r) => ! $r['ok']), 'reason')))->toBe(['import_not_previewed'])
+        ->and(($this->level)($this->tee)->on_hand)->toBe(60)->and(($this->level)($this->mug)->on_hand)->toBe(45)
+        ->and(DB::table('stock_movements')->where('ref_type', 'stock_import')->where('ref_id', $file)->count())->toBe(2)->and(app(StockLedgerVerifier::class)->verify())->toBe([]);
+});
+
+it('undoes a stock file once, however many people press undo at the same instant', function () {
+    $file = previewedStockFile($this, "sku,quantity\nTEE-1,60\nMUG-1,45\n");
+    expect(runStockOpsProbes([['inventory:ops-probe', ['apply-import', "--import={$file}", '--actor-id='.$this->people[0]]]])[0]['ok'])->toBeTrue();
+
+    $results = runStockOpsProbes(array_map(fn ($i) => ['inventory:ops-probe', ['rollback-import', "--import={$file}", '--actor-id='.$this->people[$i % 3]]], range(1, 5)));
+
+    expect(count(array_filter($results, fn ($r) => $r['ok'])))->toBe(1)->and(array_unique(array_column(array_filter($results, fn ($r) => ! $r['ok']), 'reason')))->toBe(['import_not_applied'])
+        ->and(($this->level)($this->tee)->on_hand)->toBe(50)->and(($this->level)($this->mug)->on_hand)->toBe(50)
+        ->and(DB::table('stock_movements')->where('ref_type', 'stock_import_rollback')->where('ref_id', $file)->count())->toBe(2)->and(app(StockLedgerVerifier::class)->verify())->toBe([]);
+});
+
+it('never lets a stock file take stock the orders have been promised, even when an order races the apply', function () {
+    app(StockReservations::class)->holdForOrder([$this->tee => 30], 'HOLD-A');   // 20 free
+    $file = previewedStockFile($this, "sku,quantity\nTEE-1,35\n");   // 50 -> 35 leaves 5 free: fine at preview
+
+    $results = runStockOpsProbes([
+        ['inventory:ops-probe', ['apply-import', "--import={$file}", '--actor-id='.$this->people[0]]],
+        ['inventory:probe', ['reserve', "--variant={$this->tee}", '--qty=10', '--owner=ORDER-B']],
+    ]);
+
+    $after = ($this->level)($this->tee);
+    expect($after->on_hand)->toBeGreaterThanOrEqual($after->reserved)->and(app(StockLedgerVerifier::class)->verify())->toBe([])
+        ->and(count(array_filter($results, fn ($r) => $r['ok'] ?? false)))->toBeGreaterThanOrEqual(1);
 });

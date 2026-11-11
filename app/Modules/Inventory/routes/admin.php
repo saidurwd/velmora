@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Inventory\Http\Controllers\Admin\CountController;
 use App\Modules\Inventory\Http\Controllers\Admin\ReportController;
 use App\Modules\Inventory\Http\Controllers\Admin\StockController;
+use App\Modules\Inventory\Http\Controllers\Admin\StockImportController;
 use App\Modules\Inventory\Http\Controllers\Admin\TransferController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,6 +32,15 @@ Route::middleware(['auth:admin', 'session.policy:admin'])->prefix('inventory')->
         Route::post('/cancel', [CountController::class, 'cancel'])->middleware('permission:inventory.count')->name('cancel');
         Route::post('/approve', [CountController::class, 'approve'])->middleware('permission:inventory.adjust')->name('approve');
         Route::post('/reject', [CountController::class, 'reject'])->middleware('permission:inventory.adjust')->name('reject');
+    });
+
+    Route::prefix('imports')->name('imports.')->middleware(['permission:inventory.adjust', 'throttle:inventory-actions'])->group(function (): void {
+        Route::get('/', [StockImportController::class, 'index'])->name('index');
+        Route::post('/', [StockImportController::class, 'store'])->name('store');
+        Route::get('/{import}', [StockImportController::class, 'show'])->whereAlphaNumeric('import')->name('show');
+        Route::get('/{import}/problems', [StockImportController::class, 'errors'])->whereAlphaNumeric('import')->name('errors');
+        Route::post('/{import}/apply', [StockImportController::class, 'apply'])->whereAlphaNumeric('import')->name('apply');
+        Route::post('/{import}/rollback', [StockImportController::class, 'rollback'])->whereAlphaNumeric('import')->name('rollback');
     });
 
     Route::get('/reports/low-stock', [ReportController::class, 'low'])->middleware('permission:inventory.view')->name('reports.low');

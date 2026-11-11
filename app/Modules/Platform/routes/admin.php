@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Platform\Http\Controllers\Admin\AuditController;
 use App\Modules\Platform\Http\Controllers\Admin\BrandingController;
+use App\Modules\Platform\Http\Controllers\Admin\BulkController;
 use App\Modules\Platform\Http\Controllers\Admin\DashboardController;
 use App\Modules\Platform\Http\Controllers\Admin\FailedJobController;
 use App\Modules\Platform\Http\Controllers\Admin\FeatureFlagController;
@@ -57,6 +58,11 @@ Route::middleware(['auth:admin', 'session.policy:admin'])->group(function (): vo
     Route::get('/search', SearchController::class)->middleware(['permission:dashboard.view', 'throttle:30,1,admin-search'])->name('search');
     Route::post('/saved-filters', [SavedFilterController::class, 'store'])->middleware(['permission:dashboard.view', 'throttle:20,1,saved-filters'])->name('saved-filters.store');
     Route::delete('/saved-filters/{filter}', [SavedFilterController::class, 'destroy'])->whereAlphaNumeric('filter')->middleware(['permission:dashboard.view', 'throttle:20,1,saved-filters'])->name('saved-filters.destroy');
+
+    // Several rows at once: the route only lets in staff who may do ANY bulk action; the action itself is checked again against its own permissions.
+    Route::post('/bulk/{action}/confirm', [BulkController::class, 'confirm'])->middleware(['permission:orders.update,reviews.moderate,support.reply', 'throttle:30,1,bulk'])->name('bulk.confirm');
+    Route::post('/bulk/{action}/run', [BulkController::class, 'run'])->middleware(['permission:orders.update,reviews.moderate,support.reply', 'throttle:10,1,bulk-run'])->name('bulk.run');
+    Route::get('/bulk/result', [BulkController::class, 'result'])->middleware(['permission:orders.update,reviews.moderate,support.reply', 'throttle:30,1,bulk'])->name('bulk.result');
 
     Route::get('/', DashboardController::class)->middleware('permission:dashboard.view')->name('dashboard');
 });

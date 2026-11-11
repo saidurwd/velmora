@@ -67,6 +67,7 @@ class InventoryServiceProvider extends ModuleServiceProvider
         $menu->add('inventory::admin.menu.stock', 'admin.inventory.index', 'inventory.view', 50);
         $menu->add('inventory::screens.menu.transfers', 'admin.inventory.transfers.index', 'inventory.view', 51);
         $menu->add('inventory::screens.menu.counts', 'admin.inventory.counts.index', 'inventory.view', 52);
+        $menu->add('inventory::screens.menu.imports', 'admin.inventory.imports.index', 'inventory.adjust', 53);
         $menu->add('inventory::screens.menu.low', 'admin.inventory.reports.low', 'inventory.view', 53);
         $menu->add('inventory::screens.menu.aging', 'admin.inventory.reports.aging', 'inventory.view', 54);
     }

@@ -24,6 +24,16 @@ return [
         'title' => 'Cash on delivery: aging',
         'description' => 'Cash-on-delivery money that is stuck, as of now: cash not yet recorded, and cash recorded but not yet covered by a courier statement, by how old it is.',
     ],
+    'orders_file' => [
+        'title' => 'Orders file',
+        'description' => 'One row per order placed in the period, for the orders export. Names and phone numbers are masked unless you may see personal data.',
+        'columns' => ['number' => 'Order', 'placed' => 'Placed (UTC)', 'status' => 'Status', 'payment_status' => 'Payment', 'fulfillment' => 'Delivery', 'channel' => 'Channel', 'payment_method' => 'Payment method', 'language' => 'Language', 'items' => 'Items', 'currency' => 'Currency', 'total' => 'Total', 'name' => 'Name', 'phone' => 'Phone'],
+    ],
+    'customers_file' => [
+        'title' => 'Customers file',
+        'description' => 'One row per customer who ordered in the period, for the customers export. Names and phone numbers are masked unless you may see personal data.',
+        'columns' => ['name' => 'Name', 'phone' => 'Phone', 'orders' => 'Orders', 'first_order' => 'First order', 'last_order' => 'Last order', 'total' => 'Spent (not cancelled, BDT)'],
+    ],
     'low_stock' => [
         'title' => 'Low stock',
         'description' => 'Products with nothing left to sell, or at or below the level set as low, in each place, the least left first.',

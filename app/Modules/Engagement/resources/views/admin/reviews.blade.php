@@ -13,6 +13,8 @@
             <select id="status" name="status" class="mt-1 block rounded-md border border-line px-3 py-2">@foreach (['pending', 'published', 'rejected', 'withdrawn'] as $s)<option value="{{ $s }}" @selected(($filters['status'] ?? 'pending') === $s)>{{ __('engagement::reviews.status.'.$s) }}</option>@endforeach</select></div>
         <x-platform::btn type="submit" size="sm">{{ __('engagement::reviews.filter') }}</x-platform::btn>
     </form>
+    @php $canBulk = app(\App\Modules\Platform\Support\BulkActions::class)->forScreen('reviews', auth('admin')->user()) !== []; @endphp
+    <x-platform::bulk-bar screen="reviews" />
     @if ($page->isEmpty())
         <p class="text-muted">{{ __('engagement::reviews.queue_none') }}</p>
     @else
@@ -20,7 +22,7 @@
             @foreach ($page as $r)
                 <li class="space-y-2 rounded-lg border border-line p-4">
                     <div class="flex flex-wrap items-center justify-between gap-2">
-                        <span class="font-medium">{{ $r->product_name }}</span>
+                        <span class="font-medium">@if ($canBulk)<input type="checkbox" class="size-4 me-2" form="bulk-form-reviews" name="ids[]" value="{{ $r->public_id }}" aria-label="{{ __('engagement::bulk.select', ['name' => $r->product_name]) }}">@endif{{ $r->product_name }}</span>
                         <span class="text-sm text-muted">{{ $r->author_name ?? __('engagement::reviews.anonymous') }} · {{ strtoupper($r->locale) }} · {{ \App\Modules\Platform\Support\Fmt::dateTime(\Carbon\CarbonImmutable::parse($r->created_at, 'UTC')) }}</span>
                     </div>
                     <p><span aria-hidden="true" class="text-warning">{{ str_repeat('★', (int) $r->rating) }}{{ str_repeat('☆', 5 - (int) $r->rating) }}</span><span class="sr-only">{{ __('engagement::reviews.stars', ['count' => \App\Modules\Platform\Support\Fmt::number($r->rating)]) }}</span></p>

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 return [
-    'menu' => ['transfers' => 'Stock transfers', 'counts' => 'Stock-takes', 'low' => 'Low stock', 'aging' => 'Stock age'],
+    'menu' => ['transfers' => 'Stock transfers', 'counts' => 'Stock-takes', 'imports' => 'Stock files', 'low' => 'Low stock', 'aging' => 'Stock age'],
     'back' => '← Back', 'sku' => 'SKU', 'product' => 'Product', 'quantity' => 'Quantity', 'note' => 'Note (optional)', 'reason' => 'Reason', 'location' => 'Place', 'none' => '—', 'all' => 'All places', 'filter' => 'Filter',
     'transfer_made' => 'The transfer was made. The stock is now on its way.',
     'transfer_done' => ['received' => 'The transfer was received.', 'cancelled' => 'The transfer was cancelled and the stock went back.'],

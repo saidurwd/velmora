@@ -10,3 +10,4 @@ Slice 6 adds support:
 
 * Cart reminders (`Actions/SendCartReminders`, job every 15 minutes, **off unless `CART_RECOVERY_ENABLED=true`**): opted-in signed-in customers with a cart idle 2 hours to 3 days get one marketing message per cart episode, at least 7 days apart, at most 200 per run (`config/engagement.php`, `cart_recovery`). Templates `engagement.cart_reminder.email|sms`. Reads carts through Cart `AbandonedCarts`, consent through Notifications `MarketingConsent`, language through IdentityAccess `AccountLocales`. Rows in `cart_recovery_messages` are in the data copy and deleted on erasure.
 * Phase 10, slice 5a: `Dashboard/*Tile` (reviews waiting, open and late tickets), `Search/TicketSearch` (by reference) and the `support` saved-filter screen.
+* Phase 10, slice 5b: `Bulk/ApproveReviews`, `RejectReviews` and `AssignTickets` (bulk actions through `ModerateReview` and `AssignSupportTicket`).

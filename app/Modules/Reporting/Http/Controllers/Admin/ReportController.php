@@ -44,7 +44,7 @@ class ReportController
 
         return view('reporting::admin.report', [
             'report' => $report, 'filter' => $filter, 'columns' => $values->visibleColumns($report, $finance), 'rows' => $rows, 'more' => $more, 'limit' => $limit, 'values' => $values,
-            'canExport' => $user?->can('reports.export') === true, 'coverage' => in_array('period', $report->filters(), true) ? $reader->coverage($filter) : null,
+            'canExport' => $user?->can('reports.export') === true, 'canPii' => $user?->can('customers.view_pii') === true, 'coverage' => in_array('period', $report->filters(), true) ? $reader->coverage($filter) : null,
             'methods' => array_map(fn (string $c): array => ['code' => $c, 'label' => $methods->label($c, app()->getLocale())], $reader->methods()), 'today' => $days->today(),
         ]);
     }

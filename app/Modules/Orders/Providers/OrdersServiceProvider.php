@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Orders\Providers;
 
 use App\Modules\Notifications\Contracts\TemplateRegistry;
+use App\Modules\Orders\Bulk\ConfirmOrders;
 use App\Modules\Orders\Console\AccountProbeCommand;
 use App\Modules\Orders\Console\OrderProbeCommand;
 use App\Modules\Orders\Console\PlaceOrderProbeCommand;
@@ -14,6 +15,7 @@ use App\Modules\Orders\Contracts\CustomerOrderMonths;
 use App\Modules\Orders\Contracts\CustomerOrders;
 use App\Modules\Orders\Contracts\DigitalOrderLines;
 use App\Modules\Orders\Contracts\OrderDirectory;
+use App\Modules\Orders\Contracts\OrderExportRows;
 use App\Modules\Orders\Contracts\OrderFulfilment;
 use App\Modules\Orders\Contracts\OrderPayables;
 use App\Modules\Orders\Contracts\PurchasedLines;
@@ -43,6 +45,7 @@ use App\Modules\Orders\Services\DatabaseCustomerOrderMonths;
 use App\Modules\Orders\Services\DatabaseCustomerOrders;
 use App\Modules\Orders\Services\DatabaseDigitalOrderLines;
 use App\Modules\Orders\Services\DatabaseOrderDirectory;
+use App\Modules\Orders\Services\DatabaseOrderExportRows;
 use App\Modules\Orders\Services\DatabaseOrderFulfilment;
 use App\Modules\Orders\Services\DatabaseOrderPayables;
 use App\Modules\Orders\Services\DatabasePurchasedLines;
@@ -57,6 +60,7 @@ use App\Modules\Payments\Events\PaymentSucceeded;
 use App\Modules\Payments\Events\RefundSucceeded;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
+use App\Modules\Platform\Support\BulkActions;
 use App\Modules\Platform\Support\DashboardRegistry;
 use App\Modules\Platform\Support\IntegrityRegistry;
 use App\Modules\Platform\Support\ModuleServiceProvider;
@@ -86,6 +90,7 @@ class OrdersServiceProvider extends ModuleServiceProvider
         $this->app->bind(CancellationFigures::class, DatabaseCancellationFigures::class);
         $this->app->bind(CustomerOrderMonths::class, DatabaseCustomerOrderMonths::class);
         $this->app->bind(OrderFulfilment::class, DatabaseOrderFulfilment::class);
+        $this->app->bind(OrderExportRows::class, DatabaseOrderExportRows::class);
         $this->app->bind(OrderDirectory::class, DatabaseOrderDirectory::class);
         $this->app->bind(DigitalOrderLines::class, DatabaseDigitalOrderLines::class);
         $this->app->bind(ServiceOrderLines::class, DatabaseServiceOrderLines::class);
@@ -102,6 +107,7 @@ class OrdersServiceProvider extends ModuleServiceProvider
             $dashboard->add($tile);
         }
         $this->app->make(SearchProviders::class)->add(OrderSearch::class);
+        $this->app->make(BulkActions::class)->add(ConfirmOrders::class);
         $this->app->make(SavedFilterScreens::class)->add('orders', 'admin.orders.index', 'orders.view', [
             'q' => ['nullable', 'string', 'max:60'],
             'status' => ['nullable', 'in:'.implode(',', array_column(OrderStatus::cases(), 'value'))],
