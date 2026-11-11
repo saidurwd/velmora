@@ -11,6 +11,7 @@
 <div class="space-y-6">
     <h1 class="text-2xl font-bold">{{ __('payments::admin.payments_title') }}</h1>
 
+    <x-platform::saved-filters screen="payments" />
     <form method="GET" role="search" class="grid gap-3 sm:grid-cols-3">
         <div class="sm:col-span-2"><label for="q" class="block text-sm font-medium">{{ __('payments::admin.search') }}</label>
             <input id="q" name="q" value="{{ $filters['q'] ?? '' }}" maxlength="80" class="block w-full rounded-md border border-line px-3 py-2"></div>

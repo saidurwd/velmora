@@ -7,6 +7,7 @@
     <h1 class="text-2xl font-bold">{{ __('engagement::support.desk_title') }}</h1>
     <p class="text-sm text-muted">{{ __('engagement::support.desk_help') }}</p>
     @if (session('status'))<x-platform::alert type="success">{{ session('status') }}</x-platform::alert>@endif
+    <x-platform::saved-filters screen="support" />
     <form method="GET" action="{{ route('admin.support.index') }}" class="grid items-end gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <div><label for="status" class="block text-sm font-medium">{{ __('engagement::support.status_label') }}</label>
             <select id="status" name="status" class="mt-1 block w-full rounded-md border border-line px-3 py-2">@foreach (['active', 'open', 'answered', 'closed'] as $s)<option value="{{ $s }}" @selected(($filters['status'] ?? 'active') === $s)>{{ __('engagement::support.filter.'.$s) }}</option>@endforeach</select></div>

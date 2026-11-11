@@ -15,6 +15,7 @@ use App\Modules\Catalog\Contracts\SitemapSource;
 use App\Modules\Catalog\Contracts\VariantClassification;
 use App\Modules\Catalog\Contracts\VariantDirectory;
 use App\Modules\Catalog\Events\ProductListingChanged;
+use App\Modules\Catalog\Search\SkuSearch;
 use App\Modules\Catalog\Services\DatabaseHomeCollections;
 use App\Modules\Catalog\Services\DatabaseProductGroupings;
 use App\Modules\Catalog\Services\DatabasePurchasableVariants;
@@ -27,6 +28,7 @@ use App\Modules\Catalog\Services\Storefront\DatabaseSitemapSource;
 use App\Modules\Catalog\Services\Storefront\ListingProjection;
 use App\Modules\Platform\Support\AdminMenu;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use App\Modules\Platform\Support\SearchProviders;
 use App\Modules\Platform\Support\StorefrontCache;
 use Illuminate\Support\Facades\Event;
 
@@ -40,6 +42,8 @@ class CatalogServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+
+        $this->app->make(SearchProviders::class)->add(SkuSearch::class);
 
         Event::listen(ProductListingChanged::class, function (ProductListingChanged $e): void {
             $this->app->make(ListingProjection::class)->refresh($e->productId);

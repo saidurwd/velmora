@@ -7,3 +7,4 @@ Cross-module use is limited to Contracts, DTOs, Enums and Events (BD-11).
 * Phase 10, slice 4b: `Integrity/RefundsWithinCapturedCheck` (read-only) reports payments whose live refunds exceed the money received.
 * Phase 10, slice 4c: `GatewayRegistry::registerResolver` lets SSLCommerz be decided on first use from the credentials in force (saved by staff or from the server); `registerSslCommerz()` and the live rule are unchanged. `Support/SslCommerzConnectionTest` queries the SANDBOX for a made-up transaction id and never runs in live mode.
 * Reason codes: `Enums/RefundReason`; `RequestRefund` needs one and stores it on the refund (`refunds.reason_code`). `Contracts/RefundReasonFigures` gives Reporting succeeded refunds per code.
+* Phase 10, slice 5a: `Dashboard/*Tile` (needing a decision, failed, refund queue) and the `payments` saved-filter screen.

@@ -7,6 +7,7 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 |---|---|---|---|
 | languages | supported locales | code s5 PK, name, native_name, is_default b, is_active b, direction s3 (ltr/rtl) | — |
 | settings | typed key/value | key s100 UNIQUE(scope,key), scope s50, value j, is_secret b | audit on change |
+| saved_filters | public_id ULID UNIQUE, user_id (the staff owner; no FK, identity owns users), screen s30 (allow-list in code), name s60, query s500 (sorted query string of the allowed keys only), created_at, updated_at; UNIQUE(user_id, screen, name) serves "a person's filters for one list" and stops a name twice; CHECK name and query not empty | personal, STD |
 | audit_events | who did what | actor_type, actor_id, action s100, subject_type, subject_id, before j, after j, ip s45, user_agent s255, request_id s36, created_at; idx(subject_type,subject_id,created_at),(actor_id,created_at) | AO, no updated_at |
 | audit_events (indexes) | Slice 4a adds (created_at) for the viewer's date range and (action, created_at) for "everything of this kind in a period". The rows stay append-only. |
 | scheduled_task_runs | id, name (unique), last_started_at, last_finished_at, last_status (CHECK started/ok/failed/skipped), last_error (first line, secrets removed), last_runtime_ms, updated_at. Upserted by task name from the scheduler's events. |

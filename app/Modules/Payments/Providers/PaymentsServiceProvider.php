@@ -13,6 +13,10 @@ use App\Modules\Payments\Contracts\CodCashLedger;
 use App\Modules\Payments\Contracts\PaymentFigures;
 use App\Modules\Payments\Contracts\PaymentMethodCatalog;
 use App\Modules\Payments\Contracts\RefundReasonFigures;
+use App\Modules\Payments\Dashboard\FailedPaymentsTile;
+use App\Modules\Payments\Dashboard\PaymentsNeedReviewTile;
+use App\Modules\Payments\Dashboard\RefundQueueTile;
+use App\Modules\Payments\Enums\PaymentState;
 use App\Modules\Payments\Events\PaymentExpired;
 use App\Modules\Payments\Events\PaymentFailed;
 use App\Modules\Payments\Events\PaymentInitiated;
@@ -33,10 +37,12 @@ use App\Modules\Payments\Services\OnlinePaymentInitiator;
 use App\Modules\Payments\Support\SslCommerzConnectionTest;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
+use App\Modules\Platform\Support\DashboardRegistry;
 use App\Modules\Platform\Support\IntegrationCredentials;
 use App\Modules\Platform\Support\IntegrationTests;
 use App\Modules\Platform\Support\IntegrityRegistry;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use App\Modules\Platform\Support\SavedFilterScreens;
 use App\Modules\Shipping\Events\ShipmentDelivered;
 use Closure;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -67,6 +73,16 @@ class PaymentsServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+
+        $dashboard = $this->app->make(DashboardRegistry::class);
+        foreach ([PaymentsNeedReviewTile::class, FailedPaymentsTile::class, RefundQueueTile::class] as $tile) {
+            $dashboard->add($tile);
+        }
+        $this->app->make(SavedFilterScreens::class)->add('payments', 'admin.payments.index', 'payments.view', [
+            'q' => ['nullable', 'string', 'max:80'],
+            'status' => ['nullable', 'in:'.implode(',', array_column(PaymentState::cases(), 'value'))],
+            'provider' => ['nullable', 'string', 'max:30'],
+        ]);
 
         // data-integrity checks this module owns (run from the staff Operations page and nightly)
         $integrity = $this->app->make(IntegrityRegistry::class);

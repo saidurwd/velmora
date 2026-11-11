@@ -12,6 +12,7 @@ use App\Modules\Inventory\Contracts\ShipmentStock;
 use App\Modules\Inventory\Contracts\StockInitialiser;
 use App\Modules\Inventory\Contracts\StockReportFigures;
 use App\Modules\Inventory\Contracts\StockReservations;
+use App\Modules\Inventory\Dashboard\LowStockTile;
 use App\Modules\Inventory\Events\StockLow;
 use App\Modules\Inventory\Integrity\LedgerMatchesLevelsCheck;
 use App\Modules\Inventory\Integrity\ReservationsMatchCheck;
@@ -23,6 +24,7 @@ use App\Modules\Inventory\Services\OrderShipmentStock;
 use App\Modules\Inventory\Services\OrderStockReservations;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
+use App\Modules\Platform\Support\DashboardRegistry;
 use App\Modules\Platform\Support\IntegrityRegistry;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -50,6 +52,8 @@ class InventoryServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+
+        $this->app->make(DashboardRegistry::class)->add(LowStockTile::class);
 
         // data-integrity checks this module owns (run from the staff Operations page and nightly)
         $integrity = $this->app->make(IntegrityRegistry::class);

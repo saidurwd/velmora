@@ -19,6 +19,12 @@ use App\Modules\Orders\Contracts\OrderPayables;
 use App\Modules\Orders\Contracts\PurchasedLines;
 use App\Modules\Orders\Contracts\SalesFigures;
 use App\Modules\Orders\Contracts\ServiceOrderLines;
+use App\Modules\Orders\Dashboard\OrdersNeedReviewTile;
+use App\Modules\Orders\Dashboard\OrdersToConfirmTile;
+use App\Modules\Orders\Dashboard\OrdersToShipTile;
+use App\Modules\Orders\Enums\FulfillmentStatus;
+use App\Modules\Orders\Enums\OrderStatus;
+use App\Modules\Orders\Enums\PaymentStatus;
 use App\Modules\Orders\Events\OrderCancelled;
 use App\Modules\Orders\Events\OrderPaid;
 use App\Modules\Orders\Events\OrderPlaced;
@@ -29,6 +35,7 @@ use App\Modules\Orders\Listeners\ApplyShipmentEvent;
 use App\Modules\Orders\Listeners\SendOrderConfirmation;
 use App\Modules\Orders\Notifications\OrderTemplates;
 use App\Modules\Orders\Privacy\OrderPersonalData;
+use App\Modules\Orders\Search\OrderSearch;
 use App\Modules\Orders\Services\CodPaymentInitiator;
 use App\Modules\Orders\Services\DatabaseCancellationFigures;
 use App\Modules\Orders\Services\DatabaseCodOrders;
@@ -50,8 +57,11 @@ use App\Modules\Payments\Events\PaymentSucceeded;
 use App\Modules\Payments\Events\RefundSucceeded;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
+use App\Modules\Platform\Support\DashboardRegistry;
 use App\Modules\Platform\Support\IntegrityRegistry;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use App\Modules\Platform\Support\SavedFilterScreens;
+use App\Modules\Platform\Support\SearchProviders;
 use App\Modules\Privacy\Contracts\PersonalDataRegistry;
 use App\Modules\Shipping\Events\ShipmentDelivered;
 use App\Modules\Shipping\Events\ShipmentFailed;
@@ -86,6 +96,19 @@ class OrdersServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+
+        $dashboard = $this->app->make(DashboardRegistry::class);
+        foreach ([OrdersToConfirmTile::class, OrdersToShipTile::class, OrdersNeedReviewTile::class] as $tile) {
+            $dashboard->add($tile);
+        }
+        $this->app->make(SearchProviders::class)->add(OrderSearch::class);
+        $this->app->make(SavedFilterScreens::class)->add('orders', 'admin.orders.index', 'orders.view', [
+            'q' => ['nullable', 'string', 'max:60'],
+            'status' => ['nullable', 'in:'.implode(',', array_column(OrderStatus::cases(), 'value'))],
+            'payment' => ['nullable', 'in:'.implode(',', array_column(PaymentStatus::cases(), 'value'))],
+            'fulfillment' => ['nullable', 'in:'.implode(',', array_column(FulfillmentStatus::cases(), 'value'))],
+            'review' => ['nullable', 'in:1'],
+        ]);
 
         // data-integrity checks this module owns (run from the staff Operations page and nightly)
         $integrity = $this->app->make(IntegrityRegistry::class);

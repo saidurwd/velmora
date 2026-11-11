@@ -4,13 +4,21 @@ declare(strict_types=1);
 
 namespace App\Modules\Engagement\Providers;
 
+use App\Modules\Engagement\Actions\OpenSupportTicket;
+use App\Modules\Engagement\Dashboard\LateTicketsTile;
+use App\Modules\Engagement\Dashboard\OpenTicketsTile;
+use App\Modules\Engagement\Dashboard\ReviewsWaitingTile;
 use App\Modules\Engagement\Notifications\CartReminderTemplates;
 use App\Modules\Engagement\Notifications\EngagementTemplates;
 use App\Modules\Engagement\Privacy\EngagementPersonalData;
 use App\Modules\Engagement\Privacy\SupportPersonalData;
+use App\Modules\Engagement\Search\TicketSearch;
 use App\Modules\Notifications\Contracts\TemplateRegistry;
 use App\Modules\Platform\Support\AdminMenu;
+use App\Modules\Platform\Support\DashboardRegistry;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use App\Modules\Platform\Support\SavedFilterScreens;
+use App\Modules\Platform\Support\SearchProviders;
 use App\Modules\Privacy\Contracts\PersonalDataRegistry;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -26,6 +34,16 @@ class EngagementServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+
+        $dashboard = $this->app->make(DashboardRegistry::class);
+        foreach ([ReviewsWaitingTile::class, OpenTicketsTile::class, LateTicketsTile::class] as $tile) {
+            $dashboard->add($tile);
+        }
+        $this->app->make(SearchProviders::class)->add(TicketSearch::class);
+        $this->app->make(SavedFilterScreens::class)->add('support', 'admin.support.index', 'support.view', [
+            'status' => ['nullable', 'in:active,open,answered,closed'], 'assignee' => ['nullable', 'in:mine,none'], 'category' => ['nullable', 'in:'.implode(',', OpenSupportTicket::CATEGORIES)],
+            'overdue' => ['nullable', 'in:1'], 'q' => ['nullable', 'string', 'max:12'],
+        ]);
 
         // A customer may send a handful of reviews an hour; staff decisions are limited per person.
         RateLimiter::for('reviews', fn (Request $r) => Limit::perHour(5)->by('reviews|'.($r->user('web')?->getAuthIdentifier() ?? $r->ip())));

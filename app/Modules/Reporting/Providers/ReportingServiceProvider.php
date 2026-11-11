@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Reporting\Providers;
 
 use App\Modules\Platform\Support\AdminMenu;
+use App\Modules\Platform\Support\DashboardRegistry;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use App\Modules\Reporting\Console\BuildExport;
 use App\Modules\Reporting\Console\RebuildReports;
+use App\Modules\Reporting\Dashboard\NetSalesTodayTile;
+use App\Modules\Reporting\Dashboard\OrdersTodayTile;
 use App\Modules\Reporting\Reports\ReportCatalogue;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -28,6 +31,10 @@ class ReportingServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+
+        $dashboard = $this->app->make(DashboardRegistry::class);
+        $dashboard->add(OrdersTodayTile::class);
+        $dashboard->add(NetSalesTodayTile::class);
 
         RateLimiter::for('report-export', fn (Request $r) => Limit::perHour(10)->by('report-export|'.($r->user('admin')?->getAuthIdentifier() ?? $r->ip())));
         RateLimiter::for('reports', fn (Request $r) => Limit::perMinute(60)->by('reports|'.($r->user('admin')?->getAuthIdentifier() ?? $r->ip())));

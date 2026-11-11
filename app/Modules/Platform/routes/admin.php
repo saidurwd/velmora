@@ -11,7 +11,9 @@ use App\Modules\Platform\Http\Controllers\Admin\IntegrationsController;
 use App\Modules\Platform\Http\Controllers\Admin\IntegrityController;
 use App\Modules\Platform\Http\Controllers\Admin\MaintenanceController;
 use App\Modules\Platform\Http\Controllers\Admin\OpsController;
+use App\Modules\Platform\Http\Controllers\Admin\SavedFilterController;
 use App\Modules\Platform\Http\Controllers\Admin\SchedulerController;
+use App\Modules\Platform\Http\Controllers\Admin\SearchController;
 use App\Modules\Platform\Http\Controllers\Admin\SettingsController;
 use App\Modules\Platform\Http\Controllers\Admin\SystemHealthController;
 use App\Modules\Platform\Support\FeatureFlags;
@@ -51,6 +53,10 @@ Route::middleware(['auth:admin', 'session.policy:admin'])->group(function (): vo
     Route::get('/ops/failed-jobs', [FailedJobController::class, 'index'])->middleware('permission:queues.view')->name('ops.failed');
     Route::post('/ops/failed-jobs/{failed}/retry', [FailedJobController::class, 'retry'])->whereNumber('failed')->middleware(['permission:queues.manage', 'throttle:30,1,ops-failed-write'])->name('ops.failed.retry');
     Route::post('/ops/failed-jobs/{failed}/forget', [FailedJobController::class, 'forget'])->whereNumber('failed')->middleware(['permission:queues.manage', 'throttle:30,1,ops-failed-write'])->name('ops.failed.forget');
+
+    Route::get('/search', SearchController::class)->middleware(['permission:dashboard.view', 'throttle:30,1,admin-search'])->name('search');
+    Route::post('/saved-filters', [SavedFilterController::class, 'store'])->middleware(['permission:dashboard.view', 'throttle:20,1,saved-filters'])->name('saved-filters.store');
+    Route::delete('/saved-filters/{filter}', [SavedFilterController::class, 'destroy'])->whereAlphaNumeric('filter')->middleware(['permission:dashboard.view', 'throttle:20,1,saved-filters'])->name('saved-filters.destroy');
 
     Route::get('/', DashboardController::class)->middleware('permission:dashboard.view')->name('dashboard');
 });
