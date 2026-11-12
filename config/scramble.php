@@ -2,9 +2,6 @@
 
 declare(strict_types=1);
 
-use Dedoc\Scramble\Http\Middleware\RestrictedDocsAccess;
-use Dedoc\Scramble\OpenApiVersion;
-
 return [
     /*
      * Which routes to document. String or array form; use Scramble::routes() for custom selection.
@@ -47,7 +44,6 @@ return [
     /*
      * OpenAPI version of the resulting document.
      */
-    'openapi_version' => OpenApiVersion::V3_1,
 
     'info' => [
         /*
@@ -161,7 +157,6 @@ return [
 
     'middleware' => [
         'web',
-        RestrictedDocsAccess::class,
     ],
 
     'extensions' => [],
