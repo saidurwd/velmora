@@ -14,6 +14,7 @@ use App\Modules\Orders\Actions\BuildCheckoutDraft;
 use App\Modules\Orders\Actions\ConfirmCheckoutPhone;
 use App\Modules\Orders\Actions\PlaceOrder;
 use App\Modules\Orders\Actions\ReviewCheckout;
+use App\Modules\Orders\Contracts\ApiOrderAccess;
 use App\Modules\Orders\DTOs\CheckoutReview;
 use App\Modules\Orders\DTOs\PlaceOrderCommand;
 use App\Modules\Orders\Enums\OrderChannel;
@@ -51,6 +52,7 @@ class CheckoutController
         private readonly PolicyAcceptances $policies,
         private readonly CartPresenter $carts,
         private readonly PhoneProof $proof,
+        private readonly ApiOrderAccess $access,
     ) {}
 
     /**
@@ -116,11 +118,11 @@ class CheckoutController
     /**
      * Place the order
      *
-     * Needs an `Idempotency-Key` header (8 to 100 letters, digits, `.`, `_`, `:` or `-`; make a new one for each order the person confirms and reuse it for every retry of that same order). The same key can never make a second order, however many times it is sent. `expected_total` is the `grand_total.amount_minor` the person was shown; if the real total differs the order is NOT placed and the answer is 409 `checkout.totals_changed` with the fresh `quote`. `next` is `pay` when the chosen method is online and the order awaits payment, otherwise `none`.
+     * Needs an `Idempotency-Key` header (8 to 100 letters, digits, `.`, `_`, `:` or `-`; make a new one for each order the person confirms and reuse it for every retry of that same order). The same key can never make a second order, however many times it is sent. `expected_total` is the `grand_total.amount_minor` the person was shown; if the real total differs the order is NOT placed and the answer is 409 `checkout.totals_changed` with the fresh `quote`. `next` is `pay` when the chosen method is online and the order awaits payment, otherwise `none`. A guest also gets `order_token` (valid 30 days, for this one order): send it as `X-Order-Token` to pay for, view, track and get the invoice of that order. A signed-in customer gets `null` (their sign-in is the proof).
      *
      * @unauthenticated
      */
-    #[Response(status: 201, type: 'array{data: array{order: '.OrderSummary::TYPE.', next: string}}')]
+    #[Response(status: 201, type: 'array{data: array{order: '.OrderSummary::TYPE.', next: string, order_token: string|null}}')]
     public function place(PlaceOrderApiRequest $request, PlaceOrder $place): JsonResponse
     {
         $owner = $this->owners->fromRequest($request);
@@ -143,7 +145,9 @@ class CheckoutController
 
         $online = $order->payment_method_code !== 'cod' && in_array($order->payment_status->value, ['unpaid', 'pending', 'failed'], true);
 
-        return response()->json(['data' => ['order' => OrderSummary::make($order), 'next' => $online ? 'pay' : 'none']], 201);
+        $orderToken = $order->user_id === null ? $this->access->issueToken($order->public_id) : null;
+
+        return response()->json(['data' => ['order' => OrderSummary::make($order), 'next' => $online ? 'pay' : 'none', 'order_token' => $orderToken]], 201);
     }
 
     /** @throws CheckoutException @throws DomainException */

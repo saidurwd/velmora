@@ -10,6 +10,7 @@ use App\Modules\Orders\Console\AccountProbeCommand;
 use App\Modules\Orders\Console\ApiCheckoutProbeCommand;
 use App\Modules\Orders\Console\OrderProbeCommand;
 use App\Modules\Orders\Console\PlaceOrderProbeCommand;
+use App\Modules\Orders\Contracts\ApiOrderAccess;
 use App\Modules\Orders\Contracts\CancellationFigures;
 use App\Modules\Orders\Contracts\CodOrders;
 use App\Modules\Orders\Contracts\CustomerOrderMonths;
@@ -39,6 +40,7 @@ use App\Modules\Orders\Listeners\SendOrderConfirmation;
 use App\Modules\Orders\Notifications\OrderTemplates;
 use App\Modules\Orders\Privacy\OrderPersonalData;
 use App\Modules\Orders\Search\OrderSearch;
+use App\Modules\Orders\Services\ApiOrderAccessResolver;
 use App\Modules\Orders\Services\CodPaymentInitiator;
 use App\Modules\Orders\Services\DatabaseCancellationFigures;
 use App\Modules\Orders\Services\DatabaseCodOrders;
@@ -86,6 +88,7 @@ class OrdersServiceProvider extends ModuleServiceProvider
         $this->app->tag([CodPaymentInitiator::class], 'orders.payment_initiators'); // Payments adds the online one
         $this->app->singleton(PaymentInitiators::class, fn ($app) => new PaymentInitiators($app->tagged('orders.payment_initiators')));
         $this->app->bind(OrderPayables::class, DatabaseOrderPayables::class);
+        $this->app->bind(ApiOrderAccess::class, ApiOrderAccessResolver::class);
         $this->app->bind(CodOrders::class, DatabaseCodOrders::class);
         $this->app->bind(SalesFigures::class, DatabaseSalesFigures::class);
         $this->app->bind(CancellationFigures::class, DatabaseCancellationFigures::class);

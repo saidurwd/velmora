@@ -54,6 +54,12 @@ enum ErrorCode: string
     case BookingHoldExpired = 'booking.hold_expired';
     case PoliciesRequired = 'policies.required';
     case PoliciesChanged = 'policies.changed';
+    case OrderNotCancellable = 'order.not_cancellable';
+    case OrderAlreadyPaid = 'order.already_paid';
+    case PaymentUnavailable = 'payment.unavailable';
+    case PaymentMethodUnavailable = 'payment.method_unavailable';
+    case PaymentExpired = 'payment.expired';
+    case ReturnNotEligible = 'return.not_eligible';
 
     public function status(): int
     {
@@ -68,6 +74,9 @@ enum ErrorCode: string
             self::ReauthRequired => 403,
             self::OtpUnavailable => 503,
             self::ProductNotFound, self::PageNotFound => 404,
+            self::OrderNotCancellable, self::OrderAlreadyPaid, self::PaymentExpired => 409,
+            self::PaymentUnavailable => 503,
+            self::PaymentMethodUnavailable, self::ReturnNotEligible => 422,
             self::StockInsufficient, self::CartProblem, self::TotalsChanged, self::CheckoutBusy, self::BookingHoldExpired, self::PoliciesChanged => 409,
             self::CartQuantityLimit, self::CartTooManyLines, self::CartItemUnavailable, self::CartNeedsBooking, self::CouponInvalid, self::CartEmpty, self::AddressRequired, self::AddressInvalid, self::AddressLimit, self::DeliveryUnavailable, self::ShippingMethodInvalid, self::PaymentMethodInvalid, self::CodNotEligible, self::PhoneInvalid, self::CheckoutNotAccepted, self::PoliciesRequired => 422,
             self::CartItemNotFound => 404,
@@ -99,6 +108,12 @@ enum ErrorCode: string
             self::OtpUnavailable => 'errors.api.otp_unavailable',
             self::ProductNotFound => 'errors.api.product_not_found',
             self::PageNotFound => 'errors.api.page_not_found',
+            self::OrderNotCancellable => 'errors.api.order_not_cancellable',
+            self::OrderAlreadyPaid => 'errors.api.order_already_paid',
+            self::PaymentUnavailable => 'errors.api.payment_unavailable',
+            self::PaymentMethodUnavailable => 'errors.api.payment_method_unavailable',
+            self::PaymentExpired => 'errors.api.payment_expired',
+            self::ReturnNotEligible => 'errors.api.return_not_eligible',
             self::StockInsufficient => 'errors.api.stock_insufficient',
             self::CartQuantityLimit => 'errors.api.cart_quantity_limit',
             self::CartTooManyLines => 'errors.api.cart_too_many_lines',
