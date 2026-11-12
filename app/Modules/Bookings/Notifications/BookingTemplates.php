@@ -22,6 +22,22 @@ final class BookingTemplates
                 ['shop' => 'Velmora', 'service' => 'Tailor fitting', 'when' => '1 Dec 2026, 10:00 AM', 'where' => 'at our place', 'link' => 'https://example.com/account/bookings/abc'],
             ),
             new TemplateDefinition(
+                'booking.reminder_long.push', 'push', 'transactional', ['shop', 'service', 'when'],
+                [
+                    'en' => [null, 'Reminder: your booking for {{ service }} is on {{ when }}.'],
+                    'bn' => [null, 'অনুস্মারক: {{ service }}-এর জন্য আপনার বুকিং {{ when }}।'],
+                ],
+                ['shop' => 'Velmora', 'service' => 'Tailor fitting', 'when' => '1 Dec 2026, 10:00 AM'],
+            ),
+            new TemplateDefinition(
+                'booking.reminder_short.push', 'push', 'transactional', ['shop', 'service', 'when'],
+                [
+                    'en' => [null, 'Your booking for {{ service }} is coming up: {{ when }}.'],
+                    'bn' => [null, '{{ service }}-এর জন্য আপনার বুকিং শীঘ্রই: {{ when }}।'],
+                ],
+                ['shop' => 'Velmora', 'service' => 'Tailor fitting', 'when' => '1 Dec 2026, 10:00 AM'],
+            ),
+            new TemplateDefinition(
                 'booking.reminder_long.email', 'email', 'transactional', ['service', 'when', 'where', 'link'],
                 [
                     'en' => ['Reminder: your booking for {{ service }}', "Your booking is coming up\n\nYour booking for {{ service }} is on {{ when }} ({{ where }}).\n\nSee, move or cancel this booking: {{ link }}\n\nYou are receiving this because you booked with us."],

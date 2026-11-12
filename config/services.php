@@ -47,4 +47,13 @@ return [
         ],
     ],
 
+    'push' => [
+        'driver' => env('PUSH_DRIVER', 'log'), // log | fake | fcm
+        // Firebase Cloud Messaging HTTP v1 (docs/vendor/fcm/). The service account file is downloaded from the Firebase console, kept OUTSIDE the web root and out of git.
+        'fcm' => [
+            'service_account_file' => env('FCM_SERVICE_ACCOUNT_FILE'),
+            'project_id' => env('FCM_PROJECT_ID'),   // optional: the file's own project is used when this is empty
+        ],
+    ],
+
 ];

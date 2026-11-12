@@ -54,6 +54,9 @@ final class ApplyPaymentEvent
             }
             $cash = in_array($e->detail, ['cod', 'cod_partial'], true);
             $this->payment($e->orderId, $e->detail === 'cod_partial' ? PaymentStatus::PartiallyPaid : PaymentStatus::Paid, $cash ? 'cash collected on delivery' : 'paid online');
+            if (! $cash) {
+                $this->messages->tryToSend($order, 'order.paid.push', [], 'order.paid.push|'.($e->outboxId ?? (string) Str::ulid()));   // the payment stands; only the push could fail
+            }
             if ($cash) {
                 $this->completion->attempt($e->orderId); // delivered and now fully paid: the order is complete
 

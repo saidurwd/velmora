@@ -78,6 +78,62 @@ final class OrderTemplates
                 ['shop' => 'Velmora', 'number' => 'VM-2611-000001', 'amount' => '৳ 500.00'],
             ),
             new TemplateDefinition(
+                'order.placed.push', 'push', 'transactional', ['shop', 'number'],
+                [
+                    'en' => [null, 'Order {{ number }} received. We will confirm it soon.'],
+                    'bn' => [null, 'অর্ডার {{ number }} পেয়েছি। শীঘ্রই নিশ্চিত করব।'],
+                ],
+                ['shop' => 'Velmora', 'number' => 'VM-2611-000001'],
+            ),
+            new TemplateDefinition(
+                'order.paid.push', 'push', 'transactional', ['shop', 'number'],
+                [
+                    'en' => [null, 'Payment received for order {{ number }}. Thank you!'],
+                    'bn' => [null, 'অর্ডার {{ number }}-এর পেমেন্ট পেয়েছি। ধন্যবাদ!'],
+                ],
+                ['shop' => 'Velmora', 'number' => 'VM-2611-000001'],
+            ),
+            new TemplateDefinition(
+                'order.shipped.push', 'push', 'transactional', ['shop', 'number'],
+                [
+                    'en' => [null, 'Your order {{ number }} is on its way.'],
+                    'bn' => [null, 'আপনার অর্ডার {{ number }} পথে আছে।'],
+                ],
+                ['shop' => 'Velmora', 'number' => 'VM-2611-000001'],
+            ),
+            new TemplateDefinition(
+                'order.delivered.push', 'push', 'transactional', ['shop', 'number'],
+                [
+                    'en' => [null, 'Your order {{ number }} was delivered.'],
+                    'bn' => [null, 'আপনার অর্ডার {{ number }} পৌঁছে গেছে।'],
+                ],
+                ['shop' => 'Velmora', 'number' => 'VM-2611-000001'],
+            ),
+            new TemplateDefinition(
+                'order.delivery_failed.push', 'push', 'transactional', ['shop', 'number'],
+                [
+                    'en' => [null, 'We could not deliver order {{ number }}. Please keep your phone on.'],
+                    'bn' => [null, 'অর্ডার {{ number }} পৌঁছে দেওয়া যায়নি। অনুগ্রহ করে ফোন চালু রাখুন।'],
+                ],
+                ['shop' => 'Velmora', 'number' => 'VM-2611-000001'],
+            ),
+            new TemplateDefinition(
+                'order.cancelled.push', 'push', 'transactional', ['shop', 'number'],
+                [
+                    'en' => [null, 'Order {{ number }} was cancelled because we could not confirm it in time.'],
+                    'bn' => [null, 'অর্ডার {{ number }} সময়মতো নিশ্চিত করা যায়নি, তাই বাতিল হয়েছে।'],
+                ],
+                ['shop' => 'Velmora', 'number' => 'VM-2611-000001'],
+            ),
+            new TemplateDefinition(
+                'order.refunded.push', 'push', 'transactional', ['shop', 'number'],
+                [
+                    'en' => [null, 'A refund for order {{ number }} is on its way.'],
+                    'bn' => [null, 'অর্ডার {{ number }}-এর টাকা ফেরত দেওয়া হয়েছে।'],
+                ],
+                ['shop' => 'Velmora', 'number' => 'VM-2611-000001'],
+            ),
+            new TemplateDefinition(
                 'order.placed.email', 'email', 'transactional', ['number', 'name', 'items', 'summary', 'link'],
                 [
                     'en' => ['Your order {{ number }}', "Thank you! Order {{ number }}\n\nHello {{ name }}, we have received your order. Here is what you ordered:\n\n{{ items }}\n\n{{ summary }}\n\nView your order: {{ link }}\n\nYou are receiving this because an order was placed with this email address."],

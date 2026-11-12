@@ -63,7 +63,7 @@ final class NotificationReader
         if (($f['template'] ?? '') !== '') {
             $q->where('template_code', $f['template']);
         }
-        if (in_array($f['channel'] ?? '', ['email', 'sms'], true)) {
+        if (in_array($f['channel'] ?? '', ['email', 'sms', 'push'], true)) {
             $q->where('channel', $f['channel']);
         }
         $from = (string) ($f['from'] ?? '');

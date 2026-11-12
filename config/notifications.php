@@ -13,5 +13,5 @@ return [
     'claim_minutes' => 10,
 
     // The longest a text may be, by channel (SSL Wireless accepts 1000 characters in a text message).
-    'max_length' => ['sms' => 1000, 'email' => 8000],
+    'max_length' => ['sms' => 1000, 'email' => 8000, 'push' => 240],
 ];

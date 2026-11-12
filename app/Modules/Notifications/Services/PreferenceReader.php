@@ -13,7 +13,7 @@ final class PreferenceReader
     public function forUser(int $userId): array
     {
         $rows = DB::table('notification_preferences')->where('user_id', $userId)->get();   // unique (user_id, channel)
-        $optIn = ['email' => false, 'sms' => false];
+        $optIn = ['email' => false, 'sms' => false, 'push' => false];
         $from = $to = null;
         foreach ($rows as $row) {
             $optIn[(string) $row->channel] = (bool) $row->marketing_opt_in;

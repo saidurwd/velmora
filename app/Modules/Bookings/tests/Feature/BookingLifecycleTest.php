@@ -22,9 +22,11 @@ use App\Modules\Catalog\Models\Product;
 use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
 use App\Modules\IdentityAccess\Models\User;
 use App\Modules\Notifications\Actions\DeliverDueNotifications;
+use App\Modules\Notifications\Actions\RegisterDevice;
 use App\Modules\Notifications\Contracts\NotificationSender;
 use App\Modules\Notifications\DTOs\Recipient;
 use App\Modules\Notifications\Mail\NotificationMail;
+use App\Modules\Notifications\Push\FakePushGateway;
 use App\Modules\Notifications\Sms\FakeSmsGateway;
 use App\Modules\Orders\Actions\PlaceOrder;
 use App\Modules\Orders\Actions\TransitionOrder;
@@ -99,6 +101,27 @@ describe('reminders', function () {
             ->and($sms[0]['meta'])->toBe(['purpose' => 'booking.reminder_long.sms'])->and(($this->notices)())->toBe(['reminder_long/sms/sent/1', 'reminder_long/email/sent/1']);
         Mail::assertSent(NotificationMail::class, fn (NotificationMail $m) => $m->hasTo('rahim@example.com') && str_contains($m->text, '10:00 AM') && str_contains($m->text, '/en/account/bookings/'));
         expect(DB::table('notification_logs')->where('template_code', 'booking.reminder_long.email')->count())->toBe(1);
+    });
+
+    it('also pushes the reminder to the app of a customer with an account, with what and when but not where, and never to a guest', function () {
+        config(['services.push.driver' => 'fake']);
+        $push = app(FakePushGateway::class);
+        $user = User::factory()->create();
+        app(RegisterDevice::class)->handle($user->id, strtolower((string) Str::ulid()), 'token-1', 'android', '1.0', 'bn');
+        ($this->booked)('10:00', 'en', 'rahim@example.com', $user);
+
+        expect(app(SendBookingReminders::class)->handle())->toBe(3)->and(app(SendBookingReminders::class)->handle())->toBe(0);
+
+        $reminders = array_values(array_filter($push->sent(), fn ($x) => str_starts_with($x['message']->data['template'], 'booking.')));
+        $message = $reminders[0]['message'];
+        expect($reminders)->toHaveCount(1)->and($message->body)->toContain('SVC-30')->not->toContain('at our place')->not->toContain('http')->and($message->data['template'])->toBe('booking.reminder_long.push')
+            ->and($message->data['target'])->toStartWith('booking:')->and(($this->notices)())->toContain('reminder_long/push/sent/1');
+    });
+
+    it('leaves the push out for a customer who has no app signed in', function () {
+        ($this->booked)();
+
+        expect(app(SendBookingReminders::class)->handle())->toBe(2)->and(DB::table('booking_notices')->where('channel', 'push')->count())->toBe(0);
     });
 
     it('waits until 24 hours before, and sends only the last reminder to a booking made inside the last 2 hours', function () {

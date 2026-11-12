@@ -23,14 +23,14 @@ beforeEach(function () {
 it('starts with no marketing and no quiet hours', function () {
     $res = $this->getJson('/api/v1/me/preferences', ($this->as)($this->amina));
 
-    $res->assertOk()->assertJsonPath('data.marketing', ['email' => false, 'sms' => false])->assertJsonPath('data.quiet_hours', ['from' => null, 'to' => null])->assertJsonPath('data.history', []);
+    $res->assertOk()->assertJsonPath('data.marketing', ['email' => false, 'sms' => false, 'push' => false])->assertJsonPath('data.quiet_hours', ['from' => null, 'to' => null])->assertJsonPath('data.history', []);
     assertMatchesOpenApi($res, 'GET', '/api/v1/me/preferences');
 });
 
 it('saves the whole choice, records each change with where it came from, and leaves other people alone', function () {
     $res = $this->putJson('/api/v1/me/preferences', ['email' => true, 'sms' => false, 'quiet_from' => '22:00', 'quiet_to' => '07:00'], ($this->as)($this->amina));
 
-    $res->assertOk()->assertJsonPath('data.marketing', ['email' => true, 'sms' => false])->assertJsonPath('data.quiet_hours', ['from' => '22:00', 'to' => '07:00']);
+    $res->assertOk()->assertJsonPath('data.marketing', ['email' => true, 'sms' => false, 'push' => false])->assertJsonPath('data.quiet_hours', ['from' => '22:00', 'to' => '07:00']);
     assertMatchesOpenApi($res, 'PUT', '/api/v1/me/preferences');
     expect(DB::table('notification_consent_events')->where('user_id', $this->amina->id)->where('channel', 'email')->where('granted', 1)->value('source'))->toBe('account')
         ->and(DB::table('notification_preferences')->where('user_id', $this->babul->id)->count())->toBe(0);

@@ -9,11 +9,18 @@ use App\Modules\Notifications\Actions\SendNotification;
 use App\Modules\Notifications\Console\NotificationProbeCommand;
 use App\Modules\Notifications\Contracts\MarketingConsent;
 use App\Modules\Notifications\Contracts\NotificationSender;
+use App\Modules\Notifications\Contracts\PushAudience;
+use App\Modules\Notifications\Contracts\PushGateway;
 use App\Modules\Notifications\Contracts\SmsGateway;
 use App\Modules\Notifications\Contracts\TemplateRegistry;
 use App\Modules\Notifications\Listeners\RemoveDevicesOfEndedSessions;
 use App\Modules\Notifications\Privacy\NotificationPersonalData;
+use App\Modules\Notifications\Push\FakePushGateway;
+use App\Modules\Notifications\Push\FcmPushGateway;
+use App\Modules\Notifications\Push\LogPushGateway;
+use App\Modules\Notifications\Push\UnconfiguredPushGateway;
 use App\Modules\Notifications\Services\DatabaseMarketingConsent;
+use App\Modules\Notifications\Services\DatabasePushAudience;
 use App\Modules\Notifications\Services\TemplateCatalog;
 use App\Modules\Notifications\Sms\FakeSmsGateway;
 use App\Modules\Notifications\Sms\LogSmsGateway;
@@ -40,16 +47,25 @@ class NotificationsServiceProvider extends ModuleServiceProvider
     public function register(): void
     {
         $this->app->singleton(FakeSmsGateway::class);
+        $this->app->singleton(FakePushGateway::class);
         $this->app->singleton(TemplateCatalog::class);
         $this->app->bind(TemplateRegistry::class, TemplateCatalog::class);
         $this->app->bind(NotificationSender::class, SendNotification::class);
         $this->app->bind(MarketingConsent::class, DatabaseMarketingConsent::class);
+        $this->app->bind(PushAudience::class, DatabasePushAudience::class);
 
         $this->app->bind(SmsGateway::class, fn ($app) => match ($driver = (string) config('services.sms.driver', 'log')) {
             'log' => new LogSmsGateway,
             'fake' => $app->make(FakeSmsGateway::class),
             'sslwireless' => new SslWirelessSmsGateway((string) config('services.sms.sslwireless.base_url'), (string) $app->make(IntegrationCredentials::class)->get('sms', 'api_token'), (string) $app->make(IntegrationCredentials::class)->get('sms', 'sid')),
             default => new UnconfiguredSmsGateway($driver),
+        });
+
+        $this->app->bind(PushGateway::class, fn ($app) => match ($driver = (string) config('services.push.driver', 'log')) {
+            'log' => new LogPushGateway,
+            'fake' => $app->make(FakePushGateway::class),
+            'fcm' => new FcmPushGateway((string) config('services.push.fcm.service_account_file'), config('services.push.fcm.project_id')),
+            default => new UnconfiguredPushGateway($driver),
         });
     }
 

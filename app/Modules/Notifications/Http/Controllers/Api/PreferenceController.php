@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 /** What marketing the customer wants, and their quiet hours (Dhaka time). Messages about their own orders are always sent. Only ever their own answers. */
 class PreferenceController
 {
-    private const TYPE = 'array{data: array{marketing: array{email: bool, sms: bool}, quiet_hours: array{from: string|null, to: string|null}, history: list<array{channel: string, granted: bool, source: string, at: string}>}}';
+    private const TYPE = 'array{data: array{marketing: array{email: bool, sms: bool, push: bool}, quiet_hours: array{from: string|null, to: string|null}, history: list<array{channel: string, granted: bool, source: string, at: string}>}}';
 
     /**
      * My message preferences
@@ -30,13 +30,13 @@ class PreferenceController
     /**
      * Save my message preferences
      *
-     * Send both `email` and `sms` every time (true = yes, please). `quiet_from` and `quiet_to` (`HH:MM`, Dhaka time) come together or not at all; marketing messages wait out these hours.
+     * Send both `email` and `sms` every time (true = yes, please). `push` (offers and news as push messages) is optional: leave it out and the answer is not changed. Messages about the customer's own orders are pushed to every signed-in phone whatever is chosen here; signing out of a phone stops them. `quiet_from` and `quiet_to` (`HH:MM`, Dhaka time) come together or not at all; marketing messages wait out these hours.
      */
     #[ResponseDoc(status: 200, type: self::TYPE)]
     public function update(SavePreferencesApiRequest $request, SaveMessagePreferences $save, PreferenceReader $reader): JsonResponse
     {
         $userId = (int) $request->user()?->getAuthIdentifier();
-        $save->handle($userId, ['email' => $request->boolean('email'), 'sms' => $request->boolean('sms')], $request->validated('quiet_from'), $request->validated('quiet_to'));  // a choice the customer makes in their own account, as on the website
+        $save->handle($userId, ['email' => $request->boolean('email'), 'sms' => $request->boolean('sms')] + ($request->has('push') ? ['push' => $request->boolean('push')] : []), $request->validated('quiet_from'), $request->validated('quiet_to'));  // a choice the customer makes in their own account, as on the website
 
         return response()->json($this->payload($reader->forUser($userId)));
     }
@@ -47,6 +47,6 @@ class PreferenceController
      */
     private function payload(array $p): array
     {
-        return ['data' => ['marketing' => ['email' => $p['optIn']['email'] ?? false, 'sms' => $p['optIn']['sms'] ?? false], 'quiet_hours' => ['from' => $p['quietFrom'], 'to' => $p['quietTo']], 'history' => array_values($p['history'])]];
+        return ['data' => ['marketing' => ['email' => $p['optIn']['email'] ?? false, 'sms' => $p['optIn']['sms'] ?? false, 'push' => $p['optIn']['push'] ?? false], 'quiet_hours' => ['from' => $p['quietFrom'], 'to' => $p['quietTo']], 'history' => array_values($p['history'])]];
     }
 }

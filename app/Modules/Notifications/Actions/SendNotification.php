@@ -39,13 +39,23 @@ final class SendNotification implements NotificationSender
 
         $now = $this->clock->now();
         $locale = in_array($to->locale, (array) config('app.supported_locales'), true) ? $to->locale : (string) config('app.fallback_locale');
-        $address = $template->channel === 'sms' ? $to->phone : $to->email;
-        $masked = $address === null || $address === '' ? null : ($template->channel === 'sms' ? $this->masker->phone($address) : $this->masker->email($address));
+        $address = match ($template->channel) {
+            'sms' => $to->phone,
+            'push' => $to->userId === null ? null : (string) $to->userId,   // a push goes to the person's signed-in phones, found when it is delivered
+            default => $to->email,
+        };
+        $masked = $address === null || $address === '' ? null : match ($template->channel) {
+            'sms' => $this->masker->phone($address),
+            'push' => 'app',
+            default => $this->masker->email($address),
+        };
 
         $skip = null;
         $nextAt = $now;
         if ($masked === null) {
             $skip = 'no_address';
+        } elseif ($template->channel === 'push' && ! DB::table('devices')->where('user_id', $to->userId)->exists()) {   // index user_id
+            $skip = 'no_device';
         } elseif ($template->kind === 'marketing') {
             $preference = $to->userId === null ? null : DB::table('notification_preferences')->where('user_id', $to->userId)->where('channel', $template->channel)->first();   // unique (user_id, channel)
             if ($preference === null || ! $preference->marketing_opt_in) {

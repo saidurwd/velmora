@@ -53,7 +53,7 @@ describe('asking for a copy', function () {
             ->and($copy['profile']['profile']['name'])->toBe('Amina Rahman')->and($copy['profile']['addresses'])->toHaveCount(1)->and($copy['profile']['addresses'][0]['address'])->toContain('House 5')
             ->and($copy['orders'])->toHaveCount(1)->and($copy['orders'][0]['order_number'])->toBe($this->amina['order']->order_number)->and($copy['orders'][0]['items'][0]['name'])->not->toBe('')
             ->and($copy['orders'][0]['total_minor'])->toBe(35000)->and($copy['downloads']['rights'])->toHaveCount(1)->and($copy['downloads']['rights'][0]['product'])->toBe('Cooking e-book')
-            ->and($copy['messages']['marketing'])->toBe(['email' => true, 'sms' => true])->and($copy['messages']['quiet_hours'])->toBe(['from' => '22:00', 'to' => '07:00'])
+            ->and($copy['messages']['marketing'])->toBe(['email' => true, 'sms' => true, 'push' => false])->and($copy['messages']['quiet_hours'])->toBe(['from' => '22:00', 'to' => '07:00'])
             ->and($copy['messages']['consent_history'])->toHaveCount(2)->and($copy)->toHaveKeys(['bookings', 'generated_at', 'request']);
     });
 

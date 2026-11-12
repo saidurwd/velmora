@@ -17,7 +17,7 @@ use InvalidArgumentException;
  */
 final class SaveMessagePreferences
 {
-    public const CHANNELS = ['email', 'sms'];
+    public const CHANNELS = ['email', 'sms', 'push'];
 
     public function __construct(private readonly Clock $clock, private readonly AuditLogger $audit) {}
 
@@ -39,6 +39,9 @@ final class SaveMessagePreferences
         Transactions::run(function () use ($userId, $optIn, $quietFrom, $quietTo, $source): void {
             $now = $this->clock->now();
             foreach (self::CHANNELS as $channel) {
+                if (! array_key_exists($channel, $optIn) && ! DB::table('notification_preferences')->where('user_id', $userId)->where('channel', $channel)->exists()) {
+                    continue;   // a channel the customer has never answered, and is not answering now, gets no row (a row means "they have been asked")
+                }
                 // The row is made once (the unique key decides), then locked, so two saves at once change it one after the other and each real change is recorded once.
                 DB::table('notification_preferences')->insertOrIgnore(['user_id' => $userId, 'channel' => $channel, 'marketing_opt_in' => false, 'created_at' => $now, 'updated_at' => $now]);
                 $row = DB::table('notification_preferences')->where('user_id', $userId)->where('channel', $channel)->lockForUpdate()->first();   // unique (user_id, channel)

@@ -17,6 +17,12 @@ use Throwable;
  */
 final class OrderMessages
 {
+    /** @var array<string, string> the text message an order sends => the push message that goes with it, to the app of a customer with an account (a guest has no app) */
+    private const PUSH_FOR = [
+        'order.placed.sms' => 'order.placed.push', 'order.placed_cod.sms' => 'order.placed.push', 'order.shipped.sms' => 'order.shipped.push', 'order.delivered.sms' => 'order.delivered.push',
+        'order.delivery_failed.sms' => 'order.delivery_failed.push', 'order.delivery_failed_final.sms' => 'order.delivery_failed.push', 'order.cancelled_stale.sms' => 'order.cancelled.push', 'order.refunded.sms' => 'order.refunded.push',
+    ];
+
     public function __construct(private readonly NotificationSender $sender) {}
 
     /**
@@ -27,10 +33,19 @@ final class OrderMessages
      */
     public function send(Order $order, string $code, array $variables, string $key): void
     {
+        if (str_ends_with($code, '.push') && $order->user_id === null) {
+            return;   // a guest has no app to push to
+        }
         $previous = App::getLocale();
         App::setLocale($order->locale);
         try {
-            $this->sender->send($code, new Recipient($order->contact_phone, $order->contact_email, $order->locale, $order->user_id), $variables + ['shop' => (string) config('app.name'), 'number' => $order->order_number], $key, 'order:'.$order->public_id);
+            $recipient = new Recipient($order->contact_phone, $order->contact_email, $order->locale, $order->user_id);
+            $values = $variables + ['shop' => (string) config('app.name'), 'number' => $order->order_number];
+            $this->sender->send($code, $recipient, $values, $key, 'order:'.$order->public_id);
+            $push = $order->user_id === null ? null : (self::PUSH_FOR[$code] ?? null);
+            if ($push !== null) {
+                $this->sender->send($push, $recipient, array_diff_key($values, ['amount' => 1, 'total' => 1]), $key, 'order:'.$order->public_id);   // the same event, the same key: announced twice, pushed once. No amounts travel in a push.
+            }
         } finally {
             App::setLocale($previous);
         }

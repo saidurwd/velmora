@@ -14,7 +14,10 @@ use App\Modules\Catalog\DTOs\VariantData;
 use App\Modules\Catalog\Enums\ProductType;
 use App\Modules\Customers\Database\Seeders\GeographySeeder;
 use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
+use App\Modules\IdentityAccess\Models\User;
 use App\Modules\Inventory\Database\Seeders\StockLocationSeeder;
+use App\Modules\Notifications\Actions\RegisterDevice;
+use App\Modules\Notifications\Push\FakePushGateway;
 use App\Modules\Notifications\Sms\FakeSmsGateway;
 use App\Modules\Orders\Actions\CancelStalePendingOrders;
 use App\Modules\Orders\Actions\TransitionOrder;
@@ -39,6 +42,7 @@ use App\Modules\Pricing\Database\Seeders\TaxClassSeeder;
 use App\Modules\Shipping\Database\Seeders\ShippingSeeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 
 beforeEach(function () {
     $this->seed([LanguageSeeder::class, TaxClassSeeder::class, PriceListSeeder::class, StockLocationSeeder::class, GeographySeeder::class, ShippingSeeder::class, PaymentMethodSeeder::class]);
@@ -272,6 +276,29 @@ describe('the order follows its payment', function () {
 
         expect(($this->state)()->status)->toBe('cancelled')->and(($this->state)()->payment_status)->toBe('pending')
             ->and(DB::table('payments')->where('order_id', $this->orderRow->id)->value('status'))->toBe('needs_review')->and(DB::table('reconciliation_exceptions')->pluck('type')->all())->toBe(['late_success']);
+    });
+
+    it('pushes "payment received" to the app of the customer when an online payment is verified, and to nobody for a guest', function () {
+        config(['services.push.driver' => 'fake']);
+        $push = app(FakePushGateway::class);
+        $user = User::factory()->create();
+        app(RegisterDevice::class)->handle($user->id, strtolower((string) Str::ulid()), 'token-1', 'android', '1.0', 'en');
+        DB::table('orders')->where('id', $this->orderRow->id)->update(['user_id' => $user->id]);
+        $this->gateway->answer($this->ref, ($this->paidAnswer)($this->ref, 136000));
+
+        $this->get(($this->returnUrl)())->assertRedirect();
+
+        $paid = array_values(array_filter($push->sent(), fn ($x) => $x['message']->data['template'] === 'order.paid.push'));
+        expect($paid)->toHaveCount(1)->and($paid[0]['message']->body)->toContain($this->orderRow->order_number)->and($paid[0]['message']->data['target'])->toBe('order:'.$this->orderRow->public_id);
+    });
+
+    it('pushes nothing for the payment of a guest\'s order', function () {
+        config(['services.push.driver' => 'fake']);
+        $this->gateway->answer($this->ref, ($this->paidAnswer)($this->ref, 136000));
+
+        $this->get(($this->returnUrl)())->assertRedirect();
+
+        expect(DB::table('notification_logs')->where('channel', 'push')->count())->toBe(0);
     });
 
     it('applies each announcement once even if the outbox delivers it twice', function () {

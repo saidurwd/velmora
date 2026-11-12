@@ -6,6 +6,7 @@ namespace App\Modules\Bookings\Services;
 
 use App\Modules\Catalog\Contracts\PurchasableVariants;
 use App\Modules\Notifications\Contracts\NotificationSender;
+use App\Modules\Notifications\Contracts\PushAudience;
 use App\Modules\Notifications\DTOs\Recipient;
 use App\Modules\Orders\Contracts\OrderDirectory;
 use App\Modules\Orders\Contracts\ServiceOrderLines;
@@ -28,7 +29,7 @@ final class BookingMessenger
 {
     public function __construct(
         private readonly ServiceOrderLines $lines, private readonly OrderDirectory $orders, private readonly PurchasableVariants $variants, private readonly NotificationSender $sender,
-        private readonly LocaleFormatter $format, private readonly Clock $clock,
+        private readonly LocaleFormatter $format, private readonly Clock $clock, private readonly PushAudience $apps,
     ) {}
 
     /** @return int how many messages were sent now */
@@ -41,7 +42,7 @@ final class BookingMessenger
         }
 
         $sent = 0;
-        foreach (array_filter(['sms' => true, 'email' => $contact['email'] !== null]) as $channel => $_) {
+        foreach (array_filter(['sms' => true, 'email' => $contact['email'] !== null, 'push' => $contact['user_id'] !== null && $kind !== 'review' && $this->apps->reaches($contact['user_id'])]) as $channel => $_) {   // the app: reminders for a customer with an account
             if (! $this->claim((int) $booking->id, $kind, $channel, (string) $booking->starts_at)) {
                 continue;
             }
@@ -74,6 +75,9 @@ final class BookingMessenger
                 default => null,
             };
             $params = ['shop' => (string) config('app.name'), 'service' => $service, 'when' => $when, 'where' => $where, 'link' => (string) $link];
+            if ($channel === 'push') {
+                $params = array_intersect_key($params, ['shop' => 1, 'service' => 1, 'when' => 1]);   // a push shows what and when; the place (and any meeting address) stays in the app
+            }
 
             // the platform records it, delivers it, retries it and shows staff when it cannot; here we only ask, once for each start time (booking_notices)
             $this->sender->send(

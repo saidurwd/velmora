@@ -29,6 +29,7 @@ class SavePreferencesApiRequest extends FormRequest
         return [
             'email' => ['required', 'boolean'],
             'sms' => ['required', 'boolean'],
+            'push' => ['sometimes', 'boolean'],
             'quiet_from' => ['nullable', 'date_format:H:i', 'required_with:quiet_to'],
             'quiet_to' => ['nullable', 'date_format:H:i', 'required_with:quiet_from', 'different:quiet_from'],
         ];
