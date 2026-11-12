@@ -209,6 +209,8 @@ class PlatformServiceProvider extends ModuleServiceProvider
         RateLimiter::for('public-read', fn (Request $r) => Limit::perMinute(120)->by($r->ip()));
         RateLimiter::for('search', fn (Request $r) => Limit::perMinute(60)->by($r->ip()));
         RateLimiter::for('auth', fn (Request $r) => Limit::perMinute(10)->by($r->ip()));
+        // Token refresh has its own, higher limit per address: many phones share one address on a mobile carrier, and a refresh token is 256 random bits that work once (P11-9), so guessing one is pointless.
+        RateLimiter::for('refresh', fn (Request $r) => Limit::perMinute(60)->by('refresh|'.$r->ip()));
         RateLimiter::for('otp', fn (Request $r) => [Limit::perMinutes(10, (int) config('otp.throttle_per_ten_minutes'))->by('otp-ip-min:'.$r->ip()), Limit::perHour((int) config('otp.throttle_per_hour'))->by('otp-ip-hour:'.$r->ip())]);
         RateLimiter::for('user-read', fn (Request $r) => Limit::perMinute(120)->by($by($r)));
         RateLimiter::for('write', fn (Request $r) => Limit::perMinute(60)->by($by($r)));

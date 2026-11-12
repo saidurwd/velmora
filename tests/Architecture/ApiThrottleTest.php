@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
  *     the doors where nobody is signed in yet (sign-in, codes, public reads, webhooks).
  */
 
-const IP_BY_DESIGN = ['public-read', 'search', 'auth', 'otp', 'webhook', 'courier-webhooks'];
+const IP_BY_DESIGN = ['public-read', 'search', 'auth', 'refresh', 'otp', 'webhook', 'courier-webhooks'];
 
 /** @return list<LaravelRoute> */
 function apiRoutes(): array

@@ -132,8 +132,8 @@ Shorthand — **STD** = `id` BIGINT UNSIGNED PK AI, `public_id` CHAR(26) ascii_b
 | (stock_movements) | reason also `shipment_cancelled` (a parcel cancelled before handover puts its stock back; positive delta, ref_type `shipment`, ref_id the parcel) | |
 | shipment_exceptions | STD; type (unknown_status/attempts_exhausted/stuck/unknown_consignment/returned_to_origin), shipment_id NULL, reference, details j, status (open/resolved/ignored), resolved_by/at, resolution; UNIQUE(type,reference) so a problem is raised once | |
 | (shipments) | also `polled_at` (when the courier was last asked; index status,polled_at) | |
-| (shipments) | also index `shipments_handed_over_at_courier_index` (handed_over_at, courier) = the delivery performance report | |
-| (shipments) | also covering index `shipments_delivery_report_cover_index(handed_over_at, courier, status, attempts, delivered_at, currency, cod_amount_minor)` = the delivery performance report read from the index alone; the older `shipments_handed_over_at_courier_index` stays until a later contract step | |
+| (shipments) | (the first delivery-report index `shipments_handed_over_at_courier_index` was dropped 2026-12-10; the covering index below replaces it) | |
+| (shipments) | also covering index `shipments_delivery_report_cover_index(handed_over_at, courier, status, attempts, delivered_at, currency, cod_amount_minor)` = the delivery performance report read from the index alone; the older `shipments_handed_over_at_courier_index` (handed_over_at, courier) was dropped by the contract step 2026_12_10_000001 | |
 | (return_requests) | also index `return_requests_created_at_kind_reason_index` (created_at, kind, reason_code) = the returns-by-reason report | |
 | (coupon_redemptions) | also index `coupon_redemptions_redeemed_at_coupon_index` (redeemed_at, coupon_id) = the coupon performance report | |
 | (service_bookings) | also index `service_bookings_starts_at_resource_index` (starts_at, resource_id) = the booking utilisation report | |

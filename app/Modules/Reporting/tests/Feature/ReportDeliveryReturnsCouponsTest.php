@@ -297,7 +297,7 @@ describe('all three', function () {
     it('have the indexes their queries use', function () {
         $names = fn (string $table): array => array_column(DB::select("SHOW INDEX FROM `{$table}`"), 'Key_name');
 
-        expect($names('shipments'))->toContain('shipments_handed_over_at_courier_index')
+        expect($names('shipments'))->toContain('shipments_delivery_report_cover_index')->not->toContain('shipments_handed_over_at_courier_index')
             ->and($names('return_requests'))->toContain('return_requests_created_at_kind_reason_index')
             ->and($names('coupon_redemptions'))->toContain('coupon_redemptions_redeemed_at_coupon_index');
     });

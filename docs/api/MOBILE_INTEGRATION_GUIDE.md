@@ -186,7 +186,7 @@ Some codes have no fixed title; their `detail` carries the words.
 * **Everything else that changes data** (add to cart, address changes, cancel, reviews…) is not keyed: after a lost answer, read the state again (`GET /cart`, `GET /orders/{id}`) before repeating.
 * **Back-off:** on 429/500/502/503/504 wait and try again with exponential delay and jitter (1 s, 2 s, 4 s … up to about 30 s, a few tries). If `Retry-After` is present, wait at least that long. Never retry 4xx (except 401 once after a refresh, 409 as above, 429 as above).
 * **Offline:** reads can be shown from your cache with an "as of" note. Never queue payments, checkout confirmations, refreshes or cancellations to run later: they must be done with the person looking at a fresh price.
-* **Limits** (per customer when signed in; per address for the doors where nobody is signed in yet): public reads 120/min, search 60/min, sign-in and codes 10/min and a few per hour per address, signed-in reads 120/min, changes 60/min, placing orders, holding times, starting payments 10/min, downloads 20/min, new support tickets 5/day. These numbers may change; rely on the 429 and `Retry-After`, not on the numbers.
+* **Limits** (per customer when signed in; per address for the doors where nobody is signed in yet): public reads 120/min, search 60/min, sign-in and codes 10/min and a few per hour per address, token refresh 60/min per address, signed-in reads 120/min, changes 60/min, placing orders, holding times, starting payments 10/min, downloads 20/min, new support tickets 5/day. These numbers may change; rely on the 429 and `Retry-After`, not on the numbers.
 
 ## 10. Changes to the API
 

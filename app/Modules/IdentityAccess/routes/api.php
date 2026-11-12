@@ -15,7 +15,7 @@ Route::prefix('auth')->name('auth.')->group(function (): void {
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth')->name('login');
     Route::post('/otp/request', [AuthController::class, 'otpRequest'])->middleware('throttle:otp')->name('otp.request');
     Route::post('/otp/verify', [AuthController::class, 'otpVerify'])->middleware('throttle:auth')->name('otp.verify');
-    Route::post('/refresh', [AuthController::class, 'refresh'])->middleware('throttle:auth')->name('refresh');
+    Route::post('/refresh', [AuthController::class, 'refresh'])->middleware('throttle:refresh')->name('refresh');
     Route::post('/password/forgot', [AuthController::class, 'forgot'])->middleware('throttle:auth')->name('password.forgot');
     Route::post('/password/reset', [AuthController::class, 'reset'])->middleware('throttle:auth')->name('password.reset');
 
