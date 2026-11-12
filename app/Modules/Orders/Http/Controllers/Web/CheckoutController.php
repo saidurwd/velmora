@@ -8,10 +8,9 @@ use App\Modules\Cart\Contracts\CartOwnerResolver;
 use App\Modules\Cart\Contracts\CartReader;
 use App\Modules\Cms\Contracts\PolicyAcceptances;
 use App\Modules\Customers\Contracts\AddressBook;
-use App\Modules\Customers\Contracts\AddressChecker;
 use App\Modules\Customers\Contracts\Geography;
-use App\Modules\Customers\DTOs\AddressInput;
 use App\Modules\IdentityAccess\Enums\OtpIssueStatus;
+use App\Modules\Orders\Actions\BuildCheckoutDraft;
 use App\Modules\Orders\Actions\ConfirmCheckoutPhone;
 use App\Modules\Orders\Actions\PlaceOrder;
 use App\Modules\Orders\Actions\ReviewCheckout;
@@ -29,7 +28,6 @@ use App\Modules\Payments\Contracts\PaymentMethodCatalog;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\DTOs\PhoneNumber;
 use App\Modules\Platform\Enums\ActorType;
-use App\Modules\Platform\Support\BanglaText;
 use DomainException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -37,7 +35,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\Validator;
 
 class CheckoutController
 {
@@ -49,7 +46,6 @@ class CheckoutController
         private readonly CartReader $carts,
         private readonly CheckoutDraft $draft,
         private readonly AddressBook $book,
-        private readonly AddressChecker $checker,
         private readonly Geography $geography,
         private readonly PaymentInitiators $initiators,
         private readonly OrderPaymentRequests $paymentRequests,
@@ -76,63 +72,23 @@ class CheckoutController
         ]);
     }
 
-    public function saveDetails(CheckoutDetailsRequest $request): RedirectResponse
+    public function saveDetails(CheckoutDetailsRequest $request, BuildCheckoutDraft $build): RedirectResponse
     {
         $owner = $this->owners->fromRequest($request);
-        $cart = $this->carts->view($owner, app()->getLocale());
-        if ($cart->isEmpty() || $cart->hasProblems()) {
-            return redirect()->route('cart.show', ['locale' => app()->getLocale()]);
-        }
 
-        $v = $request->validated();
-        $needsDelivery = array_filter($cart->lines, fn ($l) => $l->productType === 'physical') !== [];
-        $email = ($v['email'] ?? '') === '' ? null : mb_strtolower(trim((string) $v['email']));
-
-        if (! $needsDelivery) {
-            $name = trim(BanglaText::input((string) ($v['contact_name'] ?? '')));
-            $phone = PhoneNumber::tryParse(BanglaText::digitsToAscii((string) ($v['contact_phone'] ?? '')));
-            if ($name === '' || $phone === null) {
-                return back()->withInput()->withErrors([$name === '' ? 'contact_name' : 'contact_phone' => __('orders::checkout.errors.contact_required')]);
-            }
-            $this->draft->put(['contact_name' => $name, 'contact_phone' => $phone->e164(), 'contact_email' => $email, 'address' => null]);
-
-            return redirect()->route('checkout.review', ['locale' => app()->getLocale()]);
-        }
-
-        $userId = $owner->userId;
-        if ($userId !== null && ($v['saved_address'] ?? '') !== '') {
-            $address = $this->book->find($userId, (string) $v['saved_address']);
-            if ($address === null) {
-                return back()->withInput()->withErrors(['saved_address' => __('orders::checkout.errors.address_missing')]);
-            }
-            $this->draft->put(['contact_name' => $address->recipient, 'contact_phone' => $address->phone, 'contact_email' => $email, 'address' => ['mode' => 'saved', 'id' => $address->publicId]]);
-
-            return redirect()->route('checkout.review', ['locale' => app()->getLocale()]);
-        }
-
-        Validator::make($v, [
-            'recipient' => ['required'], 'phone' => ['required'], 'division_id' => ['required'], 'district_id' => ['required'], 'upazila_id' => ['required'], 'address_line' => ['required'],
-        ], [], [
-            'recipient' => __('customers::account.addresses.recipient'), 'phone' => __('customers::account.addresses.phone'), 'division_id' => __('customers::account.addresses.division'),
-            'district_id' => __('customers::account.addresses.district'), 'upazila_id' => __('customers::account.addresses.upazila'), 'address_line' => __('customers::account.addresses.line'),
-        ])->validate();
-
-        $input = AddressInput::fromArray($v);
         try {
-            $address = $this->checker->check($input);
-            if ($userId !== null && $request->boolean('save_address')) {
-                $address = $this->book->save($userId, null, $input);
-            }
+            $this->draft->put($build->handle($owner, $request->validated(), $request->boolean('save_address'), app()->getLocale()));
+        } catch (CheckoutException $e) {
+            return match ($e->reason) {
+                'cart_empty', 'cart_problem' => redirect()->route('cart.show', ['locale' => app()->getLocale()]),
+                'contact_required' => back()->withInput()->withErrors([(string) $e->params['field'] => __('orders::checkout.errors.contact_required')]),
+                default => back()->withInput()->withErrors(['saved_address' => __('orders::checkout.errors.address_missing')]),
+            };
         } catch (DomainException $e) {
             $reason = $e->getMessage();
 
             return back()->withInput()->withErrors([self::FIELD_FOR[$reason] ?? 'address_line' => __('customers::account.addresses.errors.'.$reason, ['max' => 10])]);
         }
-
-        $this->draft->put([
-            'contact_name' => $address->recipient, 'contact_phone' => $address->phone, 'contact_email' => $email,
-            'address' => $address->publicId !== '' ? ['mode' => 'saved', 'id' => $address->publicId] : ['mode' => 'new', 'input' => $v],
-        ]);
 
         return redirect()->route('checkout.review', ['locale' => app()->getLocale()]);
     }

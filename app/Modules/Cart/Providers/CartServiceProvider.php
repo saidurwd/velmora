@@ -6,13 +6,17 @@ namespace App\Modules\Cart\Providers;
 
 use App\Modules\Cart\Actions\ClearCart;
 use App\Modules\Cart\Contracts\AbandonedCarts;
+use App\Modules\Cart\Contracts\ApiCartOwnerResolver;
 use App\Modules\Cart\Contracts\CartFiller;
 use App\Modules\Cart\Contracts\CartOwnerResolver;
+use App\Modules\Cart\Contracts\CartPresenter;
 use App\Modules\Cart\Contracts\CartReader;
 use App\Modules\Cart\Contracts\CartWriter;
 use App\Modules\Cart\Contracts\HeldCartLines;
 use App\Modules\Cart\Listeners\MergeGuestCartOnLogin;
 use App\Modules\Cart\Privacy\CartPersonalData;
+use App\Modules\Cart\Services\ApiCartOwners;
+use App\Modules\Cart\Services\ApiCartPresenter;
 use App\Modules\Cart\Services\CartBuilder;
 use App\Modules\Cart\Services\CartLineFiller;
 use App\Modules\Cart\Services\CartOwners;
@@ -34,6 +38,8 @@ class CartServiceProvider extends ModuleServiceProvider
     {
         $this->app->bind(CartReader::class, CartBuilder::class);
         $this->app->bind(CartOwnerResolver::class, CartOwners::class);
+        $this->app->bind(ApiCartOwnerResolver::class, ApiCartOwners::class);
+        $this->app->bind(CartPresenter::class, ApiCartPresenter::class);
         $this->app->bind(CartWriter::class, ClearCart::class);
         $this->app->bind(CartFiller::class, CartLineFiller::class);
         $this->app->bind(AbandonedCarts::class, DatabaseAbandonedCarts::class);

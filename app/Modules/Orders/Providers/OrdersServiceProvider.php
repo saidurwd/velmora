@@ -7,6 +7,7 @@ namespace App\Modules\Orders\Providers;
 use App\Modules\Notifications\Contracts\TemplateRegistry;
 use App\Modules\Orders\Bulk\ConfirmOrders;
 use App\Modules\Orders\Console\AccountProbeCommand;
+use App\Modules\Orders\Console\ApiCheckoutProbeCommand;
 use App\Modules\Orders\Console\OrderProbeCommand;
 use App\Modules\Orders\Console\PlaceOrderProbeCommand;
 use App\Modules\Orders\Contracts\CancellationFigures;
@@ -124,7 +125,7 @@ class OrdersServiceProvider extends ModuleServiceProvider
         $registry->addExporter(OrderPersonalData::class);
         $registry->addEraser(OrderPersonalData::class, 20);
 
-        $this->commands([OrderProbeCommand::class, PlaceOrderProbeCommand::class, AccountProbeCommand::class]);
+        $this->commands([OrderProbeCommand::class, PlaceOrderProbeCommand::class, AccountProbeCommand::class, ApiCheckoutProbeCommand::class]);
         $this->app->make(OutboxRegistry::class)->register(OrderPlaced::class);
         $this->app->make(OutboxRegistry::class)->register(OrderPaid::class);
         $this->app->make(OutboxRegistry::class)->register(OrderRefunded::class);

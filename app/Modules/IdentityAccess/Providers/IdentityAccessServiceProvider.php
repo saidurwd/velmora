@@ -18,6 +18,7 @@ use App\Modules\IdentityAccess\Contracts\StaffDirectory;
 use App\Modules\IdentityAccess\Events\UserRegistered;
 use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
 use App\Modules\IdentityAccess\Http\Middleware\EnsureApiCustomer;
+use App\Modules\IdentityAccess\Http\Middleware\OptionalApiCustomer;
 use App\Modules\IdentityAccess\Http\Middleware\RequirePendingStaffLogin;
 use App\Modules\IdentityAccess\Http\Middleware\RequirePermission;
 use App\Modules\IdentityAccess\Http\Middleware\RequireRecentAuth;
@@ -87,6 +88,7 @@ class IdentityAccessServiceProvider extends ModuleServiceProvider
         $this->app->make(Router::class)->aliasMiddleware('permission', RequirePermission::class);
         $this->app->make(Router::class)->aliasMiddleware('recent.auth', RequireRecentAuth::class);
         $this->app->make(Router::class)->aliasMiddleware('api.customer', EnsureApiCustomer::class);
+        $this->app->make(Router::class)->aliasMiddleware('api.customer.optional', OptionalApiCustomer::class);
 
         // Super Admin passes catalogue permissions explicitly; sensitive uses are audited (see SuperAdminBypass).
         Gate::before($this->app->make(SuperAdminBypass::class));

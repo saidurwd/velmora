@@ -6,7 +6,7 @@ namespace App\Modules\Platform\Localization;
 
 use Illuminate\Http\Request;
 
-/** Locale precedence (BD-33): URL prefix -> signed-in user -> cookie -> Accept-Language -> default. */
+/** Locale precedence (BD-33): URL prefix -> signed-in user -> cookie -> Accept-Language -> default. The app API reverses the first two for an explicit Accept-Language header. */
 final class LocaleResolver
 {
     public const COOKIE = 'locale';
@@ -34,6 +34,15 @@ final class LocaleResolver
         $fromUrl = $request->route('locale') ?? $request->segment(1);
         if (is_string($fromUrl) && self::isSupported($fromUrl)) {
             return $fromUrl;
+        }
+
+        // An app says which language it is showing in every request. That choice beats the language saved on the account (the account's is the fallback when
+        // the app sends none), so switching language inside the app takes effect at once.
+        if ($request->is('api/*') && $request->headers->has('Accept-Language')) {
+            $asked = $request->getPreferredLanguage(self::supported());
+            if (self::isSupported($asked)) {
+                return (string) $asked;
+            }
         }
 
         $user = $request->user();

@@ -30,6 +30,30 @@ enum ErrorCode: string
     case OtpUnavailable = 'auth.otp_unavailable';
     case ProductNotFound = 'product.not_found';
     case PageNotFound = 'page.not_found';
+    case StockInsufficient = 'stock.insufficient';
+    case CartQuantityLimit = 'cart.quantity_limit';
+    case CartTooManyLines = 'cart.too_many_lines';
+    case CartItemUnavailable = 'cart.item_unavailable';
+    case CartNeedsBooking = 'cart.needs_booking';
+    case CartItemNotFound = 'cart.item_not_found';
+    case CouponInvalid = 'coupon.invalid';
+    case CartEmpty = 'cart.empty';
+    case CartProblem = 'cart.problem';
+    case AddressRequired = 'address.required';
+    case AddressInvalid = 'address.invalid';
+    case AddressLimit = 'address.limit_reached';
+    case DeliveryUnavailable = 'delivery.unavailable';
+    case ShippingMethodInvalid = 'shipping.method_invalid';
+    case PaymentMethodInvalid = 'payment.method_invalid';
+    case TotalsChanged = 'checkout.totals_changed';
+    case CodNotEligible = 'cod.not_eligible';
+    case PhoneConfirmationRequired = 'checkout.phone_confirmation_required';
+    case PhoneInvalid = 'checkout.phone_invalid';
+    case CheckoutNotAccepted = 'checkout.not_accepted';
+    case CheckoutBusy = 'checkout.busy';
+    case BookingHoldExpired = 'booking.hold_expired';
+    case PoliciesRequired = 'policies.required';
+    case PoliciesChanged = 'policies.changed';
 
     public function status(): int
     {
@@ -44,6 +68,10 @@ enum ErrorCode: string
             self::ReauthRequired => 403,
             self::OtpUnavailable => 503,
             self::ProductNotFound, self::PageNotFound => 404,
+            self::StockInsufficient, self::CartProblem, self::TotalsChanged, self::CheckoutBusy, self::BookingHoldExpired, self::PoliciesChanged => 409,
+            self::CartQuantityLimit, self::CartTooManyLines, self::CartItemUnavailable, self::CartNeedsBooking, self::CouponInvalid, self::CartEmpty, self::AddressRequired, self::AddressInvalid, self::AddressLimit, self::DeliveryUnavailable, self::ShippingMethodInvalid, self::PaymentMethodInvalid, self::CodNotEligible, self::PhoneInvalid, self::CheckoutNotAccepted, self::PoliciesRequired => 422,
+            self::CartItemNotFound => 404,
+            self::PhoneConfirmationRequired => 403,
             self::RateLimited => 429,
             self::ServerError => 500,
             self::IdempotencyKeyRequired, self::IdempotencyKeyInvalid => 400,
@@ -71,6 +99,30 @@ enum ErrorCode: string
             self::OtpUnavailable => 'errors.api.otp_unavailable',
             self::ProductNotFound => 'errors.api.product_not_found',
             self::PageNotFound => 'errors.api.page_not_found',
+            self::StockInsufficient => 'errors.api.stock_insufficient',
+            self::CartQuantityLimit => 'errors.api.cart_quantity_limit',
+            self::CartTooManyLines => 'errors.api.cart_too_many_lines',
+            self::CartItemUnavailable => 'errors.api.cart_item_unavailable',
+            self::CartNeedsBooking => 'errors.api.cart_needs_booking',
+            self::CartItemNotFound => 'errors.api.cart_item_not_found',
+            self::CouponInvalid => 'errors.api.coupon_invalid',
+            self::CartEmpty => 'errors.api.cart_empty',
+            self::CartProblem => 'errors.api.cart_problem',
+            self::AddressRequired => 'errors.api.address_required',
+            self::AddressInvalid => 'errors.api.address_invalid',
+            self::AddressLimit => 'errors.api.address_limit',
+            self::DeliveryUnavailable => 'errors.api.delivery_unavailable',
+            self::ShippingMethodInvalid => 'errors.api.shipping_invalid',
+            self::PaymentMethodInvalid => 'errors.api.payment_invalid',
+            self::TotalsChanged => 'errors.api.totals_changed',
+            self::CodNotEligible => 'errors.api.cod_not_eligible',
+            self::PhoneConfirmationRequired => 'errors.api.phone_confirmation_required',
+            self::PhoneInvalid => 'errors.api.phone_invalid',
+            self::CheckoutNotAccepted => 'errors.api.not_accepted',
+            self::CheckoutBusy => 'errors.api.checkout_busy',
+            self::BookingHoldExpired => 'errors.api.booking_expired',
+            self::PoliciesRequired => 'errors.api.policies_required',
+            self::PoliciesChanged => 'errors.api.policies_changed',
             default => null,
         };
     }

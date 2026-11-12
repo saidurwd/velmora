@@ -13,8 +13,9 @@ final class ApiProblem extends RuntimeException
     /**
      * @param  array<string, mixed>  $extra
      * @param  array<string, string>  $headers
+     * @param  string|null  $detail  the specific, already translated explanation (the website's own wording)
      */
-    public function __construct(public readonly ErrorCode $problem, public readonly array $extra = [], public readonly array $headers = [])
+    public function __construct(public readonly ErrorCode $problem, public readonly array $extra = [], public readonly array $headers = [], public readonly ?string $detail = null)
     {
         parent::__construct($problem->value);
     }

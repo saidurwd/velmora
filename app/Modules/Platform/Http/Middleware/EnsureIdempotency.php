@@ -123,6 +123,13 @@ class EnsureIdempotency
     {
         $user = $request->user();
 
-        return $user !== null ? 'u'.$user->getAuthIdentifier() : 'ip'.sha1((string) $request->ip());
+        if ($user !== null) {
+            return 'u'.$user->getAuthIdentifier();
+        }
+
+        // a guest's key belongs to that guest's cart, so two people behind one address can never share (or replay) each other's answer
+        $cart = (string) $request->headers->get('X-Cart-Token', '');
+
+        return preg_match('/^[a-f0-9]{40}$/', $cart) === 1 ? 'g'.sha1($cart) : 'ip'.sha1((string) $request->ip());
     }
 }
