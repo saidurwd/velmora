@@ -55,9 +55,9 @@ class EngagementServiceProvider extends ModuleServiceProvider
         // A customer may send a handful of reviews an hour; staff decisions are limited per person.
         RateLimiter::for('reviews', fn (Request $r) => Limit::perHour(5)->by('reviews|'.($r->user('web')?->getAuthIdentifier() ?? $r->ip())));
         RateLimiter::for('reviews-staff', fn (Request $r) => Limit::perMinute(60)->by('reviews-staff|'.($r->user('admin')?->getAuthIdentifier() ?? $r->ip())));
-        RateLimiter::for('support-new', fn (Request $r) => Limit::perDay(5)->by('support-new|'.($r->user('web')?->getAuthIdentifier() ?? $r->ip())));
-        RateLimiter::for('support-reply', fn (Request $r) => Limit::perHour(20)->by('support-reply|'.($r->user('web')?->getAuthIdentifier() ?? $r->ip())));
-        RateLimiter::for('support-read', fn (Request $r) => Limit::perMinute(60)->by('support-read|'.($r->user('web')?->getAuthIdentifier() ?? $r->ip())));
+        RateLimiter::for('support-new', fn (Request $r) => Limit::perDay(5)->by('support-new|'.(($r->user('web') ?? $r->user())?->getAuthIdentifier() ?? $r->ip())));
+        RateLimiter::for('support-reply', fn (Request $r) => Limit::perHour(20)->by('support-reply|'.(($r->user('web') ?? $r->user())?->getAuthIdentifier() ?? $r->ip())));
+        RateLimiter::for('support-read', fn (Request $r) => Limit::perMinute(60)->by('support-read|'.(($r->user('web') ?? $r->user())?->getAuthIdentifier() ?? $r->ip())));
         RateLimiter::for('support-staff', fn (Request $r) => Limit::perMinute(120)->by('support-staff|'.($r->user('admin')?->getAuthIdentifier() ?? $r->ip())));
         $menu = $this->app->make(AdminMenu::class);
         $menu->add('engagement::reviews.menu', 'admin.reviews.index', 'reviews.moderate', 73);

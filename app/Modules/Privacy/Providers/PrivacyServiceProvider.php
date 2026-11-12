@@ -31,7 +31,7 @@ class PrivacyServiceProvider extends ModuleServiceProvider
     {
         parent::boot();
 
-        $by = fn (Request $r): string => (string) ($r->user('web')?->getAuthIdentifier() ?? $r->ip());
+        $by = fn (Request $r): string => (string) (($r->user('web') ?? $r->user())?->getAuthIdentifier() ?? $r->ip());   // the website's login, or the app's token
         RateLimiter::for('privacy', fn (Request $r) => Limit::perMinute(10)->by('privacy|'.$by($r)));
         RateLimiter::for('privacy-staff', fn (Request $r) => Limit::perMinute(30)->by('privacy-staff|'.($r->user('admin')?->getAuthIdentifier() ?? $r->ip())));
 

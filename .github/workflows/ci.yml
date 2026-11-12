@@ -77,6 +77,15 @@ jobs:
       - name: Architecture, localisation and boundary rules
         run: php artisan test --testsuite=Architecture
 
+      - name: API contract (document drift, breaking changes, collection, journey)
+        run: |
+          php artisan scramble:export
+          git diff --exit-code docs/api/openapi.json || { echo "docs/api/openapi.json is out of date: run php artisan scramble:export and commit it"; exit 1; }
+          php artisan api:collection
+          git diff --exit-code docs/api || { echo "the collection is out of date: run php artisan api:collection and commit it"; exit 1; }
+          php artisan api:compat
+          php artisan test --group=api-contract
+
       - name: Unit, feature and database tests
         run: php artisan test
 

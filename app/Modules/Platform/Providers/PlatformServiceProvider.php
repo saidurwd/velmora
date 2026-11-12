@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Platform\Providers;
 
+use App\Modules\Platform\Console\ApiCollectionCommand;
+use App\Modules\Platform\Console\ApiCompatCommand;
 use App\Modules\Platform\Console\DispatchOutboxCommand;
 use App\Modules\Platform\Console\MakeModuleCommand;
 use App\Modules\Platform\Contracts\Clock;
@@ -14,6 +16,7 @@ use App\Modules\Platform\Events\OutboxProbe;
 use App\Modules\Platform\Http\Middleware\AssignRequestContext;
 use App\Modules\Platform\Http\Middleware\ConditionalGet;
 use App\Modules\Platform\Http\Middleware\EnsureIdempotency;
+use App\Modules\Platform\Http\Middleware\MarkDeprecated;
 use App\Modules\Platform\Http\Middleware\SecureHeaders;
 use App\Modules\Platform\Http\Middleware\SetLocale;
 use App\Modules\Platform\Http\Resources\MoneyData;
@@ -69,7 +72,7 @@ class PlatformServiceProvider extends ModuleServiceProvider
 
     public function register(): void
     {
-        $this->commands([MakeModuleCommand::class, DispatchOutboxCommand::class]);
+        $this->commands([MakeModuleCommand::class, DispatchOutboxCommand::class, ApiCompatCommand::class, ApiCollectionCommand::class]);
 
         // The API document is a committed file (docs/api/openapi.json), not a web page: no documentation routes on any server.
         if (class_exists(Scramble::class)) {
@@ -119,6 +122,7 @@ class PlatformServiceProvider extends ModuleServiceProvider
         $router->aliasMiddleware('secure.headers', SecureHeaders::class);
         $router->aliasMiddleware('locale', SetLocale::class);
         $router->aliasMiddleware('etag', ConditionalGet::class);
+        $router->aliasMiddleware('deprecated', MarkDeprecated::class);
 
         $this->app->make(OutboxRegistry::class)->register(OutboxProbe::class);
         Event::listen(OutboxProbe::class, [AcknowledgeOutboxProbe::class, 'handle']);

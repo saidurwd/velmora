@@ -50,7 +50,7 @@ class DigitalProductsServiceProvider extends ModuleServiceProvider
 
         $this->commands([DigitalProbeCommand::class]);
         Gate::policy(Entitlement::class, EntitlementPolicy::class);
-        RateLimiter::for('digital-download', fn (Request $r) => Limit::perMinute(20)->by('digital-download|'.($r->user('web')?->getAuthIdentifier() ?? $r->ip()).'|'.($r->route('order') ?? '')));
+        RateLimiter::for('digital-download', fn (Request $r) => Limit::perMinute(20)->by('digital-download|'.(($r->user('web') ?? $r->user())?->getAuthIdentifier() ?? $r->ip()).'|'.($r->route('order') ?? $r->route('id') ?? '')));
         foreach (DigitalTemplates::all() as $template) {
             $this->app->make(TemplateRegistry::class)->register($template);   // the messages this module sends; staff change their words
         }

@@ -49,3 +49,16 @@ function assertMatchesOpenApi(TestResponse $response, string $method, string $ur
 
     expect($result->isValid())->toBeTrue($result->isValid() ? '' : "{$method} {$template} {$status}: ".json_encode((new ErrorFormatter)->format($result->error()), JSON_UNESCAPED_SLASHES));
 }
+
+/** @return list<array{0: string, 1: string, 2: array<string, mixed>}> method, path, operation */
+function openApiOperations(): array
+{
+    $out = [];
+    foreach (openApiDocument()['paths'] as $path => $methods) {
+        foreach ($methods as $method => $operation) {
+            $out[] = [strtoupper($method), $path, $operation];
+        }
+    }
+
+    return $out;
+}
