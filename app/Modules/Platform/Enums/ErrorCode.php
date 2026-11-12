@@ -64,6 +64,11 @@ enum ErrorCode: string
     case ReviewDuplicate = 'review.duplicate';
     case RequestRefused = 'request.refused';
     case PrivacyRequestRefused = 'privacy.request_refused';
+    case BookingSlotTaken = 'booking.slot_taken';
+    case EntitlementLimitReached = 'entitlement.limit_reached';
+    case EntitlementExpired = 'entitlement.expired';
+    case EntitlementRevoked = 'entitlement.revoked';
+    case EntitlementUnavailable = 'entitlement.unavailable';
 
     public function status(): int
     {
@@ -78,6 +83,7 @@ enum ErrorCode: string
             self::ReauthRequired => 403,
             self::OtpUnavailable => 503,
             self::ProductNotFound, self::PageNotFound => 404,
+            self::BookingSlotTaken, self::EntitlementLimitReached, self::EntitlementExpired, self::EntitlementRevoked, self::EntitlementUnavailable => 409,
             self::ReviewNotEligible, self::RequestRefused => 422,
             self::ReviewDuplicate, self::PrivacyRequestRefused => 409,
             self::OrderNotCancellable, self::OrderAlreadyPaid, self::PaymentExpired => 409,
@@ -114,6 +120,11 @@ enum ErrorCode: string
             self::OtpUnavailable => 'errors.api.otp_unavailable',
             self::ProductNotFound => 'errors.api.product_not_found',
             self::PageNotFound => 'errors.api.page_not_found',
+            self::BookingSlotTaken => 'errors.api.booking_slot_taken',
+            self::EntitlementLimitReached => 'errors.api.entitlement_limit',
+            self::EntitlementExpired => 'errors.api.entitlement_expired',
+            self::EntitlementRevoked => 'errors.api.entitlement_revoked',
+            self::EntitlementUnavailable => 'errors.api.entitlement_unavailable',
             self::ReviewNotEligible => 'errors.api.review_not_eligible',
             self::ReviewDuplicate => 'errors.api.review_duplicate',
             self::RequestRefused => 'errors.api.request_refused',

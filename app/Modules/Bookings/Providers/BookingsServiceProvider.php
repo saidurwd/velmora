@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Bookings\Providers;
 
 use App\Modules\Bookings\Actions\ClaimBookingHold;
+use App\Modules\Bookings\Console\ApiHoldProbeCommand;
 use App\Modules\Bookings\Console\BookingProbeCommand;
 use App\Modules\Bookings\Contracts\BookingFigures;
 use App\Modules\Bookings\Contracts\BookingHolds;
@@ -53,7 +54,7 @@ class BookingsServiceProvider extends ModuleServiceProvider
         $registry->addExporter(BookingPersonalData::class);
         $registry->addEraser(BookingPersonalData::class, 30);
 
-        $this->commands([BookingProbeCommand::class]);
+        $this->commands([BookingProbeCommand::class, ApiHoldProbeCommand::class]);
         foreach (BookingTemplates::all() as $template) {
             $this->app->make(TemplateRegistry::class)->register($template);   // the messages this module sends; staff change their words
         }

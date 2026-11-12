@@ -11,4 +11,7 @@ use Illuminate\Http\Request;
 interface ApiCartOwnerResolver
 {
     public function fromRequest(Request $request): CartOwner;
+
+    /** Like `fromRequest`, but a guest with no token yet is given a new one (the caller returns it to the app). */
+    public function forWrite(Request $request): CartOwner;
 }

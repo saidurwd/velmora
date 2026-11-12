@@ -1278,6 +1278,677 @@
                 }
             }
         },
+        "/services/{sku}/slots": {
+            "get": {
+                "operationId": "v1.services.slots",
+                "description": "`sku` is the `variant.sku` of a service. `date` (`YYYY-MM-DD`, Dhaka days, today up to the service's booking horizon; default tomorrow) gives that day's really-free times, up to 60. A time is only a promise once you hold it.",
+                "summary": "Free times for a service",
+                "tags": [
+                    "Booking"
+                ],
+                "parameters": [
+                    {
+                        "name": "sku",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "resource",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "minLength": 26,
+                            "maxLength": 26
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "sku": {
+                                                    "type": "string"
+                                                },
+                                                "date": {
+                                                    "type": "string"
+                                                },
+                                                "timezone": {
+                                                    "type": "string"
+                                                },
+                                                "min_date": {
+                                                    "type": "string"
+                                                },
+                                                "max_date": {
+                                                    "type": "string"
+                                                },
+                                                "price": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "amount_minor": {
+                                                            "type": "integer"
+                                                        },
+                                                        "currency": {
+                                                            "type": "string"
+                                                        },
+                                                        "formatted": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "amount_minor",
+                                                        "currency",
+                                                        "formatted"
+                                                    ]
+                                                },
+                                                "slots": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "resource": {
+                                                                "type": "string"
+                                                            },
+                                                            "resource_name": {
+                                                                "type": "string"
+                                                            },
+                                                            "starts_at": {
+                                                                "type": "string"
+                                                            },
+                                                            "ends_at": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "resource",
+                                                            "resource_name",
+                                                            "starts_at",
+                                                            "ends_at"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "sku",
+                                                "date",
+                                                "timezone",
+                                                "min_date",
+                                                "max_date",
+                                                "price",
+                                                "slots"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/services/{sku}/hold": {
+            "post": {
+                "operationId": "v1.services.hold",
+                "description": "Holds that time for a few minutes and puts the booking in the cart; pay for the cart to confirm it. `resource` and `start` come from a slot (`resource`, `starts_at`). Somebody else was faster: `booking.slot_taken`. A guest gets a `cart_token` (also in the `X-Cart-Token` header) to send on cart and checkout calls. Holding another time for the same service replaces the earlier hold.",
+                "summary": "Hold a time",
+                "tags": [
+                    "Booking"
+                ],
+                "parameters": [
+                    {
+                        "name": "sku",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "resource": {
+                                        "type": "string",
+                                        "minLength": 26,
+                                        "maxLength": 26
+                                    },
+                                    "start": {
+                                        "type": "string",
+                                        "maxLength": 40
+                                    }
+                                },
+                                "required": [
+                                    "resource",
+                                    "start"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "starts_at": {
+                                                    "type": "string"
+                                                },
+                                                "ends_at": {
+                                                    "type": "string"
+                                                },
+                                                "expires_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "cart_token": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "status",
+                                                "starts_at",
+                                                "ends_at",
+                                                "expires_at",
+                                                "cart_token"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/bookings": {
+            "get": {
+                "operationId": "v1.bookings.index",
+                "description": "What is coming first (soonest first), then the past (newest first). Each says what I can do (`can_cancel`, `can_reschedule`, `can_complete`) and what cancelling would cost (`if_cancelled`).",
+                "summary": "My bookings",
+                "tags": [
+                    "Booking"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "service": {
+                                                        "type": "string"
+                                                    },
+                                                    "resource": {
+                                                        "type": "string"
+                                                    },
+                                                    "starts_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "ends_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "paid": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "amount_minor": {
+                                                                "type": "integer"
+                                                            },
+                                                            "currency": {
+                                                                "type": "string"
+                                                            },
+                                                            "formatted": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "amount_minor",
+                                                            "currency",
+                                                            "formatted"
+                                                        ]
+                                                    },
+                                                    "order": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "number": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "number"
+                                                        ]
+                                                    },
+                                                    "upcoming": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "can_cancel": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "can_reschedule": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "can_complete": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "reschedules_left": {
+                                                        "type": "integer"
+                                                    },
+                                                    "reschedule_notice_hours": {
+                                                        "type": "integer"
+                                                    },
+                                                    "if_cancelled": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "additionalProperties": {}
+                                                    },
+                                                    "ended": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "additionalProperties": {}
+                                                    },
+                                                    "meeting_url": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "status",
+                                                    "service",
+                                                    "resource",
+                                                    "starts_at",
+                                                    "ends_at",
+                                                    "paid",
+                                                    "order",
+                                                    "upcoming",
+                                                    "can_cancel",
+                                                    "can_reschedule",
+                                                    "can_complete",
+                                                    "reschedules_left",
+                                                    "reschedule_notice_hours",
+                                                    "if_cancelled",
+                                                    "ended",
+                                                    "meeting_url"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/bookings/{id}": {
+            "get": {
+                "operationId": "v1.bookings.show",
+                "summary": "One booking",
+                "tags": [
+                    "Booking"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "service": {
+                                                    "type": "string"
+                                                },
+                                                "resource": {
+                                                    "type": "string"
+                                                },
+                                                "starts_at": {
+                                                    "type": "string"
+                                                },
+                                                "ends_at": {
+                                                    "type": "string"
+                                                },
+                                                "paid": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "amount_minor": {
+                                                            "type": "integer"
+                                                        },
+                                                        "currency": {
+                                                            "type": "string"
+                                                        },
+                                                        "formatted": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "amount_minor",
+                                                        "currency",
+                                                        "formatted"
+                                                    ]
+                                                },
+                                                "order": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "string"
+                                                        },
+                                                        "number": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "number"
+                                                    ]
+                                                },
+                                                "upcoming": {
+                                                    "type": "boolean"
+                                                },
+                                                "can_cancel": {
+                                                    "type": "boolean"
+                                                },
+                                                "can_reschedule": {
+                                                    "type": "boolean"
+                                                },
+                                                "can_complete": {
+                                                    "type": "boolean"
+                                                },
+                                                "reschedules_left": {
+                                                    "type": "integer"
+                                                },
+                                                "reschedule_notice_hours": {
+                                                    "type": "integer"
+                                                },
+                                                "if_cancelled": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "additionalProperties": {}
+                                                },
+                                                "ended": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "additionalProperties": {}
+                                                },
+                                                "meeting_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "status",
+                                                "service",
+                                                "resource",
+                                                "starts_at",
+                                                "ends_at",
+                                                "paid",
+                                                "order",
+                                                "upcoming",
+                                                "can_cancel",
+                                                "can_reschedule",
+                                                "can_complete",
+                                                "reschedules_left",
+                                                "reschedule_notice_hours",
+                                                "if_cancelled",
+                                                "ended",
+                                                "meeting_url"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/bookings/{id}/cancel": {
+            "post": {
+                "operationId": "v1.bookings.cancel",
+                "description": "Under the service's cancellation terms: `if_cancelled` on the booking says what it would cost and what is refunded.",
+                "summary": "Cancel a booking",
+                "tags": [
+                    "Booking"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 255
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/bookings/{id}/reschedule": {
+            "post": {
+                "operationId": "v1.bookings.reschedule",
+                "description": "`start` is the `starts_at` of a free time for the same service and person (`GET /services/{sku}/slots?resource=`). Allowed only with enough notice and while moves are left.",
+                "summary": "Move a booking to another time",
+                "tags": [
+                    "Booking"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "start": {
+                                        "type": "string",
+                                        "maxLength": 40
+                                    }
+                                },
+                                "required": [
+                                    "start"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/bookings/{id}/complete": {
+            "post": {
+                "operationId": "v1.bookings.complete",
+                "description": "After the time has come.",
+                "summary": "Mark a booking done",
+                "tags": [
+                    "Booking"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/cart": {
             "get": {
                 "operationId": "v1.cart.show",
@@ -6534,6 +7205,226 @@
                     }
                 },
                 "security": []
+            }
+        },
+        "/library": {
+            "get": {
+                "operationId": "v1.library.index",
+                "description": "`state` is `available`, `limit_reached`, `expired`, `revoked` or `not_ready`. `left` is the downloads still allowed (`unlimited` when there is no limit). `keys_needed` / `keys_ready` count licence keys.",
+                "summary": "My library",
+                "tags": [
+                    "Library"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "order": {
+                                                        "type": "string"
+                                                    },
+                                                    "product": {
+                                                        "type": "string"
+                                                    },
+                                                    "sku": {
+                                                        "type": "string"
+                                                    },
+                                                    "file": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "version": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "left": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "unlimited": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "expires_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "state": {
+                                                        "type": "string"
+                                                    },
+                                                    "keys_needed": {
+                                                        "type": "integer"
+                                                    },
+                                                    "keys_ready": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "order",
+                                                    "product",
+                                                    "sku",
+                                                    "file",
+                                                    "version",
+                                                    "left",
+                                                    "unlimited",
+                                                    "expires_at",
+                                                    "state",
+                                                    "keys_needed",
+                                                    "keys_ready"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/library/{id}/download": {
+            "post": {
+                "operationId": "v1.library.download",
+                "description": "Uses one download and answers a short-lived address for the file (`url`, valid until `expires_at`, about a minute): fetch it straight away; the address is not kept. A purchase with no downloads left is `entitlement.limit_reached`, an expired one `entitlement.expired`, a revoked one `entitlement.revoked`, one with no file yet `entitlement.unavailable`; none of these uses a download.",
+                "summary": "Download a purchase",
+                "tags": [
+                    "Library"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "url": {
+                                                    "type": "string"
+                                                },
+                                                "filename": {
+                                                    "type": "string"
+                                                },
+                                                "remaining": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "expires_at": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "url",
+                                                "filename",
+                                                "remaining",
+                                                "expires_at"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/library/{id}/keys": {
+            "post": {
+                "operationId": "v1.library.keys",
+                "description": "The keys given to this purchase, never kept by a cache. Keys still being prepared are `entitlement.unavailable`.",
+                "summary": "Show my licence keys",
+                "tags": [
+                    "Library"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "keys": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "keys"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
             }
         },
         "/me": {
