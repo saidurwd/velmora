@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Modules\Notifications\Providers;
 
+use App\Modules\IdentityAccess\Events\ApiSessionsEnded;
 use App\Modules\Notifications\Actions\SendNotification;
 use App\Modules\Notifications\Console\NotificationProbeCommand;
 use App\Modules\Notifications\Contracts\MarketingConsent;
 use App\Modules\Notifications\Contracts\NotificationSender;
 use App\Modules\Notifications\Contracts\SmsGateway;
 use App\Modules\Notifications\Contracts\TemplateRegistry;
+use App\Modules\Notifications\Listeners\RemoveDevicesOfEndedSessions;
 use App\Modules\Notifications\Privacy\NotificationPersonalData;
 use App\Modules\Notifications\Services\DatabaseMarketingConsent;
 use App\Modules\Notifications\Services\TemplateCatalog;
@@ -25,6 +27,7 @@ use App\Modules\Platform\Support\ModuleServiceProvider;
 use App\Modules\Privacy\Contracts\PersonalDataRegistry;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 
 class NotificationsServiceProvider extends ModuleServiceProvider
@@ -58,6 +61,8 @@ class NotificationsServiceProvider extends ModuleServiceProvider
         $registry = $this->app->make(PersonalDataRegistry::class);
         $registry->addExporter(NotificationPersonalData::class);
         $registry->addEraser(NotificationPersonalData::class, 50);
+
+        Event::listen(ApiSessionsEnded::class, [RemoveDevicesOfEndedSessions::class, 'handle']);
 
         $this->commands([NotificationProbeCommand::class]);
 

@@ -42,6 +42,7 @@ use App\Modules\Platform\Support\SystemClock;
 use Closure;
 use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\Generator\OpenApi;
+use Dedoc\Scramble\Support\Generator\SecurityScheme;
 use Dedoc\Scramble\Support\Generator\Server;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Events\ScheduledTaskFailed;
@@ -160,6 +161,7 @@ class PlatformServiceProvider extends ModuleServiceProvider
 
         // relative server, so the committed document is the same on every machine (the app's own base URL is its configuration)
         Scramble::configure()->afterOpenApiGenerated(function (OpenApi $openApi): void {
+            $openApi->secure(SecurityScheme::http('bearer')->setDescription('The access_token from sign-in. Send `Authorization: Bearer <access_token>`.'));
             $openApi->servers = [Server::make('/api/v1')->setDescription('This server')];
         });
         Scramble::configure()->routes(fn (\Illuminate\Routing\Route $route): bool => str_starts_with($route->uri(), 'api/v1/') && ! str_contains($route->uri(), '/webhooks/'));

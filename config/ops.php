@@ -7,6 +7,7 @@ use App\Modules\Catalog\Jobs\ReconcileListing;
 use App\Modules\Cms\Jobs\GenerateSitemaps;
 use App\Modules\Cms\Jobs\PublishDuePagesJob;
 use App\Modules\IdentityAccess\Jobs\PurgeExpiredOtpChallenges;
+use App\Modules\IdentityAccess\Jobs\PurgeExpiredRefreshTokens;
 use App\Modules\Inventory\Jobs\VerifyStockLedger;
 use App\Modules\Platform\Jobs\DispatchOutboxMessages;
 use App\Modules\Privacy\Jobs\ExpireExportsJob;
@@ -38,6 +39,7 @@ return [
         ExpireExportsJob::class,
         PurgeExpiredCarts::class,
         PurgeExpiredOtpChallenges::class,
+        PurgeExpiredRefreshTokens::class,
         VerifyStockLedger::class,
         DispatchOutboxMessages::class,
     ],

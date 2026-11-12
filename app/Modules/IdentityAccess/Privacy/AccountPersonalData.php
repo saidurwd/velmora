@@ -51,6 +51,7 @@ final class AccountPersonalData implements PersonalDataEraser, PersonalDataExpor
         }
         DB::table('user_sessions')->where('user_id', $userId)->delete();
         DB::table('sessions')->where('user_id', $userId)->delete();
+        DB::table('refresh_tokens')->where('user_id', $userId)->delete();
         DB::table('personal_access_tokens')->where('tokenable_type', (new User)->getMorphClass())->where('tokenable_id', $userId)->delete();
         $targets = array_values(array_filter([$user->email, $user->phone]));
         if ($targets !== []) {

@@ -7,14 +7,17 @@ namespace App\Modules\IdentityAccess\Providers;
 use App\Modules\IdentityAccess\Actions\RegisterCustomerWithEmail;
 use App\Modules\IdentityAccess\Auth\AccountTypeUserProvider;
 use App\Modules\IdentityAccess\Auth\RecentAuth;
+use App\Modules\IdentityAccess\Console\ApiRefreshProbeCommand;
 use App\Modules\IdentityAccess\Console\CreateSuperAdminCommand;
 use App\Modules\IdentityAccess\Console\RbacMatrixCommand;
 use App\Modules\IdentityAccess\Contracts\AccountLocales;
+use App\Modules\IdentityAccess\Contracts\ApiSessionResolver;
 use App\Modules\IdentityAccess\Contracts\CustomerRegistration;
 use App\Modules\IdentityAccess\Contracts\PhoneConfirmation;
 use App\Modules\IdentityAccess\Contracts\StaffDirectory;
 use App\Modules\IdentityAccess\Events\UserRegistered;
 use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
+use App\Modules\IdentityAccess\Http\Middleware\EnsureApiCustomer;
 use App\Modules\IdentityAccess\Http\Middleware\RequirePendingStaffLogin;
 use App\Modules\IdentityAccess\Http\Middleware\RequirePermission;
 use App\Modules\IdentityAccess\Http\Middleware\RequireRecentAuth;
@@ -24,6 +27,7 @@ use App\Modules\IdentityAccess\Mfa\PendingStaffLogin;
 use App\Modules\IdentityAccess\Otp\CheckoutPhoneConfirmation;
 use App\Modules\IdentityAccess\Permissions\SuperAdminBypass;
 use App\Modules\IdentityAccess\Privacy\AccountPersonalData;
+use App\Modules\IdentityAccess\Services\DatabaseApiSessions;
 use App\Modules\IdentityAccess\Services\PasswordReauthentication;
 use App\Modules\IdentityAccess\Support\DatabaseAccountLocales;
 use App\Modules\IdentityAccess\Support\DatabaseStaffDirectory;
@@ -49,11 +53,13 @@ class IdentityAccessServiceProvider extends ModuleServiceProvider
     {
         $this->app->singleton(SuperAdminBypass::class);
         $this->app->bind(PhoneConfirmation::class, CheckoutPhoneConfirmation::class);
+        $this->app->singleton(DatabaseApiSessions::class);
+        $this->app->bind(ApiSessionResolver::class, DatabaseApiSessions::class);
         $this->app->bind(StaffDirectory::class, DatabaseStaffDirectory::class);
         $this->app->bind(AccountLocales::class, DatabaseAccountLocales::class);
         $this->app->bind(CustomerRegistration::class, RegisterCustomerWithEmail::class);
         $this->app->bind(StaffReauthentication::class, PasswordReauthentication::class);
-        $this->commands([CreateSuperAdminCommand::class, RbacMatrixCommand::class]);
+        $this->commands([CreateSuperAdminCommand::class, RbacMatrixCommand::class, ApiRefreshProbeCommand::class]);
         $this->app->scoped(RecentAuth::class, fn ($app) => new RecentAuth($app['session.store'], $app->make(Clock::class)));
         $this->app->scoped(PendingStaffLogin::class, fn ($app) => new PendingStaffLogin($app['session.store'], $app->make(Clock::class)));
     }
@@ -80,6 +86,7 @@ class IdentityAccessServiceProvider extends ModuleServiceProvider
         $this->app->make(Router::class)->aliasMiddleware('admin.pending', RequirePendingStaffLogin::class);
         $this->app->make(Router::class)->aliasMiddleware('permission', RequirePermission::class);
         $this->app->make(Router::class)->aliasMiddleware('recent.auth', RequireRecentAuth::class);
+        $this->app->make(Router::class)->aliasMiddleware('api.customer', EnsureApiCustomer::class);
 
         // Super Admin passes catalogue permissions explicitly; sensitive uses are audited (see SuperAdminBypass).
         Gate::before($this->app->make(SuperAdminBypass::class));

@@ -14,6 +14,9 @@ return [
         'store_urls' => ['android' => env('API_STORE_URL_ANDROID'), 'ios' => env('API_STORE_URL_IOS')],
     ],
 
+    // Sign-in tokens (ADR P11-2): a short access token and a longer refresh token that is swapped for a new pair every time it is used.
+    'tokens' => ['access_minutes' => 60, 'refresh_days' => 30, 'reauth_minutes' => 10, 'max_sessions_per_user' => 20],
+
     // How long a client may reuse a catalog/config read without asking again (Cache-Control max-age). The ETag still lets it ask cheaply.
     'cache_seconds' => ['config' => 300, 'catalog' => 60],
 ];

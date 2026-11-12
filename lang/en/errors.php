@@ -21,6 +21,12 @@ return [
         'method_not_allowed' => 'This method is not allowed.',
         'rate_limited' => 'Too many requests.',
         'server_error' => 'An unexpected error occurred.',
+        'invalid_credentials' => 'The details are not right. Please check them and try again.',
+        'otp_invalid' => 'The code is not right or has expired. Please ask for a new one.',
+        'refresh_invalid' => 'Your sign-in has ended. Please sign in again.',
+        'refresh_reused' => 'For your safety this sign-in was ended. Please sign in again.',
+        'otp_unavailable' => 'We could not send the code just now. Please try again in a moment.',
+        'reauth_required' => 'Please confirm it is you before doing this.',
         'app_upgrade_required' => 'This version of the app is no longer supported. Please update the app.',
     ],
 ];

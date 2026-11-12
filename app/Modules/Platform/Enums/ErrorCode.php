@@ -22,6 +22,12 @@ enum ErrorCode: string
     case IdempotencyConflict = 'idempotency.conflict';
     case IdempotencyInProgress = 'idempotency.in_progress';
     case AppUpgradeRequired = 'app.upgrade_required';
+    case InvalidCredentials = 'auth.invalid_credentials';
+    case OtpInvalid = 'auth.otp_invalid';
+    case RefreshInvalid = 'auth.refresh_invalid';
+    case RefreshReused = 'auth.refresh_reused';
+    case ReauthRequired = 'auth.reauth_required';
+    case OtpUnavailable = 'auth.otp_unavailable';
 
     public function status(): int
     {
@@ -32,6 +38,9 @@ enum ErrorCode: string
             self::NotFound => 404,
             self::MethodNotAllowed => 405,
             self::AppUpgradeRequired => 426,
+            self::InvalidCredentials, self::OtpInvalid, self::RefreshInvalid, self::RefreshReused => 401,
+            self::ReauthRequired => 403,
+            self::OtpUnavailable => 503,
             self::RateLimited => 429,
             self::ServerError => 500,
             self::IdempotencyKeyRequired, self::IdempotencyKeyInvalid => 400,
@@ -51,6 +60,12 @@ enum ErrorCode: string
             self::RateLimited => 'errors.api.rate_limited',
             self::ServerError => 'errors.api.server_error',
             self::AppUpgradeRequired => 'errors.api.app_upgrade_required',
+            self::InvalidCredentials => 'errors.api.invalid_credentials',
+            self::OtpInvalid => 'errors.api.otp_invalid',
+            self::RefreshInvalid => 'errors.api.refresh_invalid',
+            self::RefreshReused => 'errors.api.refresh_reused',
+            self::ReauthRequired => 'errors.api.reauth_required',
+            self::OtpUnavailable => 'errors.api.otp_unavailable',
             default => null,
         };
     }

@@ -11,7 +11,753 @@
             "description": "This server"
         }
     ],
+    "security": [
+        {
+            "http": []
+        }
+    ],
     "paths": {
+        "/auth/signup-policies": {
+            "get": {
+                "operationId": "v1.auth.policies",
+                "description": "The policies a new customer must accept, with the release number to send back as `policy_releases` when registering or when a phone code creates the account. Empty when nothing has been published.",
+                "summary": "Policies to accept at sign-up",
+                "tags": [
+                    "Auth"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "kind": {
+                                                        "type": "string"
+                                                    },
+                                                    "release_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "version": {
+                                                        "type": "integer"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "url": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "effective_at": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "kind",
+                                                    "release_id",
+                                                    "version",
+                                                    "title",
+                                                    "url",
+                                                    "effective_at"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "operationId": "v1.auth.register",
+                "description": "Makes a customer account and emails a verification link. Never returns a token: the person signs in afterwards. The answer is the same whether or not the address already has an account.",
+                "summary": "Register with email",
+                "tags": [
+                    "Auth"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RegisterRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "202": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "operationId": "v1.auth.login",
+                "description": "Customers only. An unknown account, a wrong password, a locked or disabled account and a staff account all get the same `auth.invalid_credentials`. Too many tries get 429 with Retry-After.",
+                "summary": "Sign in with email or phone and password",
+                "tags": [
+                    "Auth"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "token_type": {
+                                                    "type": "string"
+                                                },
+                                                "access_token": {
+                                                    "type": "string"
+                                                },
+                                                "expires_in": {
+                                                    "type": "integer"
+                                                },
+                                                "refresh_token": {
+                                                    "type": "string"
+                                                },
+                                                "refresh_expires_in": {
+                                                    "type": "integer"
+                                                },
+                                                "session_id": {
+                                                    "type": "string"
+                                                },
+                                                "user": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "string"
+                                                        },
+                                                        "name": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "email": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "phone": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "locale": {
+                                                            "type": "string"
+                                                        },
+                                                        "email_verified": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "phone_verified": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "has_password": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name",
+                                                        "email",
+                                                        "phone",
+                                                        "locale",
+                                                        "email_verified",
+                                                        "phone_verified",
+                                                        "has_password"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "token_type",
+                                                "access_token",
+                                                "expires_in",
+                                                "refresh_token",
+                                                "refresh_expires_in",
+                                                "session_id",
+                                                "user"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/auth/otp/request": {
+            "post": {
+                "operationId": "v1.auth.otp.request",
+                "description": "Always answers 202 for a valid number, whether or not it has an account. `cooling_down` means a code was sent a moment ago and is still valid.",
+                "summary": "Ask for a sign-in code by text message",
+                "tags": [
+                    "Auth"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OtpRequestRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "202": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/auth/otp/verify": {
+            "post": {
+                "operationId": "v1.auth.otp.verify",
+                "description": "A new number makes a new customer account, exactly as on the website. A wrong, expired or used code, a locked number and a staff number all get the same `auth.otp_invalid`.",
+                "summary": "Sign in with a text-message code",
+                "tags": [
+                    "Auth"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OtpVerifyRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "token_type": {
+                                                    "type": "string"
+                                                },
+                                                "access_token": {
+                                                    "type": "string"
+                                                },
+                                                "expires_in": {
+                                                    "type": "integer"
+                                                },
+                                                "refresh_token": {
+                                                    "type": "string"
+                                                },
+                                                "refresh_expires_in": {
+                                                    "type": "integer"
+                                                },
+                                                "session_id": {
+                                                    "type": "string"
+                                                },
+                                                "user": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "string"
+                                                        },
+                                                        "name": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "email": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "phone": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "locale": {
+                                                            "type": "string"
+                                                        },
+                                                        "email_verified": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "phone_verified": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "has_password": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name",
+                                                        "email",
+                                                        "phone",
+                                                        "locale",
+                                                        "email_verified",
+                                                        "phone_verified",
+                                                        "has_password"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "token_type",
+                                                "access_token",
+                                                "expires_in",
+                                                "refresh_token",
+                                                "refresh_expires_in",
+                                                "session_id",
+                                                "user"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/auth/refresh": {
+            "post": {
+                "operationId": "v1.auth.refresh",
+                "description": "Each refresh token works once. Using one a second time ends the whole sign-in (`auth.refresh_reused`), because it means a copy was stolen.",
+                "summary": "Swap the refresh token for a new pair",
+                "tags": [
+                    "Auth"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RefreshRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "token_type": {
+                                                    "type": "string"
+                                                },
+                                                "access_token": {
+                                                    "type": "string"
+                                                },
+                                                "expires_in": {
+                                                    "type": "integer"
+                                                },
+                                                "refresh_token": {
+                                                    "type": "string"
+                                                },
+                                                "refresh_expires_in": {
+                                                    "type": "integer"
+                                                },
+                                                "session_id": {
+                                                    "type": "string"
+                                                },
+                                                "user": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "string"
+                                                        },
+                                                        "name": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "email": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "phone": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "locale": {
+                                                            "type": "string"
+                                                        },
+                                                        "email_verified": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "phone_verified": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "has_password": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name",
+                                                        "email",
+                                                        "phone",
+                                                        "locale",
+                                                        "email_verified",
+                                                        "phone_verified",
+                                                        "has_password"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "token_type",
+                                                "access_token",
+                                                "expires_in",
+                                                "refresh_token",
+                                                "refresh_expires_in",
+                                                "session_id",
+                                                "user"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/auth/password/forgot": {
+            "post": {
+                "operationId": "v1.auth.password.forgot",
+                "description": "Always answers 202, whether or not the address has an account.",
+                "summary": "Ask for a password reset link",
+                "tags": [
+                    "Auth"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ForgotPasswordRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "202": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/auth/password/reset": {
+            "post": {
+                "operationId": "v1.auth.password.reset",
+                "description": "Every signed-in device is signed out. A used, expired or wrong token is a validation error on `token`.",
+                "summary": "Set a new password with the emailed token",
+                "tags": [
+                    "Auth"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ResetPasswordRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "operationId": "v1.auth.logout",
+                "summary": "Sign out this device",
+                "tags": [
+                    "Auth"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/auth/logout-all": {
+            "post": {
+                "operationId": "v1.auth.logout-all",
+                "summary": "Sign out every device",
+                "tags": [
+                    "Auth"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/auth/reauth/code": {
+            "post": {
+                "operationId": "v1.auth.reauth.code",
+                "description": "For people who have no password. The code goes to their verified phone.",
+                "summary": "Send a code to confirm it is you",
+                "tags": [
+                    "Auth"
+                ],
+                "responses": {
+                    "202": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/auth/reauth": {
+            "post": {
+                "operationId": "v1.auth.reauth",
+                "description": "Send the password, or the code from /auth/reauth/code. For the next few minutes this sign-in may do sensitive things (change the password, later: email, phone, delete the account).",
+                "summary": "Confirm it is you",
+                "tags": [
+                    "Auth"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReauthRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/config": {
             "get": {
                 "operationId": "v1.config",
@@ -237,6 +983,644 @@
                     }
                 },
                 "security": []
+            }
+        },
+        "/devices": {
+            "post": {
+                "operationId": "v1.devices.store",
+                "description": "Send it after every sign-in and whenever the push token changes. Registering the same token again updates it (200); a new one is created (201). Signing out removes the device.",
+                "summary": "Register this phone for push messages",
+                "tags": [
+                    "Device"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RegisterDeviceRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The device was already known and was updated.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "platform": {
+                                                    "type": "string"
+                                                },
+                                                "app_version": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "locale": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "platform",
+                                                "app_version",
+                                                "locale"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "201": {
+                        "description": "A new device was registered.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "platform": {
+                                                    "type": "string"
+                                                },
+                                                "app_version": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "locale": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "platform",
+                                                "app_version",
+                                                "locale"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/devices/{id}": {
+            "delete": {
+                "operationId": "v1.devices.destroy",
+                "summary": "Stop push messages to this phone",
+                "tags": [
+                    "Device"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/me": {
+            "get": {
+                "operationId": "v1.me",
+                "summary": "My account",
+                "tags": [
+                    "Me"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "email": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "phone": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "locale": {
+                                                    "type": "string"
+                                                },
+                                                "email_verified": {
+                                                    "type": "boolean"
+                                                },
+                                                "phone_verified": {
+                                                    "type": "boolean"
+                                                },
+                                                "has_password": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "email",
+                                                "phone",
+                                                "locale",
+                                                "email_verified",
+                                                "phone_verified",
+                                                "has_password"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/me/password": {
+            "post": {
+                "operationId": "v1.me.password",
+                "description": "Needs a recent confirmation (`auth.reauth_required` otherwise: call /auth/reauth first). Every other signed-in device is signed out; this one stays.",
+                "summary": "Change my password",
+                "tags": [
+                    "Me"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChangePasswordRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/me/tokens": {
+            "get": {
+                "operationId": "v1.me.tokens",
+                "summary": "My signed-in devices",
+                "tags": [
+                    "Session"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "device_name": {
+                                                        "type": "string"
+                                                    },
+                                                    "platform": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "signed_in_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "last_used_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "current": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "device_name",
+                                                    "platform",
+                                                    "signed_in_at",
+                                                    "last_used_at",
+                                                    "current"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/me/tokens/{id}": {
+            "delete": {
+                "operationId": "v1.me.tokens.destroy",
+                "description": "`id` is the `id` from the list (also the `session_id` given at sign-in). Somebody else's, an ended one or an unknown one is 404.",
+                "summary": "Sign out one device",
+                "tags": [
+                    "Session"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "http": {
+                "type": "http",
+                "description": "The access_token from sign-in. Send `Authorization: Bearer <access_token>`.",
+                "scheme": "bearer"
+            }
+        },
+        "schemas": {
+            "ChangePasswordRequest": {
+                "type": "object",
+                "properties": {
+                    "current_password": {
+                        "type": "string",
+                        "description": "People who signed up by phone have no password yet; for them the recent re-confirmation (a code) was the proof."
+                    },
+                    "password": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "password"
+                ],
+                "title": "ChangePasswordRequest"
+            },
+            "ForgotPasswordRequest": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 254
+                    }
+                },
+                "required": [
+                    "email"
+                ],
+                "title": "ForgotPasswordRequest"
+            },
+            "LoginRequest": {
+                "type": "object",
+                "properties": {
+                    "identifier": {
+                        "type": "string",
+                        "maxLength": 254
+                    },
+                    "password": {
+                        "type": "string",
+                        "maxLength": 128
+                    },
+                    "device_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 80
+                    },
+                    "platform": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "android",
+                            "ios",
+                            null
+                        ]
+                    }
+                },
+                "required": [
+                    "identifier",
+                    "password"
+                ],
+                "title": "LoginRequest"
+            },
+            "OtpRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "phone": {
+                        "type": "string",
+                        "maxLength": 40
+                    }
+                },
+                "required": [
+                    "phone"
+                ],
+                "title": "OtpRequestRequest"
+            },
+            "OtpVerifyRequest": {
+                "type": "object",
+                "description": "The phone code, plus the device, plus (only needed when this first sign-in creates the account) the policies the person accepted.",
+                "properties": {
+                    "phone": {
+                        "type": "string",
+                        "maxLength": 40
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "device_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 80
+                    },
+                    "platform": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "android",
+                            "ios",
+                            null
+                        ]
+                    },
+                    "policy_releases": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        "maxItems": 10
+                    }
+                },
+                "required": [
+                    "phone",
+                    "code"
+                ],
+                "title": "OtpVerifyRequest"
+            },
+            "ReauthRequest": {
+                "type": "object",
+                "description": "Either the password or the code sent to the verified phone: exactly one.",
+                "properties": {
+                    "password": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 128
+                    },
+                    "code": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "title": "ReauthRequest"
+            },
+            "RefreshRequest": {
+                "type": "object",
+                "properties": {
+                    "refresh_token": {
+                        "type": "string",
+                        "maxLength": 200
+                    }
+                },
+                "required": [
+                    "refresh_token"
+                ],
+                "title": "RefreshRequest"
+            },
+            "RegisterDeviceRequest": {
+                "type": "object",
+                "properties": {
+                    "push_token": {
+                        "type": "string",
+                        "minLength": 32,
+                        "maxLength": 4096
+                    },
+                    "platform": {
+                        "type": "string",
+                        "enum": [
+                            "android",
+                            "ios"
+                        ]
+                    },
+                    "app_version": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 20
+                    }
+                },
+                "required": [
+                    "push_token",
+                    "platform"
+                ],
+                "title": "RegisterDeviceRequest"
+            },
+            "RegisterRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 150
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 254
+                    },
+                    "password": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name",
+                    "email",
+                    "password"
+                ],
+                "title": "RegisterRequest"
+            },
+            "ResetPasswordRequest": {
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 254
+                    },
+                    "password": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "token",
+                    "email",
+                    "password"
+                ],
+                "title": "ResetPasswordRequest"
+            }
+        },
+        "responses": {
+            "ValidationException": {
+                "description": "Validation error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Errors overview."
+                                },
+                                "errors": {
+                                    "type": "object",
+                                    "description": "A detailed description of each field that failed validation.",
+                                    "additionalProperties": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            },
+                            "required": [
+                                "message",
+                                "errors"
+                            ]
+                        }
+                    }
+                }
+            },
+            "AuthenticationException": {
+                "description": "Unauthenticated",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
             }
         }
     }

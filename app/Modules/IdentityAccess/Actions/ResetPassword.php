@@ -15,7 +15,7 @@ use Illuminate\Support\Str;
 
 final class ResetPassword
 {
-    public function __construct(private readonly AuditLogger $audit) {}
+    public function __construct(private readonly AuditLogger $audit, private readonly EndApiSessions $apiSessions) {}
 
     /** @return bool true when the token was valid and the password changed */
     public function handle(string $email, string $token, string $newPassword, string $broker = 'users'): bool
@@ -27,6 +27,7 @@ final class ResetPassword
 
                 // every existing device must sign in again with the new password
                 DB::table('user_sessions')->where('user_id', $user->id)->delete();
+                $this->apiSessions->all($user->id, null, 'password_reset');
                 $this->audit->record('auth.password_reset', $user, actor: Actor::guest());
                 Event::dispatch(new PasswordReset($user));
             },

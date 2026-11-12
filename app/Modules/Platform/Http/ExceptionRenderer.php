@@ -24,6 +24,10 @@ final class ExceptionRenderer
     {
         $exceptions->shouldRenderJsonWhen(fn (Request $request) => $request->is('api/*') || $request->expectsJson());
 
+        $exceptions->render(function (ApiProblem $e, Request $request) {
+            return Problem::response($e->problem->status(), $e->problem->value, __((string) $e->problem->titleKey()), null, $e->extra)->withHeaders($e->headers);
+        });
+
         $exceptions->render(function (ValidationException $e, Request $request) {
             if (! self::wantsJson($request)) {
                 return null;

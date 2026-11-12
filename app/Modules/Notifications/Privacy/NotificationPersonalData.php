@@ -31,7 +31,10 @@ final class NotificationPersonalData implements PersonalDataEraser, PersonalData
         $sent = DB::table('notification_logs')->where('user_id', $userId)->orderBy('id')->limit(2000)->get(['template_code', 'channel', 'status', 'created_at'])   // index (user_id, created_at)
             ->map(fn ($m) => ['message' => $m->template_code, 'channel' => $m->channel, 'status' => $m->status, 'at' => $m->created_at])->all();
 
-        return ['marketing' => $prefs['optIn'], 'quiet_hours' => ['from' => $prefs['quietFrom'], 'to' => $prefs['quietTo']], 'consent_history' => $consent, 'messages' => $sent];
+        $devices = DB::table('devices')->where('user_id', $userId)->orderBy('id')->get(['platform', 'app_version', 'created_at'])   // index (user_id)
+            ->map(fn ($d) => ['platform' => $d->platform, 'app_version' => $d->app_version, 'registered_at' => $d->created_at])->all();
+
+        return ['devices' => $devices, 'marketing' => $prefs['optIn'], 'quiet_hours' => ['from' => $prefs['quietFrom'], 'to' => $prefs['quietTo']], 'consent_history' => $consent, 'messages' => $sent];
     }
 
     public function blockers(int $userId): array
@@ -42,6 +45,7 @@ final class NotificationPersonalData implements PersonalDataEraser, PersonalData
     public function erase(int $userId): void
     {
         DB::table('notification_preferences')->where('user_id', $userId)->delete();
+        DB::table('devices')->where('user_id', $userId)->delete();
         $now = $this->clock->now();
         // A message not yet delivered is dropped, together with the address and values kept for it; delivered ones already have none.
         DB::table('notification_logs')->where('user_id', $userId)->whereIn('status', ['queued', 'sending', 'failed', 'dead'])

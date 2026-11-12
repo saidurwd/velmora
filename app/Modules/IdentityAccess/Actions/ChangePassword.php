@@ -15,13 +15,15 @@ use Illuminate\Support\Facades\Hash;
 /** Sets a new password and ends every other session. The caller has already required recent re-authentication. */
 final class ChangePassword
 {
-    public function __construct(private readonly AuditLogger $audit, private readonly UserSessionRegistry $sessions) {}
+    public function __construct(private readonly AuditLogger $audit, private readonly UserSessionRegistry $sessions, private readonly EndApiSessions $apiSessions) {}
 
-    public function handle(User $user, string $newPassword, string $currentSessionId): void
+    /** @param  string|null  $keepApiSession  the app sign-in that made the change stays signed in; every other app sign-in ends (the website passes null: all end) */
+    public function handle(User $user, string $newPassword, string $currentSessionId, ?string $keepApiSession = null): void
     {
         $hadPassword = $user->password !== null;
         $user->forceFill(['password' => $newPassword])->save();
         $this->sessions->revokeOthers($user->id, $currentSessionId);
+        $this->apiSessions->all($user->id, $keepApiSession, 'password_changed');
 
         $this->audit->record($hadPassword ? 'auth.password_changed' : 'auth.password_set', $user, actor: new Actor(ActorType::Customer, $user->id, $user->public_id));
 
