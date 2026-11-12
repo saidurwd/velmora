@@ -44,7 +44,7 @@ function assertMatchesOpenApi(TestResponse $response, string $method, string $ur
 
     $validator = new Validator;
     $validator->resolver()?->registerRaw(json_encode($doc, JSON_THROW_ON_ERROR), 'urn:velmora:openapi');
-    $pointer = '#/paths/'.str_replace(['~', '/'], ['~0', '~1'], $template).'/'.strtolower($method).'/responses/'.$status.'/content/application~1json/schema';
+    $pointer = '#/paths/'.rawurlencode(str_replace(['~', '/'], ['~0', '~1'], $template)).'/'.strtolower($method).'/responses/'.$status.'/content/application~1json/schema';
     $result = $validator->validate(json_decode((string) $response->getContent()), (object) ['$ref' => 'urn:velmora:openapi'.$pointer]);
 
     expect($result->isValid())->toBeTrue($result->isValid() ? '' : "{$method} {$template} {$status}: ".json_encode((new ErrorFormatter)->format($result->error()), JSON_UNESCAPED_SLASHES));

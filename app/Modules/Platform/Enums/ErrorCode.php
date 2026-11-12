@@ -28,6 +28,8 @@ enum ErrorCode: string
     case RefreshReused = 'auth.refresh_reused';
     case ReauthRequired = 'auth.reauth_required';
     case OtpUnavailable = 'auth.otp_unavailable';
+    case ProductNotFound = 'product.not_found';
+    case PageNotFound = 'page.not_found';
 
     public function status(): int
     {
@@ -41,6 +43,7 @@ enum ErrorCode: string
             self::InvalidCredentials, self::OtpInvalid, self::RefreshInvalid, self::RefreshReused => 401,
             self::ReauthRequired => 403,
             self::OtpUnavailable => 503,
+            self::ProductNotFound, self::PageNotFound => 404,
             self::RateLimited => 429,
             self::ServerError => 500,
             self::IdempotencyKeyRequired, self::IdempotencyKeyInvalid => 400,
@@ -66,6 +69,8 @@ enum ErrorCode: string
             self::RefreshReused => 'errors.api.refresh_reused',
             self::ReauthRequired => 'errors.api.reauth_required',
             self::OtpUnavailable => 'errors.api.otp_unavailable',
+            self::ProductNotFound => 'errors.api.product_not_found',
+            self::PageNotFound => 'errors.api.page_not_found',
             default => null,
         };
     }

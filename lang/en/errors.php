@@ -25,6 +25,8 @@ return [
         'otp_invalid' => 'The code is not right or has expired. Please ask for a new one.',
         'refresh_invalid' => 'Your sign-in has ended. Please sign in again.',
         'refresh_reused' => 'For your safety this sign-in was ended. Please sign in again.',
+        'product_not_found' => 'This product was not found or is not on sale.',
+        'page_not_found' => 'This page was not found.',
         'otp_unavailable' => 'We could not send the code just now. Please try again in a moment.',
         'reauth_required' => 'Please confirm it is you before doing this.',
         'app_upgrade_required' => 'This version of the app is no longer supported. Please update the app.',
