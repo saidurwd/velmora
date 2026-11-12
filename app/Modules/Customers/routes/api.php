@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Customers\Http\Controllers\Api\AddressController;
 use App\Modules\Customers\Http\Controllers\Api\GeographyController;
+use App\Modules\Customers\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 // Mounted under /api/v1 with the `api.v1.` name prefix. Reference data is public; the address book is the signed-in customer's own.
@@ -19,4 +20,9 @@ Route::middleware(['auth:sanctum', 'api.customer'])->prefix('me/addresses')->nam
     Route::put('/{id}', [AddressController::class, 'update'])->where('id', '[0-9a-hjkmnp-tv-z]{26}')->middleware('throttle:write')->name('update');
     Route::delete('/{id}', [AddressController::class, 'destroy'])->where('id', '[0-9a-hjkmnp-tv-z]{26}')->middleware('throttle:write')->name('destroy');
     Route::post('/{id}/default', [AddressController::class, 'makeDefault'])->where('id', '[0-9a-hjkmnp-tv-z]{26}')->middleware('throttle:write')->name('default');
+});
+
+Route::middleware(['auth:sanctum', 'api.customer'])->prefix('me/profile')->name('me.profile.')->group(function (): void {
+    Route::get('/', [ProfileController::class, 'show'])->middleware('throttle:user-read')->name('show');
+    Route::put('/', [ProfileController::class, 'update'])->middleware('throttle:write')->name('update');
 });

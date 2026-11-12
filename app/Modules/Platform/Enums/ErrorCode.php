@@ -60,6 +60,10 @@ enum ErrorCode: string
     case PaymentMethodUnavailable = 'payment.method_unavailable';
     case PaymentExpired = 'payment.expired';
     case ReturnNotEligible = 'return.not_eligible';
+    case ReviewNotEligible = 'review.not_eligible';
+    case ReviewDuplicate = 'review.duplicate';
+    case RequestRefused = 'request.refused';
+    case PrivacyRequestRefused = 'privacy.request_refused';
 
     public function status(): int
     {
@@ -74,6 +78,8 @@ enum ErrorCode: string
             self::ReauthRequired => 403,
             self::OtpUnavailable => 503,
             self::ProductNotFound, self::PageNotFound => 404,
+            self::ReviewNotEligible, self::RequestRefused => 422,
+            self::ReviewDuplicate, self::PrivacyRequestRefused => 409,
             self::OrderNotCancellable, self::OrderAlreadyPaid, self::PaymentExpired => 409,
             self::PaymentUnavailable => 503,
             self::PaymentMethodUnavailable, self::ReturnNotEligible => 422,
@@ -108,6 +114,10 @@ enum ErrorCode: string
             self::OtpUnavailable => 'errors.api.otp_unavailable',
             self::ProductNotFound => 'errors.api.product_not_found',
             self::PageNotFound => 'errors.api.page_not_found',
+            self::ReviewNotEligible => 'errors.api.review_not_eligible',
+            self::ReviewDuplicate => 'errors.api.review_duplicate',
+            self::RequestRefused => 'errors.api.request_refused',
+            self::PrivacyRequestRefused => 'errors.api.privacy_refused',
             self::OrderNotCancellable => 'errors.api.order_not_cancellable',
             self::OrderAlreadyPaid => 'errors.api.order_already_paid',
             self::PaymentUnavailable => 'errors.api.payment_unavailable',

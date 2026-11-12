@@ -75,6 +75,7 @@ const PUBLIC_WEB = [
     'api/v1/orders/{id}' => 'app: one order — its signed-in owner, or a guest holding THAT order\'s signed 30-day X-Order-Token (ApiOrderAccess; anyone else is 404, never 403)', 'api/v1/orders/{id}/invoice' => 'app: a 30-minute signed link to the receipt; owner or that order\'s token holder',
     'api/v1/orders/{id}/payments' => 'app: starts an online payment; owner or order token; Idempotency-Key required; nothing the caller says marks anything paid', 'api/v1/orders/{id}/payment' => 'app: the payment status the server recorded; owner or order token', 'api/v1/orders/{id}/payment/verify' => 'app: makes the server ask the gateway (server to server); owner or order token; throttled critical',
     'api/v1/orders/{id}/tracking' => 'app: parcel stages with no address or phone; owner or order token',
+    'api/v1/reviews' => 'app catalog: published reviews of a product (first name and last initial only); throttled public-read, ETag',
     'api/v1/config' => 'app bootstrap: languages, currency, app versions, shop contact and page links; no customer data; throttled public-read, cached with an ETag',
     'api/v1/webhooks/couriers/{courier}' => 'courier messages about parcels: cannot log in; the adapter authenticates each request as that courier\'s documents describe (a failing request is refused and stored nowhere), events are stored once, throttled',
     'api/v1/webhooks/payments/{provider}' => 'payment gateway notifications: cannot log in; stored raw, never trusted, verified server to server, throttled',

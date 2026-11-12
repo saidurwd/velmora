@@ -6,6 +6,7 @@ namespace App\Modules\Engagement\Services;
 
 use App\Modules\Catalog\Contracts\PurchasableVariants;
 use App\Modules\Inventory\Contracts\Availability;
+use App\Modules\Platform\DTOs\Money;
 use App\Modules\Platform\Support\Fmt;
 use App\Modules\Pricing\Contracts\PriceCatalog;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,7 @@ final class WishlistReader
 {
     public function __construct(private readonly PurchasableVariants $variants, private readonly Availability $availability, private readonly PriceCatalog $prices) {}
 
-    /** @return list<array{variant: string, name: string, image: string|null, url: string, price: string|null, state: string, alert: bool, canAlert: bool}> */
+    /** @return list<array{variant: string, name: string, image: string|null, url: string, slug: string, price: string|null, money: Money|null, state: string, alert: bool, canAlert: bool}> */
     public function items(int $userId, string $locale): array
     {
         $ids = array_values(DB::table('wishlist_items')->where('user_id', $userId)->orderByDesc('id')->pluck('variant_id')->map(fn ($v): int => (int) $v)->all());   // unique (user_id, variant_id)
@@ -40,14 +41,14 @@ final class WishlistReader
             $rows[] = [
                 'variant' => $d->publicId, 'name' => trim($d->productName.($d->optionsLabel !== null ? ' ('.$d->optionsLabel.')' : '')), 'image' => $d->imageUrl,
                 'url' => route('storefront.product', ['locale' => $locale, 'slug' => $d->productSlug]),
-                'price' => isset($quotes[$id]) ? Fmt::money($quotes[$id]->price) : null, 'state' => $state, 'alert' => in_array($id, $waiting, true), 'canAlert' => $state === 'out_of_stock',
+                'slug' => $d->productSlug, 'price' => isset($quotes[$id]) ? Fmt::money($quotes[$id]->price) : null, 'money' => isset($quotes[$id]) ? $quotes[$id]->price : null, 'state' => $state, 'alert' => in_array($id, $waiting, true), 'canAlert' => $state === 'out_of_stock',
             ];
         }
 
         return $rows;
     }
 
-    /** @return list<array{variant: string, name: string, url: string, since: string}> alerts still waiting */
+    /** @return list<array{variant: string, name: string, url: string, slug: string, since: string}> alerts still waiting */
     public function waitingAlerts(int $userId, string $locale): array
     {
         $alerts = DB::table('stock_alerts')->where('user_id', $userId)->where('status', 'pending')->orderByDesc('id')->limit(100)->get(['variant_id', 'created_at']);   // unique (user_id, variant_id)
@@ -57,7 +58,7 @@ final class WishlistReader
         foreach ($alerts as $alert) {
             $d = $details[(int) $alert->variant_id] ?? null;
             if ($d !== null) {
-                $rows[] = ['variant' => $d->publicId, 'name' => trim($d->productName.($d->optionsLabel !== null ? ' ('.$d->optionsLabel.')' : '')), 'url' => route('storefront.product', ['locale' => $locale, 'slug' => $d->productSlug]), 'since' => (string) $alert->created_at];
+                $rows[] = ['variant' => $d->publicId, 'name' => trim($d->productName.($d->optionsLabel !== null ? ' ('.$d->optionsLabel.')' : '')), 'url' => route('storefront.product', ['locale' => $locale, 'slug' => $d->productSlug]), 'slug' => $d->productSlug, 'since' => (string) $alert->created_at];
             }
         }
 
