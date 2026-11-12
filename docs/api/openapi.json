@@ -1,0 +1,243 @@
+{
+    "openapi": "3.1.2",
+    "info": {
+        "title": "Velmora",
+        "version": "1.0.0",
+        "description": "The Velmora shop API for the mobile apps. JSON only. Errors are RFC 9457 application/problem+json with a stable `code`. Money is {amount_minor, currency, formatted}. Send Accept-Language: bn or en, and X-App-Platform / X-App-Version so an app that is too old can be told to update."
+    },
+    "servers": [
+        {
+            "url": "/api/v1",
+            "description": "This server"
+        }
+    ],
+    "paths": {
+        "/config": {
+            "get": {
+                "operationId": "v1.config",
+                "description": "Everything an app needs before it shows anything: languages, currency, how prices are shown, the oldest app version still served,\nhow to reach the shop, and the pages (policies, help) it can link to. Cached for a few minutes; send If-None-Match to ask cheaply.",
+                "summary": "App bootstrap",
+                "tags": [
+                    "Config"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "locale": {
+                                                    "type": "string"
+                                                },
+                                                "languages": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "default": {
+                                                            "type": "string"
+                                                        },
+                                                        "supported": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "code": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "code",
+                                                                    "name"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "default",
+                                                        "supported"
+                                                    ]
+                                                },
+                                                "currency": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "code": {
+                                                            "type": "string"
+                                                        },
+                                                        "symbol": {
+                                                            "type": "string"
+                                                        },
+                                                        "decimals": {
+                                                            "type": "integer"
+                                                        },
+                                                        "example": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "amount_minor": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "currency": {
+                                                                    "type": "string"
+                                                                },
+                                                                "formatted": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "amount_minor",
+                                                                "currency",
+                                                                "formatted"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "code",
+                                                        "symbol",
+                                                        "decimals",
+                                                        "example"
+                                                    ]
+                                                },
+                                                "tax": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "enabled": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "prices_include_tax": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "enabled",
+                                                        "prices_include_tax"
+                                                    ]
+                                                },
+                                                "app": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "min_supported_version": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "android": {
+                                                                    "type": "string"
+                                                                },
+                                                                "ios": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "android",
+                                                                "ios"
+                                                            ]
+                                                        },
+                                                        "latest_version": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "android": {
+                                                                    "type": "string"
+                                                                },
+                                                                "ios": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "android",
+                                                                "ios"
+                                                            ]
+                                                        },
+                                                        "store_urls": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "android": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "ios": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "android",
+                                                                "ios"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "min_supported_version",
+                                                        "latest_version",
+                                                        "store_urls"
+                                                    ]
+                                                },
+                                                "shop": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "phone": {
+                                                            "type": "string"
+                                                        },
+                                                        "email": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "name",
+                                                        "phone",
+                                                        "email"
+                                                    ]
+                                                },
+                                                "pages": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "slug": {
+                                                                "type": "string"
+                                                            },
+                                                            "title": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "slug",
+                                                            "title"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "locale",
+                                                "languages",
+                                                "currency",
+                                                "tax",
+                                                "app",
+                                                "shop",
+                                                "pages"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        }
+    }
+}

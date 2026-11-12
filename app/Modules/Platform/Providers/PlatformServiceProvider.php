@@ -8,19 +8,25 @@ use App\Modules\Platform\Console\DispatchOutboxCommand;
 use App\Modules\Platform\Console\MakeModuleCommand;
 use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\DTOs\Actor;
+use App\Modules\Platform\DTOs\Money;
 use App\Modules\Platform\DTOs\RequestContext;
 use App\Modules\Platform\Events\OutboxProbe;
 use App\Modules\Platform\Http\Middleware\AssignRequestContext;
+use App\Modules\Platform\Http\Middleware\ConditionalGet;
 use App\Modules\Platform\Http\Middleware\EnsureIdempotency;
 use App\Modules\Platform\Http\Middleware\SecureHeaders;
 use App\Modules\Platform\Http\Middleware\SetLocale;
+use App\Modules\Platform\Http\Resources\MoneyData;
 use App\Modules\Platform\Listeners\AcknowledgeOutboxProbe;
 use App\Modules\Platform\Listeners\RecordScheduledTask;
 use App\Modules\Platform\Outbox\OutboxRegistry;
 use App\Modules\Platform\Support\AdminMenu;
+use App\Modules\Platform\Support\Api\ApiConfig;
 use App\Modules\Platform\Support\Branding;
 use App\Modules\Platform\Support\BulkActions;
+use App\Modules\Platform\Support\BusinessProfile;
 use App\Modules\Platform\Support\DashboardRegistry;
+use App\Modules\Platform\Support\Fmt;
 use App\Modules\Platform\Support\IntegrationCredentials;
 use App\Modules\Platform\Support\Integrations\MailHandshakeTest;
 use App\Modules\Platform\Support\IntegrationTests;
@@ -30,9 +36,13 @@ use App\Modules\Platform\Support\ModuleServiceProvider;
 use App\Modules\Platform\Support\PageSeo;
 use App\Modules\Platform\Support\SavedFilterScreens;
 use App\Modules\Platform\Support\SearchProviders;
+use App\Modules\Platform\Support\Settings;
 use App\Modules\Platform\Support\StorefrontCache;
 use App\Modules\Platform\Support\SystemClock;
 use Closure;
+use Dedoc\Scramble\Scramble;
+use Dedoc\Scramble\Support\Generator\OpenApi;
+use Dedoc\Scramble\Support\Generator\Server;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Console\Events\ScheduledTaskFinished;
@@ -60,6 +70,11 @@ class PlatformServiceProvider extends ModuleServiceProvider
     {
         $this->commands([MakeModuleCommand::class, DispatchOutboxCommand::class]);
 
+        // The API document is a committed file (docs/api/openapi.json), not a web page: no documentation routes on any server.
+        if (class_exists(Scramble::class)) {
+            Scramble::ignoreDefaultRoutes();
+        }
+
         // Route::localized(fn) -> /{locale}/... for every supported language (BD-33).
         Route::macro('localized', function (Closure $routes): void {
             Route::prefix('{locale}')->whereIn('locale', config('app.supported_locales'))->group($routes);
@@ -78,6 +93,7 @@ class PlatformServiceProvider extends ModuleServiceProvider
         $this->app->singleton(Branding::class);
         $this->app->scoped(PageSeo::class);
         $this->app->singleton(StorefrontCache::class);
+        $this->app->singleton(ApiConfig::class);
 
         // One RequestContext per request / queued job / console run.
         $this->app->scoped(RequestContext::class, fn () => new RequestContext(
@@ -101,6 +117,7 @@ class PlatformServiceProvider extends ModuleServiceProvider
         $router->aliasMiddleware('request.context', AssignRequestContext::class);
         $router->aliasMiddleware('secure.headers', SecureHeaders::class);
         $router->aliasMiddleware('locale', SetLocale::class);
+        $router->aliasMiddleware('etag', ConditionalGet::class);
 
         $this->app->make(OutboxRegistry::class)->register(OutboxProbe::class);
         Event::listen(OutboxProbe::class, [AcknowledgeOutboxProbe::class, 'handle']);
@@ -129,7 +146,53 @@ class PlatformServiceProvider extends ModuleServiceProvider
         Event::listen(ScheduledTaskSkipped::class, [$recorder, 'skipped']);
 
         $this->defineRateLimiters();
+        $this->defineApiConfig();
+        $this->defineApiDocs();
         $this->assertSafeConfiguration();
+    }
+
+    /** The public API document covers /api/v1 except the provider callbacks (webhooks are not part of the public API). Scramble is a dev tool: absent in production. */
+    private function defineApiDocs(): void
+    {
+        if (! class_exists(Scramble::class)) {
+            return;
+        }
+
+        // relative server, so the committed document is the same on every machine (the app's own base URL is its configuration)
+        Scramble::configure()->afterOpenApiGenerated(function (OpenApi $openApi): void {
+            $openApi->servers = [Server::make('/api/v1')->setDescription('This server')];
+        });
+        Scramble::configure()->routes(fn (\Illuminate\Routing\Route $route): bool => str_starts_with($route->uri(), 'api/v1/') && ! str_contains($route->uri(), '/webhooks/'));
+    }
+
+    /** The sections of GET /config that belong to Platform: languages, money, how prices are shown, app versions, how to reach the shop. */
+    private function defineApiConfig(): void
+    {
+        $config = $this->app->make(ApiConfig::class);
+        $config->section('languages', fn (): array => [
+            'default' => (string) config('app.default_locale'),
+            'supported' => array_map(fn (string $code): array => ['code' => $code, 'name' => (string) config("velmora.locale_labels.{$code}", $code)], array_values(config('app.supported_locales'))),
+        ]);
+        $config->section('currency', function (): array {
+            $code = (string) $this->app->make(Settings::class)->get('business.currency', 'BDT');
+
+            return ['code' => $code, 'symbol' => trim(str_replace('0', '', Fmt::money(Money::zero($code)))), 'decimals' => 2, 'example' => MoneyData::from(Money::of(125000, $code))];
+        });
+        $config->section('tax', function (): array {
+            $settings = $this->app->make(Settings::class);
+
+            return ['enabled' => (bool) $settings->get('tax.enabled', false), 'prices_include_tax' => (bool) $settings->get('tax.prices_include_tax', true)];
+        });
+        $config->section('app', fn (): array => [
+            'min_supported_version' => config('api.app.min_supported_version'),
+            'latest_version' => config('api.app.latest_version'),
+            'store_urls' => config('api.app.store_urls'),
+        ]);
+        $config->section('shop', function (): array {
+            $profile = $this->app->make(BusinessProfile::class);
+
+            return ['name' => $profile->legalName(app()->getLocale()), 'phone' => $profile->phone(), 'email' => $profile->email()];
+        });
     }
 
     /** Rate-limit tiers from API_ARCHITECTURE §2. Per-identifier limits arrive with the auth modules (Phase 2). */

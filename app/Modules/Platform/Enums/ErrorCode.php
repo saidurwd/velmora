@@ -21,6 +21,7 @@ enum ErrorCode: string
     case IdempotencyKeyInvalid = 'idempotency.key_invalid';
     case IdempotencyConflict = 'idempotency.conflict';
     case IdempotencyInProgress = 'idempotency.in_progress';
+    case AppUpgradeRequired = 'app.upgrade_required';
 
     public function status(): int
     {
@@ -30,6 +31,7 @@ enum ErrorCode: string
             self::Forbidden => 403,
             self::NotFound => 404,
             self::MethodNotAllowed => 405,
+            self::AppUpgradeRequired => 426,
             self::RateLimited => 429,
             self::ServerError => 500,
             self::IdempotencyKeyRequired, self::IdempotencyKeyInvalid => 400,
@@ -48,6 +50,7 @@ enum ErrorCode: string
             self::MethodNotAllowed => 'errors.api.method_not_allowed',
             self::RateLimited => 'errors.api.rate_limited',
             self::ServerError => 'errors.api.server_error',
+            self::AppUpgradeRequired => 'errors.api.app_upgrade_required',
             default => null,
         };
     }

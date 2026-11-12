@@ -21,5 +21,6 @@ return [
         'method_not_allowed' => 'This method is not allowed.',
         'rate_limited' => 'Too many requests.',
         'server_error' => 'An unexpected error occurred.',
+        'app_upgrade_required' => 'This version of the app is no longer supported. Please update the app.',
     ],
 ];

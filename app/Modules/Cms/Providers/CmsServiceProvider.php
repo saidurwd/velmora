@@ -17,6 +17,7 @@ use App\Modules\Cms\Services\DatabaseMenuReader;
 use App\Modules\Cms\Services\DatabasePageDirectory;
 use App\Modules\Cms\Services\DatabasePolicyAcceptances;
 use App\Modules\Platform\Support\AdminMenu;
+use App\Modules\Platform\Support\Api\ApiConfig;
 use App\Modules\Platform\Support\ModuleServiceProvider;
 use App\Modules\Privacy\Contracts\PersonalDataRegistry;
 
@@ -46,6 +47,12 @@ class CmsServiceProvider extends ModuleServiceProvider
         $registry = $this->app->make(PersonalDataRegistry::class);
         $registry->addExporter(PolicyPersonalData::class);
         $registry->addEraser(PolicyPersonalData::class, 55);
+
+        // the pages (policies, help) an app can link to, in the app's language
+        $this->app->make(ApiConfig::class)->section('pages', fn (string $locale): array => array_map(
+            fn ($p): array => ['slug' => $p->slug, 'title' => $p->title],
+            $this->app->make(PageDirectory::class)->published($locale),
+        ));
 
         $menu = $this->app->make(AdminMenu::class);
         $menu->add('cms::admin.menu.pages', 'admin.cms.pages.index', 'cms.view', 60);

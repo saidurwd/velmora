@@ -54,6 +54,7 @@ const PUBLIC_WEB = [
     '{locale}/book/{sku}' => 'choosing a time for a service: anyone may look at the free times (nothing is held until a time is pressed); throttled',
     '{locale}/book/{sku}/hold' => 'holds one free time for the visitor and puts the booking in their own cart; the time is re-checked against the real availability, capped per visitor, throttled',
     '{locale}/orders/{order}/account' => 'sign-up from the order confirmation page: signed, expiring URL that only the shopper received (the proof of ownership); creates an account and adds that one order to it; same answer whether or not the address already has an account',
+    'api/v1/config' => 'app bootstrap: languages, currency, app versions, shop contact and page links; no customer data; throttled public-read, cached with an ETag',
     'api/v1/webhooks/couriers/{courier}' => 'courier messages about parcels: cannot log in; the adapter authenticates each request as that courier\'s documents describe (a failing request is refused and stored nowhere), events are stored once, throttled',
     'api/v1/webhooks/payments/{provider}' => 'payment gateway notifications: cannot log in; stored raw, never trusted, verified server to server, throttled',
     '{fallbackPlaceholder}' => 'renders the 404 page',

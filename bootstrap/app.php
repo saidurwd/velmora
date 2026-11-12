@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\IdentityAccess\Http\Middleware\RequirePermission;
 use App\Modules\Platform\Http\ExceptionRenderer;
 use App\Modules\Platform\Http\Middleware\AssignRequestContext;
+use App\Modules\Platform\Http\Middleware\EnforceAppVersion;
 use App\Modules\Platform\Http\Middleware\SecureHeaders;
 use App\Modules\Platform\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -33,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // by a signed URL instead (see Payments routes), and nothing it brings is believed.
         $middleware->preventRequestForgery(except: ['*/pay/return/*']);
         $middleware->appendToGroup('api', SetLocale::class);
+        $middleware->appendToGroup('api', EnforceAppVersion::class); // after SetLocale, so the refusal is in the app's language
 
         // Resolve the locale right after the session starts, before `auth` runs, so guest redirects and error
         // pages already know the language and route('login') can fill in {locale}.
