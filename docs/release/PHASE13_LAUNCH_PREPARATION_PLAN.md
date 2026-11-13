@@ -31,6 +31,10 @@ Phase 13's brief says its prerequisite is **a Phase 12 go decision**, and that a
 
 None of it touches production, and the one piece of code (boot-time secret check) is a small change with tests. Decisions I need first: **where it will be hosted** (it changes the scripts), and **who the incident decision owner is**.
 
+## Prepared for Namecheap shared hosting (2026-11-13)
+
+Built and rehearsed: server preflight, cron-driven queue, local-folder storage, build/install/rollback/backup scripts, and `docs/ops/NAMECHEAP_SHARED_HOSTING.md`. Still open: confirming the real plan's limits, a dedicated IP for SMS, off-server backup copies, a formal waiver of the 15-minute recovery target.
+
 ## Decisions received (2026-11-13)
 
 * **Incident decision owner: the Admin (the owner).** Runbooks that say "ask the owner" mean this person.
