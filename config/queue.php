@@ -17,6 +17,9 @@ return [
 
     'default' => env('QUEUE_CONNECTION', 'database'),
 
+    // Shared hosting: no always-on worker. True = the once-a-minute scheduler (cron) drains the queue (routes/console.php, `queue:drain`). Leave false where a real worker runs.
+    'run_from_scheduler' => (bool) env('QUEUE_RUN_FROM_SCHEDULER', false),
+
     /*
     |--------------------------------------------------------------------------
     | Queue Connections

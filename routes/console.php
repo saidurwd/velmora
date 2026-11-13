@@ -45,6 +45,8 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::job(new DispatchOutboxMessages)->everyMinute()->name('outbox:dispatch')->withoutOverlapping();
+// Shared hosting has no always-on queue worker: when QUEUE_RUN_FROM_SCHEDULER=true the once-a-minute scheduler runs the queue for up to 50 seconds and stops when it is empty.
+Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3')->everyMinute()->name('queue:drain')->withoutOverlapping(2)->when(fn (): bool => (bool) config('queue.run_from_scheduler'));
 Schedule::call(fn () => Cache::put('scheduler:heartbeat', now()->toIso8601String(), 600))->everyMinute()->name('scheduler:heartbeat');
 Schedule::job(new RunIntegrityChecksJob)->dailyAt('03:40')->name('ops:integrity')->withoutOverlapping();   // data-integrity checks, read-only; the last results show on the staff page
 Schedule::job(new PurgeExpiredOtpChallenges)->dailyAt('03:15')->name('otp:purge');

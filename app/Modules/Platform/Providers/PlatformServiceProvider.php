@@ -8,6 +8,7 @@ use App\Modules\Platform\Console\ApiCollectionCommand;
 use App\Modules\Platform\Console\ApiCompatCommand;
 use App\Modules\Platform\Console\DispatchOutboxCommand;
 use App\Modules\Platform\Console\MakeModuleCommand;
+use App\Modules\Platform\Console\PreflightCommand;
 use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\DTOs\Money;
@@ -72,7 +73,7 @@ class PlatformServiceProvider extends ModuleServiceProvider
 
     public function register(): void
     {
-        $this->commands([MakeModuleCommand::class, DispatchOutboxCommand::class, ApiCompatCommand::class, ApiCollectionCommand::class]);
+        $this->commands([MakeModuleCommand::class, DispatchOutboxCommand::class, ApiCompatCommand::class, ApiCollectionCommand::class, PreflightCommand::class]);
 
         // The API document is a committed file (docs/api/openapi.json), not a web page: no documentation routes on any server.
         if (class_exists(Scramble::class)) {
