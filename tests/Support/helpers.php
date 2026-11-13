@@ -417,3 +417,19 @@ function reportWorld(object $t): void
         true,
     );
 }
+
+/** @return list<string> */
+function bladeViews(): array
+{
+    $files = [];
+    foreach ([base_path('app'), base_path('resources')] as $root) {
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)) as $file) {
+            if (str_ends_with($file->getFilename(), '.blade.php') && ! str_contains($file->getPathname(), '/tests/')) {
+                $files[] = $file->getPathname();
+            }
+        }
+    }
+    sort($files);
+
+    return $files;
+}

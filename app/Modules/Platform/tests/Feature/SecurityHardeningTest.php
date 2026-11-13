@@ -14,7 +14,7 @@ it('sends baseline security headers and an ENFORCED CSP', function () {
         ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
         ->assertHeaderMissing('Content-Security-Policy-Report-Only');
 
-    expect($response->headers->get('Content-Security-Policy'))->toContain("default-src 'self'")->toContain("script-src 'self' 'unsafe-eval';");
+    expect($response->headers->get('Content-Security-Policy'))->toContain("default-src 'self'")->toContain("script-src 'self';")->not->toContain('unsafe-eval');
 });
 
 it('can be switched to report-only to diagnose a violation', function () {

@@ -66,7 +66,7 @@
         <x-platform::toast type="success">{{ __('platform::ui.dev.sample_toast') }}</x-platform::toast>
         <x-platform::empty-state :title="__('platform::ui.dev.empty_title')" :text="__('platform::ui.dev.empty_text')" />
         <div class="max-w-sm space-y-2"><x-platform::skeleton class="h-40 w-full" /><x-platform::skeleton class="h-4 w-3/4" /><x-platform::skeleton class="h-4 w-1/2" /></div>
-        <x-platform::btn @click="$dispatch('open-modal', 'demo')">{{ __('platform::ui.dev.open_modal') }}</x-platform::btn>
+        <x-platform::btn x-data @click="$dispatch('open-modal', 'demo')">{{ __('platform::ui.dev.open_modal') }}</x-platform::btn>
         <x-platform::modal id="demo" :title="__('platform::ui.dev.modal_title')"><p>{{ __('platform::ui.dev.modal_text') }}</p></x-platform::modal>
     </section>
 </div>

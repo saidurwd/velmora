@@ -117,7 +117,12 @@ it('suggests up to four other in-stock products, never the product itself', func
 });
 
 it('keeps the recently viewed list on the device, with no server call', function () {
-    $this->get('/en/p/cotton-panjabi')->assertSee('x-data="recentlyViewed(', false)->assertSee('Recently viewed');
+    $html = $this->get('/en/p/cotton-panjabi')->assertSee('x-data="recentlyViewed"', false)->assertSee('Recently viewed')->getContent();
+
+    // this product travels to the browser as JSON in a data attribute (the CSP build of Alpine cannot read JSON.parse(...) inside an expression)
+    preg_match('/data-current="([^"]*)"/', (string) $html, $m);
+    $current = json_decode(html_entity_decode($m[1] ?? ''), true);
+    expect($current)->toHaveKeys(['id', 'name', 'url', 'image'])->and($current['name'])->toBe('Cotton Panjabi')->and($current['url'])->toContain('/p/cotton-panjabi');
 });
 
 it('answers a product page in a bounded number of queries', function () {

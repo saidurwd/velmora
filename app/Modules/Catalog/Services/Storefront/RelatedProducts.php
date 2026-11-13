@@ -45,7 +45,10 @@ final class RelatedProducts
             $found = $this->listing->paginate($scope, new ListingFilters(inStock: true, sort: 'popular'), $locale, $limit - count($cards), $exclude())->items();
             foreach ($found as $card) {
                 $cards[] = $card;
-                $seen[] = (int) DB::table('products')->where('public_id', $card->publicId)->value('id');
+            }
+            // the ids of what was just found, in ONE query (not one per card), so the next group leaves them out
+            foreach (DB::table('products')->whereIn('public_id', array_map(fn (ProductCard $c): string => $c->publicId, $found))->pluck('id') as $id) {
+                $seen[] = (int) $id;
             }
         }
 

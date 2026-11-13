@@ -26,7 +26,7 @@ Against the targets (`PERFORMANCE_AND_SCALABILITY.md` §1): at light load every 
 | API product | 53 ms | 18 | 37 ms |
 | **Product page** | 93 ms | 35 | 66 ms |
 
-The product page is the heaviest. Its 35 queries are bounded (same for every product) and none is an N+1 loop; four of them look the same product up by its public id from different parts of the page and two look up the category twice. That could be trimmed by remembering the lookup, but it is worth a few milliseconds, not a change now.
+The product page is the heaviest. Profiling showed one small N+1: the related-products block looked up each related product's id one at a time (4 queries for 4 items). **Fixed**: one query for all of them (a test fails on the old code). The page is now about 32 queries, bounded and the same for every product; the rest are genuine (translations, variants, price, stock, brand, category), and the category is still read twice (once for the page, once for the related block), a few milliseconds.
 
 ## Found by the load test
 

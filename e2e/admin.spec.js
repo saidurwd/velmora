@@ -109,7 +109,7 @@ for (const [lang, locale] of [['English', 'en-US'], ['Bangla', 'bn-BD']]) {
 }
 
 // Phase 12: the Content-Security-Policy is enforced, so the "are you sure?" question before a delete is a data attribute (data-confirm) handled by resources/js/behaviors.js,
-// not an inline handler. Staff work on a desktop; at a phone's width this table's last column overlaps the button.
+// not an inline handler. Staff work on a desktop, so this runs at desktop width: at a phone's width the whole staff layout is wider than the screen (the sidebar takes 40 % of it), which is a known, tracked limitation (security register F-5), not a policy problem.
 test.describe('the delete question (Content-Security-Policy enforced)', () => {
     test('deleting asks first, cancelling really cancels, and the page is not blocked by the policy', async ({ browser }, info) => {
         const context = await browser.newContext({ ...info.project.use, storageState: state, viewport: { width: 1280, height: 900 } });
@@ -138,3 +138,76 @@ test.describe('the delete question (Content-Security-Policy enforced)', () => {
         await context.close();
     });
 });
+
+// Phase 12: Alpine runs as its CSP build (no script evaluation). The staff-side components, with the sign-in this file already made.
+test.describe('staff-side Alpine components (CSP build)', () => {
+    let page;
+    let context;
+    const problems = [];
+
+    test.beforeAll(async ({ browser }, info) => {
+        context = await browser.newContext({ ...info.project.use, storageState: state, viewport: { width: 1280, height: 900 } });
+        page = await context.newPage();
+        page.on('console', (msg) => {
+            if (/Content Security Policy|Refused to|Alpine (Expression )?Error|CSP Parser Error/i.test(msg.text())) problems.push(msg.text());
+        });
+    });
+    test.afterAll(async () => {
+        await context.close();
+    });
+
+    test('the coupon form shows only the fields its choices need', async () => {
+        await page.goto('/admin/promotions/coupons/create');
+        await page.waitForFunction(() => document.querySelector('[x-data]')?._x_dataStack !== undefined);
+        const type = page.locator('select[name="type"]');
+        const percent = page.locator('[x-show="type === \'percent\'"]');
+        await type.selectOption('percent');
+        await expect(percent).toBeVisible();
+        await type.selectOption('free_shipping');
+        await expect(percent).toBeHidden();
+        await page.locator('select[name="scope"]').selectOption('products');
+        await expect(page.locator('[x-show="scope === \'products\'"]')).toBeVisible();
+        await page.locator('select[name="scope"]').selectOption('all');
+        await expect(page.locator('[x-show="scope === \'products\'"]')).toBeHidden();
+        expect(problems).toEqual([]);
+    });
+
+    test('the automatic promotion form switches its fields too', async () => {
+        await page.goto('/admin/promotions/automatic/create');
+        await page.waitForFunction(() => document.querySelector('[x-data]')?._x_dataStack !== undefined);
+        const type = page.locator('select[name="type"]');
+        const percent = page.locator('[x-show="type === \'percent\'"]');
+        await type.selectOption('percent');
+        await expect(percent).toBeVisible();
+        const other = (await type.locator('option').allTextContents()).length > 1 ? await type.locator('option:not([value="percent"])').first().getAttribute('value') : null;
+        if (other) {
+            await type.selectOption(other);
+            await expect(percent).toBeHidden();
+        }
+        expect(problems).toEqual([]);
+    });
+
+    test('the translation tabs on the product form switch language', async () => {
+        await page.goto('/admin/catalog/products/create');
+        await page.waitForFunction(() => document.querySelector('[x-data]')?._x_dataStack !== undefined);
+        const tabs = page.getByRole('tab');
+        expect(await tabs.count()).toBeGreaterThan(1);
+        const second = tabs.nth(1);
+        await second.click();
+        await expect(second).toHaveAttribute('aria-selected', 'true');
+        await expect(tabs.first()).toHaveAttribute('aria-selected', 'false');
+        await expect(page.getByRole('tabpanel').filter({ visible: true })).toHaveCount(1);
+        expect(problems).toEqual([]);
+    });
+
+    test('the print button asks the browser to print (data-print, no inline script)', async () => {
+        await page.addInitScript(() => { window.__printed = 0; window.print = () => { window.__printed++; }; });
+        await page.goto('/admin/shipping/pick-list');
+        const button = page.locator('[data-print]');
+        await expect(button).toBeVisible();
+        await button.click();
+        expect(await page.evaluate(() => window.__printed)).toBe(1);
+        expect(problems).toEqual([]);
+    });
+});
+

@@ -8,22 +8,6 @@ declare(strict_types=1);
  * resources/js/behaviors.js instead.
  */
 
-/** @return list<string> */
-function bladeViews(): array
-{
-    $files = [];
-    foreach ([base_path('app'), base_path('resources')] as $root) {
-        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)) as $file) {
-            if (str_ends_with($file->getFilename(), '.blade.php') && ! str_contains($file->getPathname(), '/tests/')) {
-                $files[] = $file->getPathname();
-            }
-        }
-    }
-    sort($files);
-
-    return $files;
-}
-
 it('has no inline event handlers in any view', function () {
     $found = [];
     foreach (bladeViews() as $file) {
@@ -56,7 +40,7 @@ it('enforces the policy by default, never allows inline script, and lets the pay
     $directives = collect(explode(';', (string) $csp['policy']))->mapWithKeys(fn (string $d) => [explode(' ', trim($d))[0] => trim($d)]);
 
     expect($csp['enabled'])->toBeTrue()->and($csp['enforce'])->toBeTrue()
-        ->and($directives['script-src'])->not->toContain("'unsafe-inline'")->and($directives['script-src'])->toContain("'self'")
+        ->and($directives['script-src'])->not->toContain("'unsafe-inline'")->not->toContain("'unsafe-eval'")->and($directives['script-src'])->toContain("'self'")
         ->and($directives['default-src'])->toBe("default-src 'self'")->and($directives['object-src'])->toBe("object-src 'none'")
         ->and($directives['base-uri'])->toBe("base-uri 'self'")->and($directives['frame-ancestors'])->toBe("frame-ancestors 'self'")
         ->and($directives['form-action'])->toContain("'self'")->toContain('https://securepay.sslcommerz.com')->toContain('https://sandbox.sslcommerz.com');

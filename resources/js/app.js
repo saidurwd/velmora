@@ -1,4 +1,6 @@
-import Alpine from 'alpinejs';
+// The CSP build of Alpine: it reads the expressions in x-data / x-show / @click with its own safe interpreter instead of eval, so the page needs no 'unsafe-eval'.
+// It refuses browser globals (window, document) inside expressions: do those things in a registered component below, or with a data attribute (behaviors.js).
+import Alpine from '@alpinejs/csp';
 import { consentBanner } from './analytics';
 import './behaviors';
 
@@ -48,16 +50,34 @@ Alpine.data('searchBox', (suggestUrl) => ({
             window.location.href = this.items[this.active].url;
         }
     },
+    go(item) {
+        window.location.href = item.url;
+    },
     close() {
         this.open = false;
         this.active = -1;
     },
 }));
 
+// A dialog opened with $dispatch('open-modal', 'its-id'): Esc and the backdrop close it, focus moves into it.
+Alpine.data('modal', (id) => ({
+    open: false,
+    show(event) {
+        if (event.detail !== id) return;
+        this.open = true;
+        this.$nextTick(() => this.$refs.panel.focus());
+    },
+    hide() {
+        this.open = false;
+    },
+}));
+
 // Recently viewed products: remembered on this device only (localStorage), shown on product pages. No server round trip.
-Alpine.data('recentlyViewed', (current) => ({
+Alpine.data('recentlyViewed', () => ({
     items: [],
     init() {
+        // this product, handed over as JSON in a data attribute (the CSP build cannot read JSON.parse(...) inside an expression)
+        const current = JSON.parse(this.$el.dataset.current);
         const KEY = 'velmora.recentlyViewed';
         let all = [];
         try {

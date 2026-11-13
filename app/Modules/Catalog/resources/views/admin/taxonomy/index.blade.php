@@ -24,7 +24,8 @@
                 <td class="py-2">{{ $item->translate('name') }}</td>
                 <td class="py-2">{{ $item->translations->pluck('locale')->map(fn ($l) => strtoupper($l))->join(', ') }}</td>
                 <td class="py-2">{{ $item->is_active ? __('catalog::admin.active') : __('catalog::admin.inactive') }}</td>
-                <td class="flex gap-3 py-2">
+                <td class="py-2">
+                    <div class="flex gap-3">
                     @can('catalog.update')<a class="underline" href="{{ route('admin.catalog.taxonomy.edit', [$type, $item->public_id]) }}">{{ __('catalog::admin.edit') }}</a>@endcan
                     @can('catalog.delete')
                         <form method="POST" action="{{ route('admin.catalog.taxonomy.destroy', [$type, $item->public_id]) }}" data-confirm="{{ __('catalog::admin.confirm_delete') }}">
@@ -32,6 +33,7 @@
                             <button class="underline">{{ __('catalog::admin.delete') }}</button>
                         </form>
                     @endcan
+                    </div>
                 </td>
             </tr>
         @empty

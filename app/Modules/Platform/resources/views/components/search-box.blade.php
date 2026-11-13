@@ -12,7 +12,7 @@
     <ul id="search-suggestions" role="listbox" aria-label="{{ __('platform::ui.suggestions') }}" x-show="open" x-cloak style="display:none" class="absolute inset-x-0 top-full z-30 mt-1 overflow-hidden rounded-md border border-line bg-surface shadow-lg">
         <template x-for="(item, i) in items" :key="item.url">
             {{-- options hold plain text only (no nested link: screen readers cannot handle interactive content inside an option); click and Enter both open the product --}}
-            <li :id="'sg-' + i" role="option" :aria-selected="(i === active).toString()" :class="i === active ? 'bg-brand-50' : ''" @click="window.location.href = item.url" @mouseenter="active = i"
+            <li :id="'sg-' + i" role="option" :aria-selected="(i === active).toString()" :class="i === active ? 'bg-brand-50' : ''" @click="go(item)" @mouseenter="active = i"
                 class="block min-h-11 cursor-pointer px-3 py-3 hover:bg-surface-alt" x-text="item.name"></li>
         </template>
     </ul>

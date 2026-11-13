@@ -9,7 +9,7 @@ The code and the tests are in good shape, and the review found and fixed real pr
 | Phase 12 task | Result | Evidence |
 |---|---|---|
 | 1 Regression and browser journeys | **Done on the local stack.** 100 browser tests (axe accessibility in English and Bangla, keyboard-only use, no-JavaScript use, checkout, account, staff screens, the new CSP checks) pass with the security policy enforced; the full unit/feature/architecture suite and the 119-test concurrency suite pass. Real gateway and courier sandboxes were **not** exercised. | `e2e/*.spec.js`; CI "Browser tests" green; full-suite runs in the session log |
-| 2 Security review | **Done for the code** (not an independent audit or a penetration test). 12 findings, all Critical/High/Medium fixed or accepted with a reason; 1 Medium accepted for launch (Alpine needs `'unsafe-eval'`), 1 Low open (cosmetic). | `SECURITY_FINDINGS_REGISTER.md` |
+| 2 Security review | **Done for the code** (not an independent audit or a penetration test). 12 findings: everything Critical to Medium is fixed; open: F-5 (staff layout not usable on a phone, Low) and Info-level accepted trade-offs. | `SECURITY_FINDINGS_REGISTER.md` |
 | 3 Payments hardening drill | **Partly.** The replay, duplicate-notification, late-success, mismatch, refund-over-captured and reconciliation tests exist and pass; alert signals are tested. No chaos run against a real gateway (timeouts, callback storms, clock skew), no check that an alert reaches a person. | `tests/Database/PaymentConcurrencyTest`, `RefundConcurrencyTest`, `ReconciliationConcurrencyTest`; Payments feature tests |
 | 4 Concurrency and integrity audit | **Done at development size.** All concurrency tests pass in a clean run (119 passed, 2 opt-in skipped); the 6 integrity checks pass on seeded data and on a restored copy. Not run on a production-sized data set or under external load. | `tests/Database/*` (22 minutes); `RESTORE_TEST_REPORT.md` |
 | 5 Performance | **First pass only.** k6 on a laptop: inside the targets at light load, saturated at about 27 requests/s on that machine; no code-level problem; found one real configuration bug. The real test needs staging. | `PERFORMANCE_REPORT.md`; `tests/performance/storefront-api.k6.js` |
@@ -23,7 +23,7 @@ The code and the tests are in good shape, and the review found and fixed real pr
 
 | Criterion | Status |
 |---|---|
-| Zero open Critical/High security findings; Mediums fixed or accepted with a date | **Met for what was reviewed.** F-3 (Alpine `'unsafe-eval'`) is accepted for launch and needs a dated fix by the owner; an external penetration test may add findings. |
+| Zero open Critical/High security findings; Mediums fixed or accepted with a date | **Met for what was reviewed** (nothing open above Low). An external penetration test may add findings. |
 | Performance targets met or formally waived | **Not yet decidable** (laptop only). |
 | Restore rehearsal within RTO/RPO | **Not met / not rehearsed on real hosting.** |
 | The 17 high-risk scenarios have passing automated tests | **Met by existing tests, mapped below; two are not individually verified (11, 15).** |
@@ -63,11 +63,10 @@ The code and the tests are in good shape, and the review found and fixed real pr
 | B7 | **Manual accessibility pass** (screen reader, low-end Android Bangla rendering) and the staff checklist | Owner / a tester |
 | B8 | **Runbook rehearsal**: run a payment-stuck and a gateway-outage drill on staging | Owner with development |
 | B9 | **Courier**: Steadfast/Pathao documents saved so adapters can be built; until then parcels are booked by hand (documented) | Owner |
-| B10 | A dated plan for F-3 (move Alpine to its CSP build and drop `'unsafe-eval'`) | Owner decides date |
 
 ## 4. Residual risks (accepted knowingly)
 
-* F-3 above; F-5 (cosmetic table overlap on phone widths in the staff area); F-9 (a person can be locked out of sign-in for 15 minutes by repeated wrong attempts on their account).
+* F-5 (the staff area is not usable at a phone's width; staff use desktops); F-9 (a person can be locked out of sign-in for 15 minutes by repeated wrong attempts on their account, the usual trade-off against password guessing); F-8 (the queue dashboard is available only in local development).
 * Everything real-world: gateway behaviour, courier behaviour, human processes. The code is tested against fakes and recorded shapes of the official documents, never against live services.
 
 ## 5. Recommendation

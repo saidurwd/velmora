@@ -111,7 +111,7 @@
     @endif
 
     {{-- Recently viewed: kept only in this browser (localStorage); nothing is sent to the server. --}}
-    <section x-data="recentlyViewed(@js(['id' => $page->publicId, 'name' => $page->name, 'url' => $productPath, 'image' => $page->gallery[0]['src'] ?? null]))" x-show="items.length" x-cloak style="display:none" aria-labelledby="rv-h" class="space-y-4">
+    <section x-data="recentlyViewed" data-current="{{ json_encode(['id' => $page->publicId, 'name' => $page->name, 'url' => $productPath, 'image' => $page->gallery[0]['src'] ?? null], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}" x-show="items.length" x-cloak style="display:none" aria-labelledby="rv-h" class="space-y-4">
         <h2 id="rv-h" class="text-2xl font-bold">{{ __('catalog::storefront.recently_viewed') }}</h2>
         <ul class="grid grid-cols-2 gap-4 md:grid-cols-4">
             <template x-for="item in items" :key="item.id">

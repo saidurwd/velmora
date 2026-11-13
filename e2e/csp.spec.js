@@ -14,7 +14,7 @@ async function watch(page) {
         document.addEventListener('securitypolicyviolation', (e) => window.__csp.push(`${e.violatedDirective} ${e.blockedURI}`));
     });
     page.on('console', (msg) => {
-        if (/Content Security Policy|Refused to/i.test(msg.text())) violations.push(msg.text());
+        if (/Content Security Policy|Refused to|Alpine (Expression )?Error|CSP Parser Error/i.test(msg.text())) violations.push(msg.text());
     });
 
     return async () => [...violations, ...(await page.evaluate(() => window.__csp ?? []))];
@@ -29,6 +29,46 @@ test('the policy is sent on every page, and no storefront page is blocked by it'
         await page.waitForLoadState('networkidle');
         expect(await seen(), path).toEqual([]);
     }
+});
+
+test('the page runs Alpine\'s CSP build: components start, and no script evaluation is allowed', async ({ page }) => {
+    const seen = await watch(page);
+    const response = await page.goto('/en/p/cotton-panjabi');
+    expect(response.headers()['content-security-policy']).not.toContain('unsafe-eval');
+    await page.waitForFunction(() => document.querySelector('[x-data]')?._x_dataStack !== undefined);
+    // recently viewed: remembered on this device, shown on the next product page
+    await page.goto('/en/p/steel-water-bottle');
+    const strip = page.locator('section[aria-labelledby="rv-h"]');
+    await expect(strip).toBeVisible();
+    await expect(strip).toContainText('Cotton Panjabi');
+    // the policy really is enforced by this browser: a script put into the page as text is refused, and the browser says so
+    await page.evaluate(() => {
+        const script = document.createElement('script');
+        script.textContent = 'window.__injected = true';
+        document.head.appendChild(script);
+    });
+    expect(await page.evaluate(() => window.__injected ?? false), 'an inline script must not run').toBe(false);
+    const all = await seen();
+    expect(all.some((v) => v.includes('script-src')), `the browser reported the refusal: ${JSON.stringify(all)}`).toBe(true);
+    // Playwright's own page.evaluate is exempt from the policy, so the absence of 'unsafe-eval' is checked through the header above.
+    expect(all.filter((v) => !v.includes('script-src')), 'nothing else was blocked').toEqual([]);
+});
+
+test('the component library: the dialog opens, takes focus, and closes with Escape and the close button', async ({ page }) => {
+    const seen = await watch(page);
+    await page.goto('/en/dev/components');
+    await page.waitForFunction(() => document.querySelector('[x-data]')?._x_dataStack !== undefined);
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeHidden();
+    await page.getByRole('button', { name: 'Open dialog' }).click();
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+    await page.getByRole('button', { name: 'Open dialog' }).click();
+    await dialog.getByRole('button', { name: /close/i }).click();
+    await expect(dialog).toBeHidden();
+    expect(await seen()).toEqual([]);
 });
 
 test('a choice that sends its form on change still does (sorting the shop), without any inline handler', async ({ page }) => {

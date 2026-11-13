@@ -56,6 +56,6 @@
     <p class="text-sm">{{ __('orders::documents.receipt.payment') }}: {{ $receipt['payment']['method'] }} — {{ __('orders::documents.receipt.payment_status.'.$receipt['payment']['status']) }}</p>
     <p class="text-xs text-muted">{{ __('orders::documents.receipt.not_tax_invoice') }}</p>
     <x-platform::business-block />
-    <p class="print:hidden"><button type="button" x-data @click="window.print()" class="rounded-md border border-line px-4 py-2 text-sm hover:bg-surface-alt">{{ __('orders::documents.print') }}</button></p>
+    <p class="print:hidden"><button type="button" data-print class="rounded-md border border-line px-4 py-2 text-sm hover:bg-surface-alt">{{ __('orders::documents.print') }}</button></p>
 </article>
 @endsection

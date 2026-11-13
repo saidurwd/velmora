@@ -17,9 +17,8 @@ return [
             "img-src 'self' data: https:",
             "font-src 'self'",
             "style-src 'self' 'unsafe-inline'",
-            // 'unsafe-eval' is here ONLY because Alpine's standard build evaluates the expressions in x-data / x-show / @click with new Function. Inline scripts stay
-            // forbidden. Moving to Alpine's CSP build (registered components, no inline expressions) lets this be removed: tracked as a residual risk, see the findings register.
-            "script-src 'self' 'unsafe-eval'",
+            // No 'unsafe-eval' and no 'unsafe-inline': Alpine runs as its CSP build (its own safe interpreter, no eval), see resources/js/app.js.
+            "script-src 'self'",
             "connect-src 'self'",
             "frame-ancestors 'self'",
             "base-uri 'self'",

@@ -30,7 +30,8 @@
                 <td class="py-2">{{ $member->email }}</td>
                 <td class="py-2">{{ $member->roles->pluck('name')->join(', ') }}</td>
                 <td class="py-2">{{ __('identity-access::admin.status.'.$member->status->value) }}</td>
-                <td class="flex gap-2 py-2">
+                <td class="py-2">
+                    <div class="flex gap-2">
                     @can('staff.update')<a class="underline" href="{{ route('admin.staff.edit', $member) }}">{{ __('identity-access::admin.staff.edit') }}</a>@endcan
                     @can('staff.disable')
                         <form method="POST" action="{{ route($member->status->value === 'active' ? 'admin.staff.disable' : 'admin.staff.enable', $member) }}">
@@ -38,6 +39,7 @@
                             <button class="underline">{{ $member->status->value === 'active' ? __('identity-access::admin.staff.disable') : __('identity-access::admin.staff.enable') }}</button>
                         </form>
                     @endcan
+                    </div>
                 </td>
             </tr>
         @endforeach

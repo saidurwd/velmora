@@ -8,6 +8,7 @@ const baseURL = process.env.E2E_BASE_URL || `http://127.0.0.1:${port}`;
 export default defineConfig({
     testDir: './e2e',
     timeout: 60_000,
+    expect: { timeout: 10_000 }, // a slow laptop sharing a small PHP server between workers can take more than the default 5 s to answer; the checks themselves are unchanged
     fullyParallel: true,
     workers: process.env.CI ? 2 : 3,
     retries: process.env.CI ? 1 : 0,

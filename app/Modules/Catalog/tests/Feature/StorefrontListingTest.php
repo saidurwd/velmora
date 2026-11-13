@@ -77,6 +77,17 @@ it('shows a category description as plain text, cut at a word, never as half an 
     expect($m[1])->toContain('Everyday wear &amp; more.')->not->toContain('<a ')->not->toContain('<script')->not->toContain('&amp;amp;')->not->toContain('very-long-address')->toContain('…');
 });
 
+it('looks up the ids of the related products in one query, however many there are', function () {
+    $this->get('/en/p/cotton-panjabi')->assertOk();   // warm the caches
+    DB::enableQueryLog();
+    $this->get('/en/p/cotton-panjabi')->assertOk();
+    $byPublicId = collect(DB::getQueryLog())->filter(fn ($q) => str_contains($q['query'], 'from `products` where `public_id`'))->count();
+    $total = count(DB::getQueryLog());
+    DB::disableQueryLog();
+
+    expect($byPublicId)->toBeLessThanOrEqual(1)->and($total)->toBeLessThan(40);
+});
+
 it('filters by brand, price range, type, availability and attribute', function () {
     $dc = DB::table('catalog_listing')->where('brand_id', DB::table('brand_translations')->where('slug', 'dhaka-craft')->value('brand_id'))->count();
     expect(listed('/en/shop?brand[]=dhaka-craft'))->toHaveCount(min(24, $dc));
