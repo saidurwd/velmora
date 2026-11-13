@@ -7,6 +7,7 @@ namespace App\Modules\Platform\Support;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /**
@@ -50,6 +51,10 @@ final class Preflight
         $built = is_file(public_path('build/manifest.json'));
         $add('Built assets', $built ? 'ok' : 'fail', $built ? 'public/build is present' : 'public/build/manifest.json is missing (build the assets before uploading)');
 
+        foreach (['media' => 'Product images', 'private' => 'Private files'] as $disk => $what) {
+            $add('File storage: '.$what, ...$this->diskProbe($disk));
+        }
+
         $production = app()->environment('production');
         $cache = (string) config('cache.default');
         $add('Cache store', $cache === 'array' ? 'fail' : 'ok', $cache.($cache === 'array' ? ' (forgets everything on each request)' : ''));
@@ -71,6 +76,22 @@ final class Preflight
         }
 
         return $out;
+    }
+
+    /** @return array{0: string, 1: string} status and detail: can the app write, read back and delete a file on this disk? */
+    private function diskProbe(string $disk): array
+    {
+        $driver = (string) config("filesystems.disks.{$disk}.driver");
+        $key = 'preflight/'.bin2hex(random_bytes(4)).'.txt';
+        try {
+            Storage::disk($disk)->put($key, 'ok');
+            $read = Storage::disk($disk)->get($key) === 'ok';
+            Storage::disk($disk)->delete($key);
+
+            return $read ? ['ok', $driver.': can write, read and delete'] : ['fail', $driver.': wrote a file but could not read it back'];
+        } catch (Throwable $e) {
+            return ['fail', $driver.': '.($driver === 's3' ? 'no storage bucket reachable; on shared hosting set MEDIA_DRIVER=local and PRIVATE_DRIVER=local' : 'cannot write ('.mb_substr($e->getMessage(), 0, 100).')')];
+        }
     }
 
     /** @return list<array{name: string, status: string, detail: string}> */

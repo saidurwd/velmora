@@ -50,7 +50,15 @@ return [
         ],
 
         // Public catalog media (BD-05). Objects here may be served via CDN/public URL.
-        'media' => [
+        // MEDIA_DRIVER=local (shared hosting, no S3): plain files in storage/app/public/media, served through the /storage link in the web folder (see docs/ops/NAMECHEAP_SHARED_HOSTING.md).
+        'media' => env('MEDIA_DRIVER', 's3') === 'local' ? [
+            'driver' => 'local',
+            'root' => storage_path('app/public/media'),
+            'url' => rtrim((string) env('APP_URL', 'http://localhost'), '/').'/storage/media',
+            'visibility' => 'public',
+            'throw' => true,
+            'report' => true,
+        ] : [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
@@ -65,7 +73,17 @@ return [
         ],
 
         // PRIVATE: digital goods and attachments. Never public; delivered only via short-lived signed URLs (BD §9).
-        'private' => [
+        // PRIVATE_DRIVER=local (shared hosting): files outside the web folder (storage/app/private/files); a download address is a signed, expiring link handled by the app
+        // (`/private-files/...`), and without a valid signature the app answers 404. The `url` below is what makes that link not collide with the public /storage link.
+        'private' => env('PRIVATE_DRIVER', 's3') === 'local' ? [
+            'driver' => 'local',
+            'root' => storage_path('app/private/files'),
+            'url' => rtrim((string) env('APP_URL', 'http://localhost'), '/').'/private-files',
+            'serve' => true,
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => true,
+        ] : [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),

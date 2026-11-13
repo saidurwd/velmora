@@ -7,8 +7,15 @@ use App\Modules\Platform\Support\Preflight;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 /* Phase 13 preparation: the server check, and the queue that runs from cron on shared hosting. */
+
+beforeEach(function () {
+    $root = sys_get_temp_dir().'/velmora-preflight-'.bin2hex(random_bytes(4));
+    config(['filesystems.disks.media' => ['driver' => 'local', 'root' => $root.'/media'], 'filesystems.disks.private' => ['driver' => 'local', 'root' => $root.'/private']]);
+    Storage::forgetDisk(['media', 'private']);
+});
 
 it('accepts only MariaDB 11.4.5 or newer', function (string $reported, bool $supported) {
     expect(MariaDbVersion::isSupported($reported))->toBe($supported);
@@ -75,4 +82,14 @@ it('drains the queue from the scheduler only when asked to', function () {
 
     config(['queue.run_from_scheduler' => true]);
     expect($event()->filtersPass(app()))->toBeTrue()->and($event()->command)->toContain('queue:work --stop-when-empty --max-time=50');
+});
+
+it('fails, with the shared-hosting remedy, when a storage bucket cannot be reached, and passes when files can be written', function () {
+    expect(collect((new Preflight)->run())->keyBy('name')['File storage: Private files']['status'])->toBe('ok');
+
+    config(['filesystems.disks.private' => ['driver' => 's3', 'key' => 'x', 'secret' => 'x', 'region' => 'us-east-1', 'bucket' => 'none', 'endpoint' => 'http://127.0.0.1:1', 'use_path_style_endpoint' => true, 'throw' => true]]);
+    Storage::forgetDisk('private');
+    $result = collect((new Preflight)->run())->keyBy('name')['File storage: Private files'];
+
+    expect($result['status'])->toBe('fail')->and($result['detail'])->toContain('PRIVATE_DRIVER=local');
 });

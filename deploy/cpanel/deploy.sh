@@ -3,12 +3,13 @@
 #   ~/velmora-releases/<name>/   every uploaded release, kept so you can go back
 #   ~/velmora-shared/{.env,storage}   the things that belong to the shop, not to a release
 #   ~/velmora                     a LINK to the release in use (public_html/index.php points here)
+#   ~/public_html                 the web folder: index.php (from deploy/cpanel/public_index.php), the built assets (build/), the link storage -> shared storage/app/public
 # Usage:  bash deploy.sh install  velmora-release-abc1234.zip      first time or every upgrade
 #         bash deploy.sh rollback                                   go back to the previous release
 # Nothing here touches the database except `php artisan migrate`, which follows the expand/contract rules (the old code keeps working on the new schema).
 set -euo pipefail
 HOME_DIR="${VELMORA_HOME:-$HOME}"
-REL="$HOME_DIR/velmora-releases"; SHARED="$HOME_DIR/velmora-shared"; LINK="$HOME_DIR/velmora"
+REL="$HOME_DIR/velmora-releases"; SHARED="$HOME_DIR/velmora-shared"; LINK="$HOME_DIR/velmora"; WEB="${PUBLIC_HTML:-$HOME_DIR/public_html}"
 PHP="${PHP_BIN:-php}"
 mkdir -p "$REL" "$SHARED/storage/app/public" "$SHARED/storage/framework/cache" "$SHARED/storage/framework/sessions" "$SHARED/storage/framework/views" "$SHARED/storage/logs"
 
@@ -25,6 +26,12 @@ install)
   mkdir -p bootstrap/cache
   echo "== preflight (nothing is switched yet)"
   $PHP artisan velmora:preflight || { echo "Preflight failed: the old release is still live. Fix the lines marked FAIL, then run install again." >&2; exit 1; }
+  echo "== web folder: add this release's built assets (old ones stay, so a rollback still finds its files)"
+  mkdir -p "$WEB/build"; cp -R public/build/. "$WEB/build/"
+  [ -f "$WEB/index.php" ] || cp deploy/cpanel/public_index.php "$WEB/index.php"
+  [ -f "$WEB/.htaccess" ] || cp public/.htaccess "$WEB/.htaccess"
+  for f in robots.txt favicon.ico; do [ -f "public/$f" ] && [ ! -f "$WEB/$f" ] && cp "public/$f" "$WEB/$f"; done
+  [ -e "$WEB/storage" ] || ln -s "$SHARED/storage/app/public" "$WEB/storage"
   PREV="$(current)"
   echo "== maintenance on, migrate, switch, maintenance off"
   [ -n "$PREV" ] && $PHP "$LINK/artisan" down --retry=60 || true
