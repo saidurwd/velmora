@@ -19,7 +19,7 @@
                 <td class="py-2">{{ $variant->is_default ? __('catalog::admin.yes') : '' }}</td>
                 <td class="py-2">
                     @can('catalog.update')
-                        <form method="POST" action="{{ route('admin.catalog.products.variants.destroy', [$product, $variant]) }}" onsubmit="return confirm(@js(__('catalog::admin.confirm_delete')))">
+                        <form method="POST" action="{{ route('admin.catalog.products.variants.destroy', [$product, $variant]) }}" data-confirm="{{ __('catalog::admin.confirm_delete') }}">
                             @csrf @method('DELETE')
                             <button class="underline">{{ __('catalog::admin.delete') }}</button>
                         </form>

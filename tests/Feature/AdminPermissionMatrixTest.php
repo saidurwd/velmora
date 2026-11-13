@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\IdentityAccess\Database\Seeders\RolesAndPermissionsSeeder;
 use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
 use App\Modules\IdentityAccess\Permissions\PermissionCatalogue;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Routing\Route as LaravelRoute;
 use Illuminate\Support\Facades\Route;
 
@@ -53,7 +54,7 @@ function adminPermissionRoutes(): array
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
-    $this->withoutMiddleware(EnforceSessionPolicy::class);
+    $this->withoutMiddleware([EnforceSessionPolicy::class, ThrottleRequests::class]);   // this test sends hundreds of writes as one user to check who is allowed; the write limit has its own tests
 });
 
 it('names only permissions that exist (an unknown name would silently lock everyone out)', function () {

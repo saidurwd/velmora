@@ -23,7 +23,7 @@
                 @unless ($a->isDefault)
                     <form method="POST" action="{{ route('account.addresses.default', $a->publicId) }}">@csrf<button class="underline">{{ __('customers::account.addresses.make_default') }}</button></form>
                 @endunless
-                <form method="POST" action="{{ route('account.addresses.destroy', $a->publicId) }}" onsubmit="return confirm(@js(__('customers::account.addresses.confirm_delete')))">@csrf @method('DELETE')<button class="underline">{{ __('customers::account.addresses.delete') }}</button></form>
+                <form method="POST" action="{{ route('account.addresses.destroy', $a->publicId) }}" data-confirm="{{ __('customers::account.addresses.confirm_delete') }}">@csrf @method('DELETE')<button class="underline">{{ __('customers::account.addresses.delete') }}</button></form>
             </div>
         </article>
     @empty

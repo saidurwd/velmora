@@ -29,7 +29,7 @@
 
     <header class="space-y-2">
         <h1 class="text-3xl font-bold">{{ $title }}</h1>
-        @if ($description)<div class="max-w-3xl text-muted">{!! \Illuminate\Support\Str::limit($description, 600) !!}</div>@endif
+        @if ($description)<div class="max-w-3xl text-muted">{{ $description }}</div>@endif
     </header>
 
     @if ($children !== [])
@@ -106,7 +106,7 @@
                         @endforeach
                     @endforeach
                     <label for="sort" class="text-sm">{{ __('catalog::storefront.sort.label') }}</label>
-                    <select id="sort" name="sort" onchange="this.form.submit()" class="rounded-md border border-line px-3 py-2">
+                    <select id="sort" name="sort" data-autosubmit class="rounded-md border border-line px-3 py-2">
                         @foreach ($sortLabels as $value => $label)<option value="{{ $value }}" @selected($filters->sort === $value)>{{ $label }}</option>@endforeach
                     </select>
                     <noscript><x-platform::btn type="submit" size="sm" variant="secondary">{{ __('catalog::storefront.apply') }}</x-platform::btn></noscript>

@@ -55,7 +55,7 @@
                             <div class="flex flex-wrap gap-2">
                                 @foreach ($option['values'] as $value)
                                     <label class="relative">
-                                        <input type="radio" name="opt[{{ $option['code'] }}]" value="{{ $value['code'] }}" @checked($value['selected']) onchange="this.form.submit()" class="peer sr-only">
+                                        <input type="radio" name="opt[{{ $option['code'] }}]" value="{{ $value['code'] }}" @checked($value['selected']) data-autosubmit class="peer sr-only">
                                         <span class="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-md border px-4 peer-checked:border-brand-600 peer-checked:bg-brand-50 peer-checked:font-semibold peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 {{ $value['inStock'] ? 'border-line' : 'border-dashed border-line text-muted line-through' }}">
                                             {{ $value['label'] }}@unless ($value['inStock'])<span class="sr-only"> — {{ __('platform::ui.out_of_stock') }}</span>@endunless
                                         </span>

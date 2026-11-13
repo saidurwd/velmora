@@ -9,7 +9,7 @@
         @endcan
         <a class="underline" href="{{ route('admin.cms.menus.edit', $row->public_id) }}">{{ __('cms::menu.edit') }}</a>
         @can('cms.edit')
-            <form method="POST" action="{{ route('admin.cms.menus.destroy', $row->public_id) }}" class="inline" onsubmit="return confirm('{{ __('cms::menu.confirm_delete') }}')">@csrf @method('DELETE')<button class="underline text-danger">{{ __('cms::admin.delete') }}</button></form>
+            <form method="POST" action="{{ route('admin.cms.menus.destroy', $row->public_id) }}" class="inline" data-confirm="{{ __('cms::menu.confirm_delete') }}">@csrf @method('DELETE')<button class="underline text-danger">{{ __('cms::admin.delete') }}</button></form>
         @endcan
     </span>
 </div>

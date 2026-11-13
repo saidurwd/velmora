@@ -107,3 +107,34 @@ for (const [lang, locale] of [['English', 'en-US'], ['Bangla', 'bn-BD']]) {
         });
     });
 }
+
+// Phase 12: the Content-Security-Policy is enforced, so the "are you sure?" question before a delete is a data attribute (data-confirm) handled by resources/js/behaviors.js,
+// not an inline handler. Staff work on a desktop; at a phone's width this table's last column overlaps the button.
+test.describe('the delete question (Content-Security-Policy enforced)', () => {
+    test('deleting asks first, cancelling really cancels, and the page is not blocked by the policy', async ({ browser }, info) => {
+        const context = await browser.newContext({ ...info.project.use, storageState: state, viewport: { width: 1280, height: 900 } });
+        const page = await context.newPage();
+        const violations = [];
+        page.on('console', (msg) => {
+            if (/Content Security Policy|Refused to/i.test(msg.text())) violations.push(msg.text());
+        });
+        await page.goto('/admin/catalog/categories');
+        const remove = page.getByRole('button', { name: /^delete$/i }).first();
+        await expect(remove).toBeVisible();
+        const before = await page.locator('tbody tr, li').count();
+
+        let asked = '';
+        page.once('dialog', async (dialog) => {
+            asked = dialog.message();
+            await dialog.dismiss();
+        });
+        await remove.click();
+        await page.waitForLoadState('networkidle');
+
+        expect(asked.length, 'the confirmation question was shown').toBeGreaterThan(5);
+        await expect(page).toHaveURL(/\/admin\/catalog\/categories/);
+        expect(await page.locator('tbody tr, li').count()).toBe(before);
+        expect(violations).toEqual([]);
+        await context.close();
+    });
+});

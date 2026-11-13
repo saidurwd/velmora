@@ -27,6 +27,7 @@ mysql -h"${DB_HOST:-127.0.0.1}" -P"${DB_PORT:-3306}" -u"${DB_USERNAME:-root}" -e
   echo "DIGITAL_DISK=local"   # the e-book file of the demo data lives on the local disk here, not in the cloud bucket
   echo "OTP_THROTTLE_PER_TEN_MINUTES=60"   # many code flows from one address in one run; production keeps 3 per 10 minutes
   echo "OTP_THROTTLE_PER_HOUR=300"
+  echo "AUTH_THROTTLE_PER_MINUTE=120"   # every browser sign-in comes from one address; production keeps 10 a minute
   echo "SMS_DRIVER=log"      # the browser test reads the guest's code from the log
 } > .env.e2e
 [ -n "$(grep '^APP_KEY=' .env.e2e)" ] || { php artisan key:generate --show | sed 's/^/APP_KEY=/' >> .env.e2e; }

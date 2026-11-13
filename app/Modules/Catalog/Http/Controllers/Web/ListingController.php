@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /** Shop, category, brand and collection pages: same engine, different scope. All state lives in the URL. */
 class ListingController
@@ -92,6 +93,17 @@ class ListingController
         return $this->render($request, ListingScope::collection($collection->id), (string) $collection->translate('name'), $collection->translate('description'), $this->withShop([['label' => (string) $collection->translate('name'), 'url' => null]]), [], $collection->translate('seo_description'), null, [], $this->alternatesFor($collection, 'collections'));
     }
 
+    /** A category / brand / collection description (purified HTML) as one short line of plain text, cut at a word where it can be. */
+    private function plainIntro(?string $html): ?string
+    {
+        if ($html === null) {
+            return null;
+        }
+        $text = trim((string) preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags((string) preg_replace('/<(br|\/p|\/li|\/h[1-6])\b[^>]*>/i', ' ', $html)), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+
+        return $text === '' ? null : Str::limit($text, 600, '…', preserveWords: true);
+    }
+
     /**
      * @param  list<array{label: string, url: string|null}>  $breadcrumb
      * @param  list<array{name: string, url: string}>  $children
@@ -102,6 +114,7 @@ class ListingController
     private function render(Request $request, ListingScope $scope, string $title, ?string $description, array $breadcrumb, array $children, ?string $metaDescription = null, ?array $queryOverride = null, array $extra = [], array $alternates = [], bool $search = false): View
     {
         $locale = app()->getLocale();
+        $description = $this->plainIntro($description);   // shown as text and used for the page's description: never half of an HTML tag
         $filters = ListingFilters::fromQuery($queryOverride ?? $request->query());
         $products = $search ? $this->query->paginate($scope, $filters, $locale) : $this->query->paginateCached($scope, $filters, $locale);
 

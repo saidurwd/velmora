@@ -29,7 +29,7 @@
                 <td class="flex gap-3 py-2">
                     @can('catalog.update')<a class="underline" href="{{ route('admin.catalog.categories.edit', $c) }}">{{ __('catalog::admin.edit') }}</a>@endcan
                     @can('catalog.delete')
-                        <form method="POST" action="{{ route('admin.catalog.categories.destroy', $c) }}" onsubmit="return confirm(@js(__('catalog::admin.confirm_delete')))">
+                        <form method="POST" action="{{ route('admin.catalog.categories.destroy', $c) }}" data-confirm="{{ __('catalog::admin.confirm_delete') }}">
                             @csrf @method('DELETE')
                             <button class="underline">{{ __('catalog::admin.delete') }}</button>
                         </form>

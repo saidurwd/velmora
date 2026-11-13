@@ -17,7 +17,7 @@
                             @endunless
                             <form method="POST" action="{{ route('admin.catalog.products.media.move', [$product, $media]) }}">@csrf<button name="direction" value="up" class="underline">{{ __('catalog::admin.media.up') }}</button></form>
                             <form method="POST" action="{{ route('admin.catalog.products.media.move', [$product, $media]) }}">@csrf<button name="direction" value="down" class="underline">{{ __('catalog::admin.media.down') }}</button></form>
-                            <form method="POST" action="{{ route('admin.catalog.products.media.destroy', [$product, $media]) }}" onsubmit="return confirm(@js(__('catalog::admin.confirm_delete')))">@csrf @method('DELETE')<button class="underline">{{ __('catalog::admin.delete') }}</button></form>
+                            <form method="POST" action="{{ route('admin.catalog.products.media.destroy', [$product, $media]) }}" data-confirm="{{ __('catalog::admin.confirm_delete') }}">@csrf @method('DELETE')<button class="underline">{{ __('catalog::admin.delete') }}</button></form>
                         </div>
                     @endcan
                 </li>

@@ -6,24 +6,24 @@ use App\Modules\Platform\Providers\PlatformServiceProvider;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 
-it('sends baseline security headers and a report-only CSP', function () {
+it('sends baseline security headers and an ENFORCED CSP', function () {
     $response = $this->get('/healthz');
 
     $response->assertHeader('X-Content-Type-Options', 'nosniff')
         ->assertHeader('X-Frame-Options', 'SAMEORIGIN')
         ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
-        ->assertHeaderMissing('Content-Security-Policy');
+        ->assertHeaderMissing('Content-Security-Policy-Report-Only');
 
-    expect($response->headers->get('Content-Security-Policy-Report-Only'))->toContain("default-src 'self'");
+    expect($response->headers->get('Content-Security-Policy'))->toContain("default-src 'self'")->toContain("script-src 'self' 'unsafe-eval';");
 });
 
-it('can switch the CSP to enforcing', function () {
-    config(['security.csp.enforce' => true]);
+it('can be switched to report-only to diagnose a violation', function () {
+    config(['security.csp.enforce' => false]);
 
     $response = $this->get('/healthz');
 
-    expect($response->headers->get('Content-Security-Policy'))->toContain("script-src 'self'")
-        ->and($response->headers->has('Content-Security-Policy-Report-Only'))->toBeFalse();
+    expect($response->headers->get('Content-Security-Policy-Report-Only'))->toContain("script-src 'self'")
+        ->and($response->headers->has('Content-Security-Policy'))->toBeFalse();
 });
 
 it('refuses to boot production with debug on, no key or insecure cookies', function () {
@@ -67,4 +67,14 @@ it('returns problem+json with Retry-After when an API route is throttled', funct
     }
 
     $this->getJson('/api/v1/_test/limited')->assertStatus(429)->assertJson(['code' => 'rate.limited'])->assertHeader('Retry-After');
+});
+
+it('keeps the sign-in limit at ten a minute in production even if a setting asks for more', function () {
+    config(['security.auth_throttle_per_minute' => 500]);
+    $limit = fn () => RateLimiter::limiter('auth')(request());
+
+    expect($limit()->maxAttempts)->toBe(500);   // the browser tests' environment
+
+    app()->detectEnvironment(fn () => 'production');
+    expect($limit()->maxAttempts)->toBe(10);
 });

@@ -40,7 +40,7 @@ abstract class ModuleServiceProvider extends ServiceProvider
         }
 
         $this->routeFile('web', fn (string $file) => Route::middleware('web')->group($file));
-        $this->routeFile('admin', fn (string $file) => Route::middleware('web')->prefix('admin')->name('admin.')->group($file));
+        $this->routeFile('admin', fn (string $file) => Route::middleware(['web', 'throttle:admin-write'])->prefix('admin')->name('admin.')->group($file));
         $this->routeFile('api', fn (string $file) => Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group($file));
     }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\IdentityAccess\Database\Seeders\RolesAndPermissionsSeeder;
 use App\Modules\IdentityAccess\Http\Middleware\EnforceSessionPolicy;
 use App\Modules\IdentityAccess\Models\User;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Routing\Route as LaravelRoute;
 use Illuminate\Support\Facades\Route;
 
@@ -184,7 +185,7 @@ it('demands the MFA pending state on the exempt MFA pages', function () {
 
 it('enforces the decision at runtime: guests, customers and role-less staff are all refused on every admin route', function () {
     $this->seed(RolesAndPermissionsSeeder::class);
-    $this->withoutMiddleware(EnforceSessionPolicy::class);
+    $this->withoutMiddleware([EnforceSessionPolicy::class, ThrottleRequests::class]);   // hundreds of requests as one user to check who is let in; throttling has its own tests
     $customer = User::factory()->create();
     $roleless = User::factory()->staff()->create(['email' => 'nobody@example.com']);
 

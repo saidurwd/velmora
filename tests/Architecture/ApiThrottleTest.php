@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Cache\RateLimiting\Unlimited;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route as LaravelRoute;
 use Illuminate\Support\Arr;
@@ -97,4 +98,39 @@ it('limits the doors where nobody is signed in yet per address, and those only',
     }
 
     expect(true)->toBeTrue();
+});
+
+it('limits every staff action that changes something, per staff member, and leaves reading alone', function () {
+    $bare = [];
+    $checked = 0;
+    foreach (Route::getRoutes()->getRoutes() as $route) {
+        if (! str_starts_with($route->uri(), 'admin/') || array_diff($route->methods(), ['GET', 'HEAD']) === []) {
+            continue;
+        }
+        $checked++;
+        if (! in_array('throttle:admin-write', $route->gatherMiddleware(), true)) {
+            $bare[] = implode('|', $route->methods()).' '.$route->uri();
+        }
+    }
+
+    $key = fn (string $method, string $ip, int $staff) => (function () use ($method, $ip, $staff) {
+        $request = Request::create('/admin/x', $method, server: ['REMOTE_ADDR' => $ip]);
+        $user = new class($staff)
+        {
+            public function __construct(private readonly int $id) {}
+
+            public function getAuthIdentifier(): int
+            {
+                return $this->id;
+            }
+        };
+        $request->setUserResolver(fn (?string $guard = null) => $guard === 'admin' ? $user : null);
+
+        return RateLimiter::limiter('admin-write')($request);
+    })();
+
+    expect($checked)->toBeGreaterThan(100)->and($bare)->toBe([])
+        ->and($key('GET', '203.0.113.1', 7))->toBeInstanceOf(Unlimited::class)
+        ->and($key('POST', '203.0.113.1', 7)->maxAttempts)->toBe(120)
+        ->and($key('POST', '203.0.113.1', 7)->key)->toBe($key('POST', '198.51.100.9', 7)->key)->not->toBe($key('POST', '203.0.113.1', 8)->key);
 });

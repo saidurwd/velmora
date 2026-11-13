@@ -8,7 +8,7 @@
     @include('bookings::admin.setup._nav')
     <p class="text-sm text-muted">{{ __('bookings::setup.services_help') }}</p>
     @if (session('status'))<x-platform::alert type="success">{{ session('status') }}</x-platform::alert>@endif
-    <form method="GET" action="" onsubmit="event.preventDefault(); var v = this.sku.value.trim(); if (v) { window.location = '{{ route('admin.bookings.setup.services') }}/' + encodeURIComponent(v); }" class="flex items-end gap-3">
+    <form method="GET" action="" data-goto-field="sku" data-goto-base="{{ route('admin.bookings.setup.services') }}" class="flex items-end gap-3">
         <div class="flex-1"><label for="sku" class="block text-sm font-medium">{{ __('bookings::setup.add_by_sku') }}</label><input id="sku" name="sku" maxlength="64" class="mt-1 block w-full max-w-xs rounded-md border border-line px-3 py-2"></div>
         <x-platform::btn type="submit" size="sm">{{ __('bookings::setup.open') }}</x-platform::btn>
     </form>

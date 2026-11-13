@@ -35,7 +35,7 @@
                         @else
                             <span class="text-xs text-muted">{{ __('platform::ops.failed.not_retryable') }}</span>
                         @endif
-                        <form method="POST" action="{{ route('admin.ops.failed.forget', $r['id']) }}" onsubmit="return confirm('{{ __('platform::ops.failed.confirm_forget') }}')">@csrf<button class="underline text-danger">{{ __('platform::ops.failed.forget') }}</button></form>
+                        <form method="POST" action="{{ route('admin.ops.failed.forget', $r['id']) }}" data-confirm="{{ __('platform::ops.failed.confirm_forget') }}">@csrf<button class="underline text-danger">{{ __('platform::ops.failed.forget') }}</button></form>
                     @endcan
                 </td>
             </tr>

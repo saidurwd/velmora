@@ -27,7 +27,7 @@
                 <td class="py-2">{{ $banner->translations->pluck('locale')->map(fn ($l) => strtoupper($l))->join(', ') }}</td>
                 <td class="py-2">{{ $banner->is_active ? __('cms::admin.active') : __('cms::admin.inactive') }}</td>
                 <td class="py-2">@can('cms.edit')
-                    <form method="POST" action="{{ route('admin.cms.banners.destroy', $banner) }}" onsubmit="return confirm(@js(__('cms::admin.confirm_delete')))">@csrf @method('DELETE')<button class="underline">{{ __('cms::admin.delete') }}</button></form>
+                    <form method="POST" action="{{ route('admin.cms.banners.destroy', $banner) }}" data-confirm="{{ __('cms::admin.confirm_delete') }}">@csrf @method('DELETE')<button class="underline">{{ __('cms::admin.delete') }}</button></form>
                 @endcan</td>
             </tr>
         @empty

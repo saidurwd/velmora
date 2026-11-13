@@ -1,5 +1,6 @@
 import Alpine from 'alpinejs';
 import { consentBanner } from './analytics';
+import './behaviors';
 
 // Alpine is progressive enhancement only: browse, search, filter and checkout must work without JS.
 window.Alpine = Alpine;

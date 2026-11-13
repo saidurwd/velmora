@@ -30,7 +30,7 @@
                             @endcan
                             <a class="underline" href="{{ route('admin.cms.home.edit', $row->public_id) }}">{{ __('cms::home.edit') }}</a>
                             @can('cms.edit')
-                                <form method="POST" action="{{ route('admin.cms.home.destroy', $row->public_id) }}" class="inline" onsubmit="return confirm('{{ __('cms::home.confirm_delete') }}')">@csrf @method('DELETE')<button class="underline text-danger">{{ __('cms::admin.delete') }}</button></form>
+                                <form method="POST" action="{{ route('admin.cms.home.destroy', $row->public_id) }}" class="inline" data-confirm="{{ __('cms::home.confirm_delete') }}">@csrf @method('DELETE')<button class="underline text-danger">{{ __('cms::admin.delete') }}</button></form>
                             @endcan
                         </span>
                     </li>

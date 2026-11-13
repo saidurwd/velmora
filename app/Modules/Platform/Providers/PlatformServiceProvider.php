@@ -201,14 +201,24 @@ class PlatformServiceProvider extends ModuleServiceProvider
         });
     }
 
+    /** 10 in production whatever the setting says: the setting exists so the browser tests (one address, many sign-ins) can raise it, never to loosen a live shop. */
+    private function authTriesPerMinute(): int
+    {
+        $setting = max(1, (int) config('security.auth_throttle_per_minute', 10));
+
+        return app()->environment('production') ? min(10, $setting) : $setting;
+    }
+
     /** Rate-limit tiers from API_ARCHITECTURE §2. Per-identifier limits arrive with the auth modules (Phase 2). */
     private function defineRateLimiters(): void
     {
         $by = fn (Request $r): string => (string) ($r->user()?->getAuthIdentifier() ?? $r->ip());
 
+        // Every staff screen that CHANGES something (anything but a read): 120 a minute per staff member (per address while not yet signed in). Reads are not limited here.
+        RateLimiter::for('admin-write', fn (Request $r) => $r->isMethodSafe() ? Limit::none() : Limit::perMinute(120)->by('admin-write|'.($r->user('admin')?->getAuthIdentifier() ?? $r->ip())));
         RateLimiter::for('public-read', fn (Request $r) => Limit::perMinute(120)->by($r->ip()));
         RateLimiter::for('search', fn (Request $r) => Limit::perMinute(60)->by($r->ip()));
-        RateLimiter::for('auth', fn (Request $r) => Limit::perMinute(10)->by($r->ip()));
+        RateLimiter::for('auth', fn (Request $r) => Limit::perMinute($this->authTriesPerMinute())->by($r->ip()));
         // Token refresh has its own, higher limit per address: many phones share one address on a mobile carrier, and a refresh token is 256 random bits that work once (P11-9), so guessing one is pointless.
         RateLimiter::for('refresh', fn (Request $r) => Limit::perMinute(60)->by('refresh|'.$r->ip()));
         RateLimiter::for('otp', fn (Request $r) => [Limit::perMinutes(10, (int) config('otp.throttle_per_ten_minutes'))->by('otp-ip-min:'.$r->ip()), Limit::perHour((int) config('otp.throttle_per_hour'))->by('otp-ip-hour:'.$r->ip())]);

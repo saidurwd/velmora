@@ -22,13 +22,13 @@
             <x-platform::alert type="warning">{{ __('inventory::imports.has_errors') }}</x-platform::alert>
             <p><a class="underline" href="{{ route('admin.inventory.imports.errors', $import->public_id) }}">{{ __('inventory::imports.problems_file') }}</a></p>
         @else
-            <form method="POST" action="{{ route('admin.inventory.imports.apply', $import->public_id) }}" onsubmit="return confirm(@js(__('inventory::imports.apply_confirm', ['ok' => Fmt::number($summary['ok'])])))">@csrf
+            <form method="POST" action="{{ route('admin.inventory.imports.apply', $import->public_id) }}" data-confirm="{{ __('inventory::imports.apply_confirm', ['ok' => Fmt::number($summary['ok'])]) }}">@csrf
                 <x-platform::btn type="submit">{{ __('inventory::imports.apply') }}</x-platform::btn>
             </form>
         @endif
     @elseif ($import->status === 'applied')
         <p class="text-sm text-muted">{{ __('inventory::imports.applied_by', ['when' => Fmt::dateTime(CarbonImmutable::parse($import->applied_at, 'UTC'))]) }}</p>
-        <form method="POST" action="{{ route('admin.inventory.imports.rollback', $import->public_id) }}" class="space-y-2" onsubmit="return confirm(@js(__('inventory::imports.rollback_confirm')))">@csrf
+        <form method="POST" action="{{ route('admin.inventory.imports.rollback', $import->public_id) }}" class="space-y-2" data-confirm="{{ __('inventory::imports.rollback_confirm') }}">@csrf
             <p class="max-w-3xl text-sm text-muted">{{ __('inventory::imports.rollback_help') }}</p>
             <x-platform::btn type="submit" variant="secondary">{{ __('inventory::imports.rollback') }}</x-platform::btn>
         </form>

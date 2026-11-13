@@ -67,6 +67,16 @@ it('does not show inactive categories', function () {
     $this->get('/en/c/clothing')->assertNotFound();
 });
 
+it('shows a category description as plain text, cut at a word, never as half an HTML tag', function () {
+    $filler = str_repeat('word ', 200);
+    DB::table('category_translations')->where('locale', 'en')->where('slug', 'clothing')->update(['description' => '<p>Everyday <a href="https://example.test/a">wear</a> &amp; more.</p><script>alert(1)</script>'.$filler.'<a href="https://example.test/very-long-address">cut here</a>']);
+
+    $html = $this->get('/en/c/clothing')->assertOk()->getContent();
+    preg_match('#<header class="space-y-2">(.*?)</header>#s', (string) $html, $m);
+
+    expect($m[1])->toContain('Everyday wear &amp; more.')->not->toContain('<a ')->not->toContain('<script')->not->toContain('&amp;amp;')->not->toContain('very-long-address')->toContain('…');
+});
+
 it('filters by brand, price range, type, availability and attribute', function () {
     $dc = DB::table('catalog_listing')->where('brand_id', DB::table('brand_translations')->where('slug', 'dhaka-craft')->value('brand_id'))->count();
     expect(listed('/en/shop?brand[]=dhaka-craft'))->toHaveCount(min(24, $dc));
