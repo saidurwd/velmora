@@ -61,3 +61,9 @@ it('enforces the policy by default, never allows inline script, and lets the pay
         ->and($directives['base-uri'])->toBe("base-uri 'self'")->and($directives['frame-ancestors'])->toBe("frame-ancestors 'self'")
         ->and($directives['form-action'])->toContain("'self'")->toContain('https://securepay.sslcommerz.com')->toContain('https://sandbox.sslcommerz.com');
 });
+
+it('is not switched off by the example environment file that new servers are built from', function () {
+    $example = (string) file_get_contents(base_path('.env.example'));
+
+    expect($example)->toContain('CSP_ENFORCE=true')->not->toMatch('/^CSP_ENFORCE=false/m')->not->toMatch('/^CSP_ENABLED=false/m');
+});
