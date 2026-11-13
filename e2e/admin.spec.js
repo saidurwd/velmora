@@ -211,3 +211,27 @@ test.describe('staff-side Alpine components (CSP build)', () => {
     });
 });
 
+
+// The staff menu on a phone: closed behind a "Menu" button so the page comes first; on a large screen it is always open. (Uses the sign-in this file already made.)
+test('the staff menu collapses behind a Menu button on a phone and stays open on a desktop', async ({ browser }, info) => {
+    const phone = await browser.newContext({ ...info.project.use, storageState: state, viewport: { width: 390, height: 900 } });
+    const page = await phone.newPage();
+    await page.goto('/admin');
+    await page.waitForFunction(() => document.querySelector('[x-data]')?._x_dataStack !== undefined);
+    const button = page.getByRole('button', { name: 'Menu' });
+    const sales = page.locator('summary', { hasText: 'Sales' });
+    await expect(button).toHaveAttribute('aria-expanded', 'false');
+    await expect(sales).toBeHidden();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), 'no sideways scrolling on a phone').toBe(false);
+    await button.click();
+    await expect(button).toHaveAttribute('aria-expanded', 'true');
+    await expect(sales).toBeVisible();
+    await phone.close();
+
+    const desktop = await browser.newContext({ ...info.project.use, storageState: state, viewport: { width: 1280, height: 800 } });
+    const wide = await desktop.newPage();
+    await wide.goto('/admin');
+    await expect(wide.getByRole('button', { name: 'Menu' })).toBeHidden();
+    await expect(wide.locator('summary', { hasText: 'Sales' })).toBeVisible();
+    await desktop.close();
+});

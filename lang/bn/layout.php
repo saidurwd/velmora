@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
     'skip_to_content' => 'মূল কনটেন্টে যান',
     'admin_navigation' => 'অ্যাডমিন নেভিগেশন',
+    'menu' => 'মেনু',
     'sign_out' => 'সাইন আউট',
     'account_navigation' => 'অ্যাকাউন্ট',
     'account_overview' => 'সংক্ষিপ্ত বিবরণ',

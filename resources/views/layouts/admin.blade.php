@@ -8,8 +8,13 @@
     @endphp
     {{-- Phones: the menu sits above the page; from the large breakpoint it is a fixed-width column that scrolls by itself. Each area is a native <details>: it works without JavaScript and by keyboard, and the area of the page you are on is open. --}}
     <div class="flex min-h-screen flex-col lg:flex-row">
-        <nav class="w-full shrink-0 space-y-4 border-b border-line bg-surface-alt p-4 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:overflow-y-auto lg:border-b-0 lg:border-e" aria-label="{{ __('layout.admin_navigation') }}">
-            <p class="font-bold text-brand-700">{{ config('app.name') }}</p>
+        <nav x-data="adminNav" class="w-full shrink-0 border-b border-line bg-surface-alt p-4 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:overflow-y-auto lg:border-b-0 lg:border-e" aria-label="{{ __('layout.admin_navigation') }}">
+            <div class="flex items-center justify-between gap-4">
+                <p class="font-bold text-brand-700">{{ config('app.name') }}</p>
+                {{-- Phones only, and only when scripts run: without JavaScript the whole menu simply stays open. --}}
+                <button type="button" x-cloak @click="toggle()" x-bind:aria-expanded="open.toString()" aria-controls="admin-menu" class="min-h-11 rounded-md border border-line bg-surface px-4 py-2 text-sm font-medium lg:hidden">{{ __('layout.menu') }}</button>
+            </div>
+            <div id="admin-menu" x-bind:class="open ? 'mt-4 space-y-4' : 'mt-4 hidden space-y-4 lg:block'" class="mt-4 space-y-4">
             @if ($user && Route::has('admin.search'))
                 <form method="GET" action="{{ route('admin.search') }}" role="search">
                     <label for="admin-search" class="sr-only">{{ __('platform::productivity.search.label') }}</label>
@@ -45,6 +50,7 @@
                     <button class="text-sm underline">{{ __('layout.sign_out') }} ({{ $user->name }})</button>
                 </form>
             @endif
+            </div>
         </nav>
         <main id="main" class="min-w-0 flex-1 p-4 lg:p-6" tabindex="-1">
             @yield('content')

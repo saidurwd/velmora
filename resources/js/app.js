@@ -59,6 +59,14 @@ Alpine.data('searchBox', (suggestUrl) => ({
     },
 }));
 
+// The staff menu on a phone: closed behind a "Menu" button (the page content comes first); on a large screen it is always shown (CSS). Without JavaScript it stays open.
+Alpine.data('adminNav', () => ({
+    open: false,
+    toggle() {
+        this.open = !this.open;
+    },
+}));
+
 // A dialog opened with $dispatch('open-modal', 'its-id'): Esc and the backdrop close it, focus moves into it.
 Alpine.data('modal', (id) => ({
     open: false,
