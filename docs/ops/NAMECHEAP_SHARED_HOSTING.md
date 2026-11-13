@@ -58,7 +58,8 @@ PUSH_DRIVER=log
 ```
 
    This one line runs every scheduled task **and** drains the queue (`QUEUE_RUN_FROM_SCHEDULER=true`). Two minutes later run `php ~/velmora/artisan velmora:preflight`: the "Scheduler (cron)" line should turn OK.
-7. **First staff account.** `php ~/velmora/artisan velmora:create-super-admin you@yourdomain.com --name="Your Name"` (it asks for the password; see `OWNER_LAUNCH_CHECKLIST.md`).
+7. **Starter catalogue (optional).** `php ~/velmora/artisan db:seed --class='Database\Seeders\BangladeshLifestyleSeeder' --force` adds the categories, attributes, brands, tags, menus and search spellings of a Bangladeshi lifestyle shop (see `docs/ops/LIFESTYLE_STARTER_CATALOGUE.md`; it can take about 20 seconds on shared hosting).
+8. **First staff account.** `php ~/velmora/artisan velmora:create-super-admin you@yourdomain.com --name="Your Name"` (it asks for the password; see `OWNER_LAUNCH_CHECKLIST.md`).
 
 ## 2. Every upgrade, and going back
 
