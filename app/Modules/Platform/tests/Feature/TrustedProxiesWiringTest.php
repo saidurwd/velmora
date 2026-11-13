@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Platform\Support\TrustedProxies;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
+use Illuminate\Support\Env;
 
 /* The visitor's address comes from X-Forwarded-For only from a proxy that is trusted, and then the rate limits are per visitor, not per load balancer. */
 
@@ -25,11 +26,18 @@ it('takes the visitor\'s address from X-Forwarded-For when every caller is trust
 });
 
 it('reads the setting through the config file, so a TRUSTED_PROXIES line in .env counts', function () {
-    putenv('TRUSTED_PROXIES=*');
-    $wildcard = (require base_path('config/trustedproxy.php'))['proxies'];
-    putenv('TRUSTED_PROXIES=10.0.0.1,10.2.0.0/16');
-    $list = (require base_path('config/trustedproxy.php'))['proxies'];
-    putenv('TRUSTED_PROXIES');
+    $env = Env::getRepository();   // the same place a .env file is loaded into, so this works whether or not the machine's own .env defines the setting
+    $before = $env->get('TRUSTED_PROXIES');
+    try {
+        $env->set('TRUSTED_PROXIES', '*');
+        $wildcard = (require base_path('config/trustedproxy.php'))['proxies'];
+        $env->set('TRUSTED_PROXIES', '10.0.0.1,10.2.0.0/16');
+        $list = (require base_path('config/trustedproxy.php'))['proxies'];
+        $env->set('TRUSTED_PROXIES', '');
+        $empty = (require base_path('config/trustedproxy.php'))['proxies'];
+    } finally {
+        $before === null ? $env->clear('TRUSTED_PROXIES') : $env->set('TRUSTED_PROXIES', $before);
+    }
 
-    expect($wildcard)->toBe('*')->and($list)->toBe(['10.0.0.1', '10.2.0.0/16']);
+    expect($wildcard)->toBe('*')->and($list)->toBe(['10.0.0.1', '10.2.0.0/16'])->and($empty)->toBeNull();
 });
