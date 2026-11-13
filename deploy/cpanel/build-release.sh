@@ -9,8 +9,10 @@ SHA="$(git rev-parse --short HEAD)"
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
 git archive HEAD | tar -x -C "$WORK"
 cd "$WORK"
-composer install --no-dev --optimize-autoloader --no-interaction --no-progress --quiet
-npm ci --silent && npm run build --silent
+find app -type d -name tests -prune -exec rm -rf {} +   # test code never ships, and must not be in the class map
+# APP_ENV=build: the install boots the app once, and the app (rightly) refuses to boot as "production" without a key; this is not the live shop
+APP_ENV=build composer install --no-dev --optimize-autoloader --no-interaction --no-progress --quiet
+APP_ENV=build npm ci --silent && npm run build --silent
 rm -rf node_modules tests e2e docs .github deploy/cpanel/build-release.sh playwright.config.js phpunit.xml pint.json phpstan.neon .env .env.e2e .env.example.bak
 rm -rf storage/logs/* storage/framework/cache/data/* storage/framework/sessions/* storage/framework/views/* 2>/dev/null || true
 echo "$SHA" > RELEASE
