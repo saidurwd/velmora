@@ -23,7 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->trustProxies(at: env('TRUSTED_PROXIES') ? explode(',', (string) env('TRUSTED_PROXIES')) : null);
+        // Trusted proxies come from config/trustedproxy.php (read after the .env file is loaded, which has not happened yet at this point).
         // Maintenance mode shuts the storefront but never the admin area or the health checks, so nobody can lock staff out.
         $middleware->preventRequestsDuringMaintenance(except: ['admin', 'admin/*', 'up', 'healthz', 'readyz']);
         $middleware->append(AssignRequestContext::class);

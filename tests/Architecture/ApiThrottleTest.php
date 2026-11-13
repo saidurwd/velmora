@@ -134,3 +134,7 @@ it('limits every staff action that changes something, per staff member, and leav
         ->and($key('POST', '203.0.113.1', 7)->maxAttempts)->toBe(120)
         ->and($key('POST', '203.0.113.1', 7)->key)->toBe($key('POST', '198.51.100.9', 7)->key)->not->toBe($key('POST', '203.0.113.1', 8)->key);
 });
+
+it('does not read the environment in bootstrap/app.php, where a .env file has not been loaded yet', function () {
+    expect((string) file_get_contents(base_path('bootstrap/app.php')))->not->toMatch('/\benv\s*\(/');
+});
