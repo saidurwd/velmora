@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Catalog\DTOs\ProductCard;
 use App\Modules\Cms\DTOs\BannerView;
+use App\Modules\Cms\DTOs\MenuLink;
 use App\Modules\Cms\DTOs\PageLink;
 use App\Modules\Platform\DTOs\Money;
 use Illuminate\Support\Str;
@@ -143,6 +144,7 @@ return [
         ProductCard::class,
         BannerView::class,
         PageLink::class,
+        MenuLink::class,   // the header and footer menus (tests/Feature/StorefrontCacheRoundTripTest.php proves each class here round-trips through a real cache)
         Money::class,
     ],
 
