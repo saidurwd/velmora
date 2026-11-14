@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 return [
     'skip_to_content' => 'Skip to main content',
+    'admin_ui' => ['panel' => 'Staff area', 'close_menu' => 'Close the menu', 'view_shop' => 'View shop', 'account' => 'Your account'],
     'admin_navigation' => 'Admin navigation',
     'menu' => 'Menu',
     'sign_out' => 'Sign out',

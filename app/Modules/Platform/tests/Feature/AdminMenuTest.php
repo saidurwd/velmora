@@ -53,12 +53,12 @@ it('shows a viewer only the areas they may use, and no empty area', function () 
 it('draws the sidebar with area headings, opens the area of the current page and marks the current link', function () {
     $html = $this->actingAs($this->owner, 'admin')->get('/admin/catalog/categories')->assertOk()->getContent();
 
-    preg_match_all('/<details class="group"\s*(open)?\s*>/', $html, $tags);
+    preg_match_all('/<details class="group" data-nav-area="[a-z]+"\s*(open)?\s*>/', $html, $tags);
     expect(count($tags[0]))->toBe(count(AdminMenu::AREAS))->and(array_filter($tags[1]))->toHaveCount(1)   // eleven areas, only the one you are in is open
-        ->and($html)->toContain('>Catalog<')->toContain('>Money<')->toContain('>Administration<');
+        ->and($html)->toContain('>Catalog</span>')->toContain('>Money</span>')->toContain('>Administration</span>');
     preg_match_all('/aria-current="page"/', $html, $current);
     expect(count($current[0]))->toBe(1);
-    preg_match('/<details class="group"\s*open\s*>(.*?)<\/details>/s', $html, $open);
+    preg_match('/<details class="group" data-nav-area="catalog"\s*open\s*>(.*?)<\/details>/s', $html, $open);
     expect($open[1])->toContain('aria-current="page"')->toContain('>Categories<');
 });
 

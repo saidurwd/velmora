@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 return [
     'skip_to_content' => 'মূল কনটেন্টে যান',
+    'admin_ui' => ['panel' => 'স্টাফ এরিয়া', 'close_menu' => 'মেনু বন্ধ করুন', 'view_shop' => 'শপ দেখুন', 'account' => 'আপনার অ্যাকাউন্ট'],
     'admin_navigation' => 'অ্যাডমিন নেভিগেশন',
     'menu' => 'মেনু',
     'sign_out' => 'সাইন আউট',

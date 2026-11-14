@@ -109,7 +109,7 @@ for (const [lang, locale] of [['English', 'en-US'], ['Bangla', 'bn-BD']]) {
 }
 
 // Phase 12: the Content-Security-Policy is enforced, so the "are you sure?" question before a delete is a data attribute (data-confirm) handled by resources/js/behaviors.js,
-// not an inline handler. Staff work on a desktop, so this runs at desktop width: at a phone's width the whole staff layout is wider than the screen (the sidebar takes 40 % of it), which is a known, tracked limitation (security register F-5), not a policy problem.
+// not an inline handler. It runs at desktop width, where staff mostly work; the phone layout is checked by the staff-menu test below.
 test.describe('the delete question (Content-Security-Policy enforced)', () => {
     test('deleting asks first, cancelling really cancels, and the page is not blocked by the policy', async ({ browser }, info) => {
         const context = await browser.newContext({ ...info.project.use, storageState: state, viewport: { width: 1280, height: 900 } });
@@ -218,7 +218,7 @@ test('the staff menu collapses behind a Menu button on a phone and stays open on
     const page = await phone.newPage();
     await page.goto('/admin');
     await page.waitForFunction(() => document.querySelector('[x-data]')?._x_dataStack !== undefined);
-    const button = page.getByRole('button', { name: 'Menu' });
+    const button = page.getByRole('button', { name: 'Menu', exact: true });
     const sales = page.locator('summary', { hasText: 'Sales' });
     await expect(button).toHaveAttribute('aria-expanded', 'false');
     await expect(sales).toBeHidden();
@@ -231,7 +231,7 @@ test('the staff menu collapses behind a Menu button on a phone and stays open on
     const desktop = await browser.newContext({ ...info.project.use, storageState: state, viewport: { width: 1280, height: 800 } });
     const wide = await desktop.newPage();
     await wide.goto('/admin');
-    await expect(wide.getByRole('button', { name: 'Menu' })).toBeHidden();
+    await expect(wide.getByRole('button', { name: 'Menu', exact: true })).toBeHidden();
     await expect(wide.locator('summary', { hasText: 'Sales' })).toBeVisible();
     await desktop.close();
 });

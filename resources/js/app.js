@@ -60,10 +60,18 @@ Alpine.data('searchBox', (suggestUrl) => ({
 }));
 
 // The staff menu on a phone: closed behind a "Menu" button (the page content comes first); on a large screen it is always shown (CSS). Without JavaScript it stays open.
+// The staff menu. Large screens always show it; on phones (with scripts) it is a drawer the top bar opens, closed by Escape, the backdrop or its close button.
 Alpine.data('adminNav', () => ({
     open: false,
+    get drawerClass() {
+        return this.open ? 'max-lg:fixed max-lg:inset-y-0 max-lg:start-0 max-lg:z-50 max-lg:flex max-lg:w-80 max-lg:max-w-[85vw] max-lg:flex-col max-lg:shadow-lift' : 'max-lg:hidden';
+    },
     toggle() {
         this.open = !this.open;
+        if (this.open) this.$nextTick(() => this.$refs.closeButton?.focus());
+    },
+    close() {
+        this.open = false;
     },
 }));
 

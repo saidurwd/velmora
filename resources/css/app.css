@@ -31,6 +31,7 @@
     --color-surface: #ffffff;
     --color-surface-alt: #faf7f2;
     --color-line: #e7e0d6;
+    --color-line-strong: #cfc6b8;
     --color-night: #10231f;
     --color-night-soft: #1b352f;
     --color-sale: #b42318;
@@ -133,5 +134,157 @@
 
     .skip-link:focus {
         top: 0.5rem;
+    }
+}
+
+/* `admin:` styles an element only inside the staff area (the element with .admin-ui), e.g. `rounded-full admin:rounded-lg` on a shared button. */
+@custom-variant admin (&:where(.admin-ui, .admin-ui *));
+
+/*
+ * The staff area. Its 130-odd screens are written with plain elements and a few utility classes, so the common look lives here, once: calm canvas, white cards,
+ * clear form controls with a visible focus ring, tables with a quiet header, row hover and tabular numbers. Everything is scoped to .admin-ui, so the storefront is
+ * untouched, and sits in the components layer, so a utility class written on an element still wins.
+ */
+@layer components {
+    .admin-ui {
+        --admin-canvas: #f6f5f1;
+        font-size: 0.9375rem;
+    }
+
+    .admin-ui main :where(input:not([type='checkbox'], [type='radio'], [type='file'], [type='hidden'], [type='range'], [type='color'], [type='submit'], [type='button']), select, textarea) {
+        min-height: 2.5rem;
+        background-color: var(--color-surface);
+        border-color: var(--color-line);
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 1px rgb(28 25 23 / 0.04);
+        transition: border-color 0.12s, box-shadow 0.12s;
+    }
+
+    .admin-ui main :where(input:not([type='checkbox'], [type='radio'], [type='file'], [type='hidden']), select, textarea):hover {
+        border-color: var(--color-line-strong);
+    }
+
+    .admin-ui main :where(input, select, textarea):focus-visible {
+        border-color: var(--color-brand-600);
+        outline: 3px solid color-mix(in srgb, var(--color-brand-500) 30%, transparent);
+        outline-offset: 0;
+    }
+
+    .admin-ui main :where(input, select, textarea):disabled {
+        background-color: var(--admin-canvas);
+        color: var(--color-muted);
+        cursor: not-allowed;
+    }
+
+    .admin-ui main :where(input, select, textarea)[aria-invalid='true'] {
+        border-color: var(--color-danger);
+    }
+
+    .admin-ui main :where(input[type='checkbox'], input[type='radio']) {
+        accent-color: var(--color-brand-600);
+        width: 1.05rem;
+        height: 1.05rem;
+    }
+
+    .admin-ui main :where(input[type='file'])::file-selector-button {
+        margin-inline-end: 0.75rem;
+        padding: 0.45rem 0.9rem;
+        border: 1px solid var(--color-line);
+        border-radius: 0.5rem;
+        background: var(--color-surface);
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .admin-ui main :where(label) {
+        color: var(--color-ink);
+    }
+
+    /* Page title and section titles. */
+    .admin-ui main :where(h1) {
+        letter-spacing: -0.015em;
+        color: var(--color-ink);
+    }
+
+    .admin-ui main :where(h2, h3) {
+        letter-spacing: -0.01em;
+    }
+
+    /* Action links ("Edit", "View", "Back") read as links in the brand colour. */
+    .admin-ui main :where(a.underline) {
+        color: var(--color-brand-700);
+        text-decoration-color: color-mix(in srgb, var(--color-brand-700) 40%, transparent);
+        text-underline-offset: 3px;
+    }
+
+    .admin-ui main :where(a.underline):hover {
+        text-decoration-color: currentColor;
+    }
+
+    /* Tables: a white card with a quiet header, roomy edge cells, row hover and figures that line up. */
+    .admin-ui main :where(table) {
+        background: var(--color-surface);
+        box-shadow: 0 0 0 1px var(--color-line);
+    }
+
+    .admin-ui main :where(.overflow-x-auto:has(> table)) {
+        border-radius: 0.75rem;
+        background: var(--color-surface);
+        box-shadow: 0 0 0 1px var(--color-line), 0 1px 2px rgb(28 25 23 / 0.04);
+    }
+
+    .admin-ui main :where(.overflow-x-auto > table) {
+        box-shadow: none;
+    }
+
+    .admin-ui main :where(thead th, thead td) {
+        background: var(--color-surface-alt);
+        color: var(--color-muted);
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        padding-top: 0.65rem;
+        padding-bottom: 0.65rem;
+        border-bottom: 1px solid var(--color-line);
+    }
+
+    html[lang='bn'] .admin-ui main :where(thead th, thead td) {
+        text-transform: none;
+        letter-spacing: 0;
+        font-size: 0.8125rem;
+    }
+
+    .admin-ui main :where(th, td):first-child {
+        padding-inline-start: 1rem;
+    }
+
+    .admin-ui main :where(th, td):last-child {
+        padding-inline-end: 1rem;
+    }
+
+    .admin-ui main :where(tbody td, tbody th) {
+        padding-top: 0.7rem;
+        padding-bottom: 0.7rem;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .admin-ui main :where(tbody tr) {
+        transition: background-color 0.1s;
+    }
+
+    .admin-ui main :where(tbody tr:hover) {
+        background: color-mix(in srgb, var(--color-brand-50) 60%, transparent);
+    }
+
+    .admin-ui main :where(tbody tr:last-child) {
+        border-bottom-width: 0;
+    }
+
+    /* Boxed sections (forms, panels, filter bars) become white cards on the canvas. */
+    .admin-ui main :where(.rounded-lg.border, .rounded-md.border.p-4, .rounded-xl.border, fieldset.border) {
+        background-color: var(--color-surface);
+        box-shadow: 0 1px 2px rgb(28 25 23 / 0.04);
     }
 }
