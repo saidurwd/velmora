@@ -32,6 +32,7 @@ The values live in `resources/css/app.css` (`@theme`); views use the token names
 - **Layout:** top bar (promise, help, my orders, language) → sticky header (menu, logo, search, account, cart) → page → dark footer (contact, payment methods the shop really offers, footer menu). Content width `max-w-7xl`.
 - **Honesty rule:** the value strip and "We accept" show cash on delivery or online payment only when that payment method is active. Nothing promises a delivery time, a return window or a discount that settings do not back.
 - **Behaviour without inline script (CSP):** menus are `<details data-menu>` / `<details data-popover>`, carousels `data-carousel`, the filter panel `<details data-open-desktop>`; `resources/js/behaviors.js` adds one-open-at-a-time, click-away, Escape and hover. With JavaScript off they still open and close as plain `<details>`.
+- **Quantity:** always `<x-platform::qty-stepper>` (product page, cart): − and + that keep to the item's minimum, maximum and step, arrow keys in the box (a spinbutton), buttons skipped by Tab so Tab goes on to the form's button; without JavaScript a plain box. Typed numbers (Bangla digits too) are left for the server to judge. The hint under it states the minimum, step and per-order maximum.
 - **Contrast:** every text and background pair above is at least 4.5:1; the browser suite checks the key pages with axe in both languages.
 
 ## 2. Component inventory (Blade `<x-…>`; living page `/dev/components`, non-prod)

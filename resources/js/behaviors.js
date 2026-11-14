@@ -103,6 +103,54 @@ document.querySelectorAll('[data-carousel]').forEach((carousel) => {
     controls.querySelector('[data-carousel-next]')?.addEventListener('click', () => step(1));
 });
 
+// ---- Quantity steppers ([data-stepper], the qty-stepper component): − and + keep to data-min, data-max and data-step; the arrow keys do the same in the box. ----
+// Typing is left alone (a Bangla digit or an over-large number is the server's to judge, with a friendly message); only the buttons and arrows snap the number.
+const asciiDigits = (text) => text.replace(/[০-৯]/g, (digit) => String('০১২৩৪৫৬৭৮৯'.indexOf(digit)));
+document.querySelectorAll('[data-stepper]').forEach((box) => {
+    const input = box.querySelector('input');
+    const less = box.querySelector('[data-stepper-dec]');
+    const more = box.querySelector('[data-stepper-inc]');
+    if (!input || !less || !more) return;
+    const min = Math.max(1, parseInt(box.dataset.min, 10) || 1);
+    const step = Math.max(1, parseInt(box.dataset.step, 10) || 1);
+    const max = box.dataset.max ? parseInt(box.dataset.max, 10) : Infinity;
+    const read = () => { const n = parseInt(asciiDigits(input.value.trim()), 10); return Number.isFinite(n) ? n : min; };
+    // the nearest allowed amount: min, min + step, min + 2·step, ... and never above max
+    const snap = (n) => {
+        let q = min + Math.round((Math.max(min, n) - min) / step) * step;
+        while (q > max && q - step >= min) q -= step;
+        return q;
+    };
+    const sync = () => {
+        const n = read();
+        less.disabled = n <= min;
+        more.disabled = n + step > max;
+        input.setAttribute('aria-valuenow', String(n));
+    };
+    const change = (direction) => {
+        const n = read();
+        const next = snap(direction > 0 ? (n < min ? min : n + step) : n - step);
+        input.value = String(next);
+        sync();
+    };
+
+    input.setAttribute('role', 'spinbutton');
+    input.setAttribute('aria-valuemin', String(min));
+    if (Number.isFinite(max)) input.setAttribute('aria-valuemax', String(max));
+    less.hidden = false;
+    more.hidden = false;
+    less.addEventListener('click', () => change(-1));
+    more.addEventListener('click', () => change(1));
+    input.addEventListener('input', sync);
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+            event.preventDefault();
+            change(event.key === 'ArrowUp' ? 1 : -1);
+        }
+    });
+    sync();
+});
+
 // A <details data-open-desktop> (the listing filters) is a closed drawer on phones and simply open on large screens.
 if (window.matchMedia('(min-width: 64rem)').matches) {
     document.querySelectorAll('details[data-open-desktop]').forEach((details) => { details.open = true; });

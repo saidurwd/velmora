@@ -41,7 +41,7 @@
                             <form method="POST" action="{{ route('cart.update', ['locale' => app()->getLocale(), 'variant' => $line->variantPublicId]) }}" class="flex items-end gap-2 sm:justify-end">
                                 @csrf @method('PATCH')
                                 <div><label for="q-{{ $line->variantPublicId }}" class="block text-xs text-muted">{{ __('cart::cart.quantity') }}</label>
-                                    <input id="q-{{ $line->variantPublicId }}" name="quantity" inputmode="numeric" value="{{ $line->quantity }}" class="field-input w-20 px-2 py-2 text-center"></div>
+                                    <x-platform::qty-stepper size="sm" class="mt-1" :id="'q-'.$line->variantPublicId" :value="$line->quantity" :min="$line->minQty" :max="$line->maxQty" :step="$line->qtyStep" /></div>
                                 <x-platform::btn type="submit" size="sm" variant="secondary">{{ __('cart::cart.update') }}</x-platform::btn>
                             </form>
                         @endif

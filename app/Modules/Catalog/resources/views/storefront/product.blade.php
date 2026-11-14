@@ -78,16 +78,22 @@
                 @elseif ($page->stockState === 'out_of_stock')
                     <x-platform::btn type="button" disabled aria-disabled="true" class="w-full cursor-not-allowed opacity-60">{{ __('platform::ui.out_of_stock') }}</x-platform::btn>
                 @else
-                    <form method="POST" action="{{ route('cart.add', ['locale' => app()->getLocale()]) }}" class="flex items-end gap-3" novalidate>
+                    @php
+                        $qtyHelp = array_filter([
+                            $page->qtyStep > 1 || $page->minQty > 1 ? __('catalog::storefront.qty_rule', ['min' => $page->minQty, 'step' => $page->qtyStep]) : null,
+                            $page->maxQty !== null ? __('catalog::storefront.qty_max', ['max' => $page->maxQty]) : null,
+                        ]);
+                    @endphp
+                    <form method="POST" action="{{ route('cart.add', ['locale' => app()->getLocale()]) }}" class="flex flex-wrap items-end gap-3" novalidate>
                         @csrf
                         <input type="hidden" name="variant" value="{{ $page->variantPublicId }}">
                         <div>
-                            <label for="qty" class="block text-sm font-medium">{{ __('cart::cart.quantity') }}</label>
-                            <input id="qty" name="quantity" inputmode="numeric" value="{{ $page->minQty }}" class="field-input w-24 px-3 py-2.5 text-center" @if ($page->qtyStep > 1 || $page->minQty > 1) aria-describedby="qty-help" @endif>
+                            <label for="qty" class="mb-1 block text-sm font-medium">{{ __('cart::cart.quantity') }}</label>
+                            <x-platform::qty-stepper id="qty" :value="$page->minQty" :min="$page->minQty" :max="$page->maxQty" :step="$page->qtyStep" :describedby="$qtyHelp !== [] ? 'qty-help' : null" />
                         </div>
-                        <x-platform::btn type="submit" class="flex-1"><svg aria-hidden="true" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.7 12.4a1 1 0 0 0 1 .8h9.1a1 1 0 0 0 1-.8L21 7H6"/></svg>{{ __('cart::cart.add') }}</x-platform::btn>
+                        <x-platform::btn type="submit" class="min-w-48 flex-1"><svg aria-hidden="true" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.7 12.4a1 1 0 0 0 1 .8h9.1a1 1 0 0 0 1-.8L21 7H6"/></svg>{{ __('cart::cart.add') }}</x-platform::btn>
                     </form>
-                    @if ($page->qtyStep > 1 || $page->minQty > 1)<p id="qty-help" class="text-sm text-muted">{{ __('catalog::storefront.qty_rule', ['min' => $page->minQty, 'step' => $page->qtyStep]) }}</p>@endif
+                    @if ($qtyHelp !== [])<p id="qty-help" class="text-sm text-muted">{{ implode(' ', $qtyHelp) }}</p>@endif
                 @endif
                 @includeIf('engagement::partials.product-actions', ['variant' => $page->variantPublicId, 'type' => $page->type, 'outOfStock' => $page->stockState === 'out_of_stock'])
             </div>
