@@ -53,3 +53,7 @@ Thumbs.db
 /test-results/
 /playwright-report/
 .env.e2e
+
+# Database copies hold customers' personal data and password hashes: never commit them
+*.sql
+*.sql.gz

@@ -4,6 +4,7 @@ All notable changes. Format: [Keep a Changelog](https://keepachangelog.com), ver
 
 ## [Unreleased]
 ### Added — Phase 7 (fulfilment, couriers, returns) — in progress
+- Database copies import as any user: `deploy/cpanel/backup-db.sh` removes the `DEFINER` clause from triggers (an import by another user stopped at the first trigger), the hosting guide shows how to clean a copy made elsewhere, and `.gitignore` refuses `*.sql` / `*.sql.gz` (a copy holds personal data).
 - Fixed: on the Data checks page, running the checks one by one was refused at the 7th click within a minute with a bare "Too many requests" page (seen with the coupon check on a dev site; the check itself was fine). Running one check now allows 30 a minute and "Run all checks" 6; past either limit the page comes back with a plain message instead of an error page, and opening or reloading the run address returns to the page.
 - Security & audit and System screens in the staff area, in two new menu areas (Administration keeps settings, staff and roles):
   - **Activity log** (`audit.view`): what staff did, in plain words ("Rahima put a product on sale"), grouped by day, filtered by person, area and date; **My activity** for every staff member (own actions only). Every one of the 219 audit actions has a sentence in English and Bangla; a test fails when a new action has none.

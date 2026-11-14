@@ -86,6 +86,13 @@ PUSH_DRIVER=log
 * Also back up `~/velmora-shared/storage` (images, digital files) and **the `APP_KEY`**.
 * **What you do not get:** point-in-time recovery. The most you can lose is up to a day (the interval between copies), not the 15 minutes the design document targets. That target must be **formally waived** for the shared-hosting phase (the readiness report lists it as a blocker until you decide). A restore is done as in `docs/runbooks/database-failover-restore.md`; practise it once.
 
+### Importing a database copy (phpMyAdmin or the `mysql` command)
+A copy made with `mysqldump` / `mariadb-dump` names the database user who made it on every trigger (`DEFINER=\`root\`@\`localhost\``). Imported as another user (always the case on cPanel), it stops at the first trigger, e.g. at `TRIGGER \`audit_events_no_update\``, because only an administrator may create a trigger for someone else. Remove that clause first; nothing else changes and the triggers then belong to your cPanel database user:
+
+    sed -e '1{/enable the sandbox mode/d;}' -e 's#/\*!50017 DEFINER=`[^`]*`@`[^`]*`\*/ ##g' copy.sql > copy.import.sql
+
+(The first expression drops the `/*M!999999\- enable the sandbox mode */` line that MariaDB 11.4+/12 tools put at the top, which older import tools reject.) `deploy/cpanel/backup-db.sh` already writes its copies without it. Import into an **empty** database. If the import then stops with error 1419 (binary logging), the host must allow triggers (`log_bin_trust_function_creators`); `php artisan velmora:preflight` checks this. A copy holds customers' personal data and password hashes: keep it out of the repository (`.gitignore` refuses `*.sql`) and delete local copies you no longer need.
+
 ## 5. What was tested
 
 * `deploy/cpanel/build-release.sh`: builds a 22 MB zip with production dependencies only, no `.env`, no tests, no dev tools.
