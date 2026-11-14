@@ -15,6 +15,19 @@ beforeEach(function () {
     $root = sys_get_temp_dir().'/velmora-preflight-'.bin2hex(random_bytes(4));
     config(['filesystems.disks.media' => ['driver' => 'local', 'root' => $root.'/media'], 'filesystems.disks.private' => ['driver' => 'local', 'root' => $root.'/private']]);
     Storage::forgetDisk(['media', 'private']);
+    // the built assets, in a folder the test owns: CI builds them only after the tests, and a developer's machine may or may not have them
+    $this->publicRoot = $root.'/public';
+    @mkdir($this->publicRoot.'/build', 0777, true);
+    file_put_contents($this->publicRoot.'/build/manifest.json', '{}');
+    app()->usePublicPath($this->publicRoot);
+});
+
+it('fails when the assets were not built, and passes when they were', function () {
+    $check = fn () => collect((new Preflight)->run())->keyBy('name')['Built assets']['status'];
+    expect($check())->toBe('ok');
+
+    unlink($this->publicRoot.'/build/manifest.json');
+    expect($check())->toBe('fail');
 });
 
 it('accepts only MariaDB 11.4.5 or newer', function (string $reported, bool $supported) {
