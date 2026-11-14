@@ -287,9 +287,25 @@ describe('the page', function () {
         $as()->post('/admin/ops/integrity/run', ['code' => 'bad code!'])->assertSessionHasErrors('code');
 
         $this->actingAs(catalogStaff(['queues.view']), 'admin')->post('/admin/ops/integrity/run')->assertForbidden();
-        foreach (range(1, 4) as $i) {
-            $as()->post('/admin/ops/integrity/run');
+        foreach (range(1, 5) as $i) {   // with the one above: six "run all" in the minute, all allowed (single checks have their own, wider limit)
+            $as()->post('/admin/ops/integrity/run')->assertSessionHasNoErrors();
         }
-        $as()->post('/admin/ops/integrity/run')->assertStatus(429);
+        // the seventh "run all": past the limit (6 a minute): back to the page with a plain message, not an error page, and nothing ran
+        $before = DB::table('audit_events')->where('action', 'ops.integrity_run')->count();
+        $as()->post('/admin/ops/integrity/run')->assertRedirect('/admin/ops/integrity')->assertSessionHasErrors(['ops' => 'You ran the checks several times in the last minute. Wait a minute, then try again.']);
+        expect(DB::table('audit_events')->where('action', 'ops.integrity_run')->count())->toBe($before);
+    });
+
+    it('lets staff run each check in turn without hitting the limit, and sends a reload of the run address back to the page', function () {
+        $as = fn () => $this->actingAs($this->viewer, 'admin');
+
+        // one check is one small read: clicking down the list (twice, even) is normal use (it was refused at the 7th click; seen on a dev site)
+        foreach (['stock_ledger', 'stock_reservations', 'order_lines_add_up', 'refunds_within_captured', 'refunds_within_captured', 'outbox_not_stuck', 'coupon_use_counts', 'stock_ledger'] as $code) {
+            $as()->post('/admin/ops/integrity/run', ['code' => $code])->assertRedirect('/admin/ops/integrity')->assertSessionHasNoErrors();
+        }
+        expect(DB::table('integrity_check_runs')->count())->toBe(6);
+
+        $as()->get('/admin/ops/integrity/run')->assertRedirect('/admin/ops/integrity');   // reloading the address after a run, or a bookmark
+        $this->actingAs(catalogStaff(['queues.view']), 'admin')->get('/admin/ops/integrity/run')->assertForbidden();
     });
 });

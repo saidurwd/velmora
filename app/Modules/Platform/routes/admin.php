@@ -58,7 +58,9 @@ Route::middleware(['auth:admin', 'session.policy:admin'])->group(function (): vo
     Route::get('/ops/health', [SystemHealthController::class, 'index'])->middleware('permission:system.view')->name('ops.health');
     Route::get('/ops/scheduler', [SchedulerController::class, 'index'])->middleware('permission:system.view')->name('ops.scheduler');
     Route::get('/ops/integrity', [IntegrityController::class, 'index'])->middleware('permission:system.view')->name('ops.integrity');
-    Route::post('/ops/integrity/run', [IntegrityController::class, 'run'])->middleware(['permission:system.view', 'throttle:6,1,ops-integrity'])->name('ops.integrity.run');
+    Route::post('/ops/integrity/run', [IntegrityController::class, 'run'])->middleware(['permission:system.view', 'throttle:ops-integrity'])->name('ops.integrity.run');
+    // reloading the address after a run, or a bookmark of it: back to the page (the run itself is a POST)
+    Route::get('/ops/integrity/run', [IntegrityController::class, 'reload'])->middleware('permission:system.view')->name('ops.integrity.reload');
     Route::get('/ops/queues', [SystemInfoController::class, 'queues'])->middleware('permission:queues.view')->name('ops.queues');
     Route::get('/ops/about', [SystemInfoController::class, 'about'])->middleware('permission:system.view')->name('ops.about');
     Route::get('/ops/failed-jobs', [FailedJobController::class, 'index'])->middleware('permission:queues.view')->name('ops.failed');

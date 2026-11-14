@@ -233,6 +233,14 @@ class PlatformServiceProvider extends ModuleServiceProvider
         $by = fn (Request $r): string => (string) ($r->user()?->getAuthIdentifier() ?? $r->ip());
 
         // Every staff screen that CHANGES something (anything but a read): 120 a minute per staff member (per address while not yet signed in). Reads are not limited here.
+        // Data checks run by hand: one check is a single small read, so clicking down the list is fine (30 a minute); "run all" is heavier (6 a minute).
+        // Past the limit the person is sent back to the page with a plain message, not shown an error page.
+        RateLimiter::for('ops-integrity', function (Request $r) {
+            $all = ! $r->filled('code');
+
+            return ($all ? Limit::perMinute(6) : Limit::perMinute(30))->by('ops-integrity|'.($all ? 'all' : 'one').'|'.($r->user('admin')?->getAuthIdentifier() ?? $r->ip()))
+                ->response(fn () => redirect()->route('admin.ops.integrity')->withErrors(['ops' => __('platform::ops.errors.too_often')]));
+        });
         RateLimiter::for('admin-write', fn (Request $r) => $r->isMethodSafe() ? Limit::none() : Limit::perMinute(120)->by('admin-write|'.($r->user('admin')?->getAuthIdentifier() ?? $r->ip())));
         RateLimiter::for('public-read', fn (Request $r) => Limit::perMinute(120)->by($r->ip()));
         RateLimiter::for('search', fn (Request $r) => Limit::perMinute(60)->by($r->ip()));

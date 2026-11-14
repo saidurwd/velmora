@@ -4,6 +4,7 @@ All notable changes. Format: [Keep a Changelog](https://keepachangelog.com), ver
 
 ## [Unreleased]
 ### Added — Phase 7 (fulfilment, couriers, returns) — in progress
+- Fixed: on the Data checks page, running the checks one by one was refused at the 7th click within a minute with a bare "Too many requests" page (seen with the coupon check on a dev site; the check itself was fine). Running one check now allows 30 a minute and "Run all checks" 6; past either limit the page comes back with a plain message instead of an error page, and opening or reloading the run address returns to the page.
 - Security & audit and System screens in the staff area, in two new menu areas (Administration keeps settings, staff and roles):
   - **Activity log** (`audit.view`): what staff did, in plain words ("Rahima put a product on sale"), grouped by day, filtered by person, area and date; **My activity** for every staff member (own actions only). Every one of the 219 audit actions has a sentence in English and Bangla; a test fails when a new action has none.
   - **Security events** (`audit.view`): the last 24 hours (wrong passwords and codes, lockouts, recovery codes used, app sign-ins stopped for key reuse), the network addresses with the most failures (shown in part only), and a feed rated High / Medium / Info (lockouts, super-admin overrides, role and staff changes, maintenance, audit and report downloads, password, email and phone changes, integrations).

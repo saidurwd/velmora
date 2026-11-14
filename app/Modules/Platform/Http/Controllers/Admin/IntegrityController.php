@@ -35,6 +35,12 @@ class IntegrityController
         return view('platform::admin.ops.integrity', ['rows' => $rows]);
     }
 
+    /** The run address opened directly (a reload after a run, a bookmark): nothing runs, back to the page. */
+    public function reload(): RedirectResponse
+    {
+        return redirect()->route('admin.ops.integrity');
+    }
+
     public function run(Request $request, RunIntegrityChecks $run): RedirectResponse
     {
         $data = $request->validate(['code' => ['nullable', 'string', 'max:60', 'regex:/^[a-z0-9_]+$/']]);

@@ -56,5 +56,5 @@ return [
         'stock_ledger' => 'Stock on hand matches the stock ledger', 'stock_reservations' => 'Stock held for orders matches the reservations', 'refunds_within_captured' => 'Refunds never exceed the money received',
         'order_lines_add_up' => 'Order lines add up to the order subtotal (recent orders)', 'coupon_use_counts' => 'Coupon use counts match the redemptions', 'outbox_not_stuck' => 'No delivery message is stuck or given up',
     ],
-    'errors' => ['job_gone' => 'That failed job was already handled by someone else.', 'job_not_retryable' => 'That kind of job is not safe to run again, so it cannot be sent back from here.', 'check_unknown' => 'That check does not exist.'],
+    'errors' => ['too_often' => 'You ran the checks several times in the last minute. Wait a minute, then try again.', 'job_gone' => 'That failed job was already handled by someone else.', 'job_not_retryable' => 'That kind of job is not safe to run again, so it cannot be sent back from here.', 'check_unknown' => 'That check does not exist.'],
 ];
