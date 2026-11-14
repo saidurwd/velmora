@@ -30,7 +30,10 @@ install)
   mkdir -p "$WEB/build"; cp -R public/build/. "$WEB/build/"
   [ -f "$WEB/index.php" ] || cp deploy/cpanel/public_index.php "$WEB/index.php"
   [ -f "$WEB/.htaccess" ] || cp public/.htaccess "$WEB/.htaccess"
-  for f in robots.txt favicon.ico; do [ -f "public/$f" ] && [ ! -f "$WEB/$f" ] && cp "public/$f" "$WEB/$f"; done
+  [ -f public/robots.txt ] && [ ! -f "$WEB/robots.txt" ] && cp public/robots.txt "$WEB/robots.txt"   # yours to edit on the server: copied only once
+  # brand icons and logos ship with the code: always the release's copy
+  for f in favicon.ico favicon.svg favicon-16x16.png favicon-32x32.png apple-touch-icon.png android-chrome-192x192.png android-chrome-512x512.png site.webmanifest; do [ -f "public/$f" ] && cp "public/$f" "$WEB/$f"; done
+  mkdir -p "$WEB/brand"; cp -R public/brand/. "$WEB/brand/"
   [ -e "$WEB/storage" ] || ln -s "$SHARED/storage/app/public" "$WEB/storage"
   PREV="$(current)"
   echo "== maintenance on, migrate, switch, maintenance off"

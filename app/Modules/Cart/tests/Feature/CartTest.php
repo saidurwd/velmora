@@ -290,6 +290,21 @@ describe('housekeeping', function () {
         $this->get('/en/p/cotton-tee')->assertOk()->assertDontSee('name="variant"', false)->assertSee('Out of stock');
     });
 
+    it('gives the quantity box − and + buttons that know the item\'s minimum, maximum and step, on the product page and in the cart, in both languages', function () {
+        $page = (string) $this->get('/en/p/brass-lamp')->assertOk()->getContent();
+        expect($page)->toContain('data-stepper data-min="2" data-step="2"  data-max="6"')
+            ->toContain('aria-label="Decrease quantity"')->toContain('aria-label="Increase quantity"')
+            ->toContain('Minimum 2, in steps of 2. Up to 6 per order.')
+            ->toMatch('/<input id="qty" name="quantity" value="2" inputmode="numeric"[^>]*aria-describedby="qty-help"/');   // the hint is read with the box
+        $this->get('/en/p/cotton-tee')->assertOk()->assertDontSee('qty-help', false);   // no rules, no hint
+
+        $this->get('/bn/p/'.rawurlencode('পিতলের-ল্যাম্প'))->assertOk()->assertSee('পরিমাণ কমান')->assertSee('পরিমাণ বাড়ান')->assertSee('প্রতি অর্ডারে সর্বোচ্চ 6 টি।');
+
+        $token = (string) ($this->add)($this->lamp, '4')->getCookie(GuestCartToken::COOKIE)?->getValue();
+        $cart = (string) $this->withCookie(GuestCartToken::COOKIE, $token)->get('/en/cart')->assertOk()->getContent();
+        expect($cart)->toContain('data-stepper data-min="2" data-step="2"  data-max="6"')->toContain('id="q-'.$this->lamp['publicId'].'" name="quantity" value="4"');
+    });
+
     it('deletes expired carts only, and pushes expiry out when a cart is used', function () {
         $token = (string) ($this->add)($this->tee, '1')->getCookie(GuestCartToken::COOKIE)?->getValue();
         $cart = Cart::firstOrFail();

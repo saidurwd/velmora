@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="800" viewBox="0 0 2400 800">
+  <!-- Hero banner "Eid specials". No lettering: the shop lays the title, subtitle and button over the left side in either language. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#06151a"/>
+      <stop offset=".55" stop-color="#0b2b2a"/>
+      <stop offset="1" stop-color="#0d5a4d"/>
+    </linearGradient>
+    <radialGradient id="moonGlow" cx="1960" cy="230" r="520" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f5c75a" stop-opacity=".32"/>
+      <stop offset="1" stop-color="#f5c75a" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="motif" width="56" height="56" patternUnits="userSpaceOnUse">
+      <path d="M28 5 51 28 28 51 5 28Z" fill="none" stroke="#f5b841" stroke-opacity=".08" stroke-width="1.6"/>
+      <circle cx="28" cy="28" r="2.4" fill="#f5b841" fill-opacity=".1"/>
+    </pattern>
+    <mask id="crescent">
+      <circle cx="1960" cy="230" r="122" fill="#fff"/>
+      <circle cx="2012" cy="192" r="112" fill="#000"/>
+    </mask>
+    <radialGradient id="glass" cx=".5" cy=".45" r=".6">
+      <stop offset="0" stop-color="#fff4cc"/>
+      <stop offset=".55" stop-color="#ffc94d"/>
+      <stop offset="1" stop-color="#d9831a"/>
+    </radialGradient>
+    <radialGradient id="lampGlow">
+      <stop offset="0" stop-color="#ffcf5c" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#ffcf5c" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7d06b"/>
+      <stop offset="1" stop-color="#c88a17"/>
+    </linearGradient>
+    <g id="spark"><path d="M0-22C3-6 6-3 22 0 6 3 3 6 0 22-3 6-6 3-22 0-6-3-3-6 0-22Z"/></g>
+    <!-- a lantern hanging from its ring at (0,0) -->
+    <g id="lantern">
+      <circle cy="118" r="150" fill="url(#lampGlow)"/>
+      <circle r="9" fill="none" stroke="url(#gold)" stroke-width="5"/>
+      <path d="M-6 9h12l4 8h-20Z" fill="url(#gold)"/>
+      <path d="M-34 44h68l-18-27h-32Z" fill="url(#gold)"/>
+      <path d="M-40 44h80l10 76-10 72h-80l-10-72Z" fill="url(#glass)"/>
+      <path d="M-14 44v148M14 44v148M-50 120h100" stroke="#8a5a12" stroke-width="4" stroke-opacity=".75"/>
+      <path d="M-40 44h80l10 76-10 72h-80l-10-72Z" fill="none" stroke="url(#gold)" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M-42 192h84l-14 24h-56Z" fill="url(#gold)"/>
+      <circle cy="230" r="8" fill="url(#gold)"/>
+    </g>
+  </defs>
+
+  <rect width="2400" height="800" fill="url(#sky)"/>
+  <rect width="2400" height="800" fill="url(#motif)"/>
+  <rect width="2400" height="800" fill="url(#moonGlow)"/>
+
+  <!-- stars -->
+  <g fill="#fdf1d3">
+    <use href="#spark" transform="translate(1720 120) scale(.7)"/>
+    <use href="#spark" transform="translate(2200 110) scale(.9)"/>
+    <use href="#spark" transform="translate(2320 330) scale(.5)" fill-opacity=".8"/>
+    <use href="#spark" transform="translate(1290 90) scale(.45)" fill-opacity=".7"/>
+    <use href="#spark" transform="translate(1100 220) scale(.35)" fill-opacity=".5"/>
+    <use href="#spark" transform="translate(2090 400) scale(.4)" fill-opacity=".7"/>
+  </g>
+  <g fill="#fdf1d3" fill-opacity=".75">
+    <circle cx="1500" cy="60" r="3"/><circle cx="1830" cy="300" r="3"/><circle cx="2380" cy="190" r="3"/><circle cx="1380" cy="420" r="2.5"/>
+    <circle cx="960" cy="120" r="2.5"/><circle cx="2140" cy="240" r="2.5"/><circle cx="1640" cy="250" r="2.5"/>
+  </g>
+
+  <!-- crescent moon -->
+  <rect width="2400" height="800" fill="#f8d377" mask="url(#crescent)"/>
+
+  <!-- hanging lanterns -->
+  <g stroke="#c88a17" stroke-width="3">
+    <path d="M1430 0v200"/>
+    <path d="M1620 0v318"/>
+    <path d="M2270 0v262"/>
+  </g>
+  <use href="#lantern" transform="translate(1430 200)"/>
+  <use href="#lantern" transform="translate(1620 318) scale(.72)"/>
+  <use href="#lantern" transform="translate(2270 262) scale(.86)"/>
+
+  <!-- mosque skyline -->
+  <g fill="#052823">
+    <rect x="1280" y="690" width="1120" height="110"/>
+    <path d="M1750 692Q1750 560 1900 532Q2050 560 2050 692Z"/>
+    <path d="M1590 692Q1590 618 1660 604Q1730 618 1730 692Z"/>
+    <path d="M2070 692Q2070 618 2140 604Q2210 618 2210 692Z"/>
+    <rect x="1500" y="520" width="34" height="172"/>
+    <path d="M1494 524h46l-23-58Z"/>
+    <rect x="2290" y="520" width="34" height="172"/>
+    <path d="M2284 524h46l-23-58Z"/>
+    <rect x="1897" y="486" width="6" height="48"/>
+  </g>
+  <path d="M1916 486a16 16 0 1 1-6-26 13 13 0 1 0 6 26Z" fill="#f5c75a"/>
+  <g fill="#f5b841" fill-opacity=".75">
+    <path d="M1872 760v-40a14 14 0 0 1 28 0v40Z"/><path d="M1912 760v-40a14 14 0 0 1 28 0v40Z"/>
+    <path d="M1640 760v-30a12 12 0 0 1 24 0v30Z"/><path d="M2128 760v-30a12 12 0 0 1 24 0v30Z"/>
+    <path d="M1760 760v-30a12 12 0 0 1 24 0v30Z"/><path d="M2020 760v-30a12 12 0 0 1 24 0v30Z"/>
+  </g>
+
+  <!-- gifts in front -->
+  <ellipse cx="1420" cy="790" rx="170" ry="14" fill="#000" fill-opacity=".3"/>
+  <g>
+    <rect x="1290" y="660" width="150" height="128" rx="6" fill="#c2553d"/>
+    <rect x="1280" y="638" width="170" height="34" rx="6" fill="#d4644a"/>
+    <rect x="1352" y="638" width="26" height="150" fill="url(#gold)"/>
+    <path d="M1365 638c-30-40-70-26-56-4 10 14 40 8 56 4Zm0 0c30-40 70-26 56-4-10 14-40 8-56 4Z" fill="url(#gold)"/>
+  </g>
+  <g>
+    <rect x="1466" y="702" width="112" height="86" rx="6" fill="#f7efe2"/>
+    <rect x="1458" y="686" width="128" height="26" rx="6" fill="#fffaf2"/>
+    <rect x="1512" y="686" width="20" height="102" fill="#0f6b5c"/>
+    <path d="M1522 686c-22-30-52-20-42-3 8 11 30 6 42 3Zm0 0c22-30 52-20 42-3-8 11-30 6-42 3Z" fill="#0f6b5c"/>
+  </g>
+</svg>

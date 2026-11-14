@@ -14,6 +14,34 @@ Stack [PINNED]: Blade components + Tailwind + Alpine via Vite; no SPA. Mobile-fi
 | Motion | ≤ 200ms, respects `prefers-reduced-motion` |
 | Direction | `dir` from `languages.direction`; logical CSS properties (margin-inline) so RTL languages later need no rewrite |
 
+### 1a. Storefront identity as built (November 2026)
+The values live in `resources/css/app.css` (`@theme`); views use the token names, never raw hex values.
+
+| Token | Value | Use |
+|---|---|---|
+| `brand-50/500/600/700` | emerald, default `#0f6b5c` | Primary buttons, links, active states. The owner can change it in the admin (`Branding::cssVariables` overrides the four shades at run time) |
+| `accent-100/400/500/800` | marigold `#f5b841` | Highlights: hero call to action, cart count, small labels. Text on `accent-400` is `ink`, never white |
+| `ink` / `muted` | `#1c1917` / `#57534e` | Text and secondary text |
+| `surface` / `surface-alt` / `line` | white / ivory `#faf7f2` / `#e7e0d6` | Page, bands and cards, borders |
+| `night` / `night-soft` | `#10231f` / `#1b352f` | Top bar and footer |
+| `sale` | `#b42318` | Sale price and the −N% badge only |
+| `shadow-card` / `shadow-lift` | | Card at rest / on hover |
+
+- **Motif:** `.motif` (on light) and `.motif-dark` (on dark) draw a jamdani-inspired diamond pattern in CSS. It is used on the hero, the listing header band, the footer and as the placeholder where a product has no photo. No image file, so it costs nothing to load.
+- **Shape:** buttons, chips and the search box are pills; cards and panels use large rounded corners; product photos are 4:5.
+- **Layout:** top bar (promise, help, my orders, language) → sticky header (menu, logo, search, account, cart) → page → dark footer (contact, payment methods the shop really offers, footer menu). Content width `max-w-7xl`.
+- **Honesty rule:** the value strip and "We accept" show cash on delivery or online payment only when that payment method is active. Nothing promises a delivery time, a return window or a discount that settings do not back.
+- **Behaviour without inline script (CSP):** menus are `<details data-menu>` / `<details data-popover>`, carousels `data-carousel`, the filter panel `<details data-open-desktop>`; `resources/js/behaviors.js` adds one-open-at-a-time, click-away, Escape and hover. With JavaScript off they still open and close as plain `<details>`.
+- **Quantity:** always `<x-platform::qty-stepper>` (product page, cart): − and + that keep to the item's minimum, maximum and step, arrow keys in the box (a spinbutton), buttons skipped by Tab so Tab goes on to the form's button; without JavaScript a plain box. Typed numbers (Bangla digits too) are left for the server to judge. The hint under it states the minimum, step and per-order maximum.
+- **Contrast:** every text and background pair above is at least 4.5:1; the browser suite checks the key pages with axe in both languages.
+
+### 1b. Staff area (admin) as built (November 2026)
+- **Shell** (`resources/views/layouts/admin.blade.php`): dark `night` menu column with the jamdani motif, one icon per area (`partials/admin/nav-icon`), the current page marked with a marigold edge; a white top bar with search, "View shop", language and an account menu (name, e-mail, My sessions, Sign out). Content on a calm canvas (`--admin-canvas`), up to 96rem wide. Phones: the menu is a drawer (Escape, backdrop or ✕ closes it); without JavaScript it sits above the page.
+- **One stylesheet for 130+ screens**: `.admin-ui` rules in `resources/css/app.css` (components layer, so a utility on an element still wins) give inputs, selects and text areas one height, border, hover and focus ring; tables a white card, a quiet upper-case header (no upper case in Bangla), roomy edge cells, row hover and tabular numbers; boxed sections a white card. Write new screens with plain elements and these get the look for free.
+- **`admin:` variant**: shared components adapt inside the staff area, e.g. buttons are compact and `rounded-lg` there and pills on the storefront.
+- **Logo and icons**: always through `Branding::logo()` / `logo(onDark: true)` (brand kit vector in `public/brand/` → uploaded logo → the name). To change the logo, replace `public/brand/logo-horizontal.svg` and `logo-horizontal-light.svg` (same names) and the favicons in `public/`; sources and the brief are in `docs/Logos/`.
+- **Messages**: `<x-platform::alert type="success|info|warning|error">` and the form error summary carry an icon; colour is never the only signal.
+
 ## 2. Component inventory (Blade `<x-…>`; living page `/dev/components`, non-prod)
 Foundations: button (primary/secondary/ghost/danger, loading), link, icon, input, textarea, select, checkbox, radio, switch, phone input (digit normalisation), OTP input, quantity stepper, form field (label/help/error), error summary. Display: badge/status pill, price (regular/compare-at/sale/tax note), rating, product card, service card, digital card, breadcrumb, pagination, tabs (bn/en), table (sortable/filterable), card, empty state, skeleton, avatar. Overlay: modal, drawer (cart/filters), toast, tooltip, dropdown. Layout: storefront shell, admin shell (sidebar), account shell, page header, filter bar. Commerce: address form (cascading geography), shipping option, payment option (with fee/COD note), order summary, order timeline, stock indicator, coupon box, policy accordion.
 

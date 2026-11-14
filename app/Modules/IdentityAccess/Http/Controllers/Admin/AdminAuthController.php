@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\IdentityAccess\Http\Controllers\Admin;
 
 use App\Modules\IdentityAccess\Actions\LoginWithPassword;
+use App\Modules\IdentityAccess\Actions\SignOut;
 use App\Modules\IdentityAccess\Enums\AccountType;
 use App\Modules\IdentityAccess\Enums\LoginStatus;
 use App\Modules\IdentityAccess\Http\Requests\AdminLoginRequest;
@@ -13,7 +14,6 @@ use App\Modules\IdentityAccess\Models\StaffMfaCredential;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class AdminAuthController
 {
@@ -43,11 +43,9 @@ class AdminAuthController
         return redirect()->route($enrolled ? 'admin.mfa.challenge' : 'admin.mfa.enrol');
     }
 
-    public function logout(Request $request): RedirectResponse
+    public function logout(Request $request, SignOut $signOut): RedirectResponse
     {
-        Auth::guard('admin')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        $signOut->handle($request, 'admin');
 
         return redirect()->route('admin.login');
     }

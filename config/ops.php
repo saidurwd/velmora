@@ -21,6 +21,11 @@ return [
     // The queues the system health page counts (the names jobs are put on).
     'queues' => ['default', 'low'],
 
+    // The queue monitor marks a queue amber when its oldest waiting job has waited this long, red at the second (seconds). With the queue run by the
+    // once-a-minute scheduler (shared hosting) a job normally waits under a minute.
+    'queue_wait_warn_seconds' => (int) env('OPS_QUEUE_WAIT_WARN_SECONDS', 300),
+    'queue_wait_critical_seconds' => (int) env('OPS_QUEUE_WAIT_CRITICAL_SECONDS', 900),
+
     /*
     | Failed jobs staff may send back to the queue. Only jobs that are safe to run again: they work out the same result a second time
     | (a refresh, a clean-up, a read-only check). Anything that sends a message, moves money or changes an order is NOT on this list; it can be

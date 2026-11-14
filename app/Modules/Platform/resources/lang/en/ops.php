@@ -5,6 +5,28 @@ declare(strict_types=1);
 return [
     'milliseconds' => ':n ms',
     'menu' => 'Operations', 'title' => 'Operations', 'intro' => 'How the system is running: health, scheduled tasks, failed background jobs and checks that the data adds up.',
+    'menu_items' => ['health' => 'System health', 'queues' => 'Queue monitor', 'scheduler' => 'Scheduled tasks', 'failed' => 'Failed jobs', 'integrity' => 'Data checks', 'about' => 'About'],
+    'queues' => [
+        'title' => 'Queue monitor', 'blurb' => 'Background work waiting, running and failing.', 'refresh' => 'Refresh',
+        'intro' => 'Background work: messages, files, report figures. Counts and kinds of job only; a job’s data is never shown.',
+        'connection' => 'Queue connection', 'runner' => 'Who runs the queue', 'runners' => ['worker' => 'A queue worker', 'scheduler' => 'The scheduler, every minute', 'sync' => 'Straight away (no queue)'],
+        'queues' => 'Queues', 'thresholds' => 'Amber when the oldest job has waited :warn, red at :critical.',
+        'columns' => ['queue' => 'Queue', 'pending' => 'Waiting', 'delayed' => 'Later', 'running' => 'Running', 'oldest' => 'Oldest waiting', 'state' => 'State'],
+        'states' => ['ok' => 'Flowing', 'warn' => 'Slow', 'critical' => 'Stuck', 'unknown' => 'Cannot tell'],
+        'failed' => 'Failed in the last 24 hours', 'see_failed' => 'All failed jobs (:n)', 'no_failures' => 'Nothing failed in the last 24 hours.',
+        'outbox' => 'Events to announce (outbox)', 'outbox_help' => 'Events saved with each change and announced to the rest of the system right after.', 'outbox_pending' => 'Waiting', 'outbox_failed' => 'Given up',
+    ],
+    'about' => [
+        'title' => 'About', 'blurb' => 'This installation: release, software and settings in outline.', 'intro' => 'The :shop installation: what it runs on and what it is built from.',
+        'release' => 'Release', 'development' => 'Development copy', 'built' => 'Built :when',
+        'software' => 'Software', 'rows' => ['laravel' => 'Framework', 'php' => 'Language', 'database' => 'Database', 'time' => 'Time', 'languages' => 'Languages'],
+        'time_value' => 'Stored in :stored, shown in :shown', 'language_names' => ['en' => 'English', 'bn' => 'Bangla'],
+        'services' => 'Services in use', 'services_help' => 'Only the kind of each service: addresses, keys and passwords are never shown.',
+        'service_names' => ['cache' => 'Cache', 'session' => 'Sessions', 'queue' => 'Queue', 'mail' => 'Email', 'media' => 'Product images', 'private' => 'Private files', 'sms' => 'Text messages', 'push' => 'App notifications', 'payments' => 'Online payments'],
+        'payments' => ['live' => 'Live', 'sandbox' => 'Test (sandbox)'],
+        'modules' => 'Modules (:n)', 'components' => 'Third-party components', 'components_help' => 'The open-source parts this shop asks for directly, with the installed version and licence.',
+        'columns' => ['name' => 'Name', 'version' => 'Version', 'licence' => 'Licence', 'kind' => 'Kind'], 'kinds' => ['php' => 'Server (PHP)', 'js' => 'Browser (JavaScript)'],
+    ],
     'health' => [
         'title' => 'System health', 'blurb' => 'Is everything up, and is work piling up?', 'checks' => 'Checks', 'work' => 'Work waiting', 'runtime' => 'This server',
         'probes' => ['database' => 'Database', 'cache' => 'Cache', 'storage' => 'File storage', 'queue' => 'Job queue'], 'scheduler' => 'Scheduler (last tick)',
@@ -34,5 +56,5 @@ return [
         'stock_ledger' => 'Stock on hand matches the stock ledger', 'stock_reservations' => 'Stock held for orders matches the reservations', 'refunds_within_captured' => 'Refunds never exceed the money received',
         'order_lines_add_up' => 'Order lines add up to the order subtotal (recent orders)', 'coupon_use_counts' => 'Coupon use counts match the redemptions', 'outbox_not_stuck' => 'No delivery message is stuck or given up',
     ],
-    'errors' => ['job_gone' => 'That failed job was already handled by someone else.', 'job_not_retryable' => 'That kind of job is not safe to run again, so it cannot be sent back from here.', 'check_unknown' => 'That check does not exist.'],
+    'errors' => ['too_often' => 'You ran the checks several times in the last minute. Wait a minute, then try again.', 'job_gone' => 'That failed job was already handled by someone else.', 'job_not_retryable' => 'That kind of job is not safe to run again, so it cannot be sent back from here.', 'check_unknown' => 'That check does not exist.'],
 ];

@@ -1,3 +1,4 @@
+@props(['tone' => 'light'])
 @php
     use App\Modules\Platform\Localization\LocaleResolver;
     use App\Modules\Platform\Localization\LocaleUrl;
@@ -12,12 +13,12 @@
         @if ($locale === $current)
             <span class="font-semibold" aria-current="true" lang="{{ $locale }}">{{ $labels[$locale] ?? $locale }}</span>
         @elseif ($localized)
-            <a href="{{ $seo->alternates[$locale] ?? LocaleUrl::switchTo(request(), $locale) }}" hreflang="{{ $locale }}" lang="{{ $locale }}" rel="alternate" class="underline hover:text-brand-700">{{ $labels[$locale] ?? $locale }}</a>
+            <a href="{{ $seo->alternates[$locale] ?? LocaleUrl::switchTo(request(), $locale) }}" hreflang="{{ $locale }}" lang="{{ $locale }}" rel="alternate" class="underline underline-offset-2 {{ $tone === 'dark' ? 'hover:no-underline' : 'hover:text-brand-700' }}">{{ $labels[$locale] ?? $locale }}</a>
         @else
             <form method="POST" action="{{ route('locale.set', ['locale' => $current]) }}">
                 @csrf
                 <input type="hidden" name="locale" value="{{ $locale }}">
-                <button type="submit" lang="{{ $locale }}" class="underline hover:text-brand-700">{{ $labels[$locale] ?? $locale }}</button>
+                <button type="submit" lang="{{ $locale }}" class="underline underline-offset-2 {{ $tone === 'dark' ? 'hover:no-underline' : 'hover:text-brand-700' }}">{{ $labels[$locale] ?? $locale }}</button>
             </form>
         @endif
         @if (! $loop->last)<span aria-hidden="true">·</span>@endif

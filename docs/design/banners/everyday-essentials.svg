@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="800" viewBox="0 0 2400 800">
+  <!-- Hero banner "Everyday essentials, delivered". No lettering: the shop lays the title, subtitle and button over the left side in either language. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#083f37"/>
+      <stop offset=".55" stop-color="#0f6b5c"/>
+      <stop offset="1" stop-color="#1f8a77"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="1760" cy="410" r="760" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f5b841" stop-opacity=".38"/>
+      <stop offset="1" stop-color="#f5b841" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="sun" cx=".42" cy=".38" r=".7">
+      <stop offset="0" stop-color="#ffd27a"/>
+      <stop offset="1" stop-color="#eaa21c"/>
+    </radialGradient>
+    <pattern id="motif" width="56" height="56" patternUnits="userSpaceOnUse">
+      <path d="M28 5 51 28 28 51 5 28Z" fill="none" stroke="#ffffff" stroke-opacity=".07" stroke-width="1.6"/>
+      <path d="M28 18 38 28 28 38 18 28Z" fill="#ffffff" fill-opacity=".05"/>
+    </pattern>
+    <linearGradient id="leaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3cb497"/>
+      <stop offset="1" stop-color="#14705f"/>
+    </linearGradient>
+    <g id="spark"><path d="M0-22C3-6 6-3 22 0 6 3 3 6 0 22-3 6-6 3-22 0-6-3-3-6 0-22Z"/></g>
+  </defs>
+
+  <rect width="2400" height="800" fill="url(#bg)"/>
+  <rect width="2400" height="800" fill="url(#motif)"/>
+  <rect width="2400" height="800" fill="url(#glow)"/>
+
+  <!-- sun disc and a dashed halo -->
+  <circle cx="1760" cy="400" r="292" fill="url(#sun)"/>
+  <circle cx="1760" cy="400" r="338" fill="none" stroke="#fdf1d3" stroke-opacity=".45" stroke-width="3" stroke-dasharray="4 14" stroke-linecap="round"/>
+
+  <!-- the delivery route arriving at the parcel -->
+  <path d="M880 760C1040 700 1120 560 1300 560" fill="none" stroke="#fdf1d3" stroke-opacity=".5" stroke-width="5" stroke-dasharray="2 18" stroke-linecap="round"/>
+  <g transform="translate(880 735)">
+    <path d="M0 0C-26-30-34-46-34-62a34 34 0 0 1 68 0C34-46 26-30 0 0Z" fill="#f5b841"/>
+    <circle cy="-62" r="13" fill="#0c584c"/>
+  </g>
+
+  <!-- ground shadow -->
+  <ellipse cx="1800" cy="668" rx="560" ry="26" fill="#021a16" fill-opacity=".28"/>
+
+  <!-- kraft parcel -->
+  <g>
+    <polygon points="1380,432 1700,432 1762,392 1442,392" fill="#e2b27a"/>
+    <polygon points="1700,432 1762,392 1762,622 1700,662" fill="#a8743f"/>
+    <rect x="1380" y="432" width="320" height="230" fill="#c98f55"/>
+    <polygon points="1524,432 1564,432 1626,392 1586,392" fill="#f1d7a8"/>
+    <rect x="1524" y="432" width="40" height="230" fill="#e6c08a"/>
+    <rect x="1404" y="566" width="98" height="70" rx="8" fill="#fdf8ef"/>
+    <rect x="1418" y="582" width="58" height="7" rx="3.5" fill="#c9b9a3"/>
+    <rect x="1418" y="598" width="70" height="7" rx="3.5" fill="#c9b9a3"/>
+    <rect x="1418" y="614" width="40" height="7" rx="3.5" fill="#0f6b5c"/>
+    <path d="M1630 470v40m-12-26 12-14 12 14M1664 470v40m-12-26 12-14 12 14" fill="none" stroke="#7a4f22" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- folded clothes: ivory with emerald border, terracotta with gold nakshi line, indigo -->
+  <g>
+    <rect x="1800" y="592" width="290" height="70" rx="20" fill="#2f4a7a"/>
+    <path d="M1822 627h246" stroke="#22375d" stroke-width="5" stroke-linecap="round"/>
+    <rect x="1815" y="528" width="262" height="66" rx="20" fill="#c2553d"/>
+    <path d="M1835 548h222" stroke="#f5b841" stroke-width="5" stroke-linecap="round" stroke-dasharray="1 12"/>
+    <path d="M1835 574h222" stroke="#a5432e" stroke-width="5" stroke-linecap="round"/>
+    <rect x="1832" y="468" width="228" height="62" rx="20" fill="#f7efe2"/>
+    <rect x="1832" y="512" width="228" height="10" fill="#0f6b5c"/>
+    <path d="M1852 490h188" stroke="#e3d6c2" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="2030" cy="490" r="9" fill="#f5b841"/>
+  </g>
+
+  <!-- potted plant -->
+  <g>
+    <path d="M2200 560C2196 500 2160 440 2118 410" fill="none" stroke="#0c584c" stroke-width="7" stroke-linecap="round"/>
+    <path d="M2200 560C2206 480 2236 420 2282 392" fill="none" stroke="#0c584c" stroke-width="7" stroke-linecap="round"/>
+    <path d="M2200 560V380" stroke="#0c584c" stroke-width="7" stroke-linecap="round"/>
+    <path d="M2118 410c-40-6-66 22-70 52 34 6 62-14 70-52Z" fill="url(#leaf)"/>
+    <path d="M2160 470c-34-18-66 0-78 26 30 16 64 6 78-26Z" fill="url(#leaf)"/>
+    <path d="M2282 392c36-18 70 2 80 30-32 14-66 0-80-30Z" fill="url(#leaf)"/>
+    <path d="M2240 462c34-14 64 6 72 32-30 12-62-2-72-32Z" fill="url(#leaf)"/>
+    <path d="M2200 380c-22-30-14-70 10-86 22 26 18 64-10 86Z" fill="url(#leaf)"/>
+    <rect x="2128" y="548" width="144" height="26" rx="8" fill="#c8603b"/>
+    <path d="M2140 574h120l-14 88h-92Z" fill="#b5502f"/>
+    <path d="M2150 606h100" stroke="#f5b841" stroke-width="5" stroke-linecap="round" stroke-dasharray="1 11"/>
+  </g>
+
+  <!-- tea cup -->
+  <g>
+    <path d="M1262 590h96l-10 66a12 12 0 0 1-12 10h-52a12 12 0 0 1-12-10Z" fill="#fdf8ef"/>
+    <path d="M1356 604c26 0 26 40-4 40" fill="none" stroke="#fdf8ef" stroke-width="9"/>
+    <rect x="1262" y="606" width="96" height="9" fill="#0f6b5c"/>
+    <path d="M1292 568c-10-12 10-20 0-34M1322 568c-10-12 10-20 0-34" fill="none" stroke="#fdf1d3" stroke-opacity=".7" stroke-width="5" stroke-linecap="round"/>
+  </g>
+
+  <!-- sparkles -->
+  <g fill="#fdf1d3">
+    <use href="#spark" transform="translate(1330 210) scale(.9)"/>
+    <use href="#spark" transform="translate(2260 170) scale(1.2)"/>
+    <use href="#spark" transform="translate(1520 150) scale(.55)" fill-opacity=".8"/>
+    <use href="#spark" transform="translate(2140 300) scale(.5)" fill-opacity=".7"/>
+  </g>
+  <g fill="#f5b841">
+    <use href="#spark" transform="translate(1180 320) scale(.5)"/>
+    <use href="#spark" transform="translate(2330 520) scale(.6)"/>
+  </g>
+</svg>

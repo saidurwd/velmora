@@ -12,10 +12,15 @@ use Illuminate\Support\Facades\Storage;
  */
 final class Branding
 {
-    public const DEFAULT_COLOR = '#1d4ed8';
+    public const DEFAULT_COLOR = '#0f6b5c';
 
     /** WCAG AA for normal text: white on the primary colour must reach this ratio. */
     public const MIN_CONTRAST = 4.5;
+
+    /** The brand kit's logo files in public/brand (vector; the second is for dark backgrounds). */
+    public const KIT_LOGO = 'logo-horizontal.svg';
+
+    public const KIT_LOGO_ON_DARK = 'logo-horizontal-light.svg';
 
     public function __construct(private readonly Settings $settings) {}
 
@@ -37,6 +42,20 @@ final class Branding
         $path = $this->settings->string('brand.logo');
 
         return $path === '' ? null : Storage::disk((string) config('catalog.media.disk', 'media'))->url($path);
+    }
+
+    /**
+     * The logo to show: the brand kit's vector logo shipped in public/brand (sharp at any size, no background), the version for dark backgrounds when
+     * $onDark; without a kit, the logo uploaded in the admin (light backgrounds only, as it may carry its own background); else null (show the name).
+     */
+    public function logo(bool $onDark = false): ?string
+    {
+        $file = 'brand/'.($onDark ? self::KIT_LOGO_ON_DARK : self::KIT_LOGO);
+        if (is_file(public_path($file))) {
+            return asset($file);
+        }
+
+        return $onDark ? null : $this->logoUrl();
     }
 
     public function color(): string

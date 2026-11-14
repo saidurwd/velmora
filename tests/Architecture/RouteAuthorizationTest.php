@@ -93,7 +93,7 @@ const ADMIN_PUBLIC = [
 
 /** Signed-in staff, no specific permission: strictly about the person themselves. */
 const ADMIN_AUTH_ONLY = [
-    'admin/logout' => 'ends own session', 'admin/account/sessions' => 'own device list', 'admin/account/sessions/revoke-others' => 'own devices only',
+    'admin/logout' => 'ends own session', 'admin/account/sessions' => 'own device list', 'admin/account/sessions/revoke-others' => 'own devices only', 'admin/account/activity' => 'own actions only (filtered to the signed-in person)',
     'admin/mfa/recovery-codes' => 'shown once to the signed-in person',
 ];
 

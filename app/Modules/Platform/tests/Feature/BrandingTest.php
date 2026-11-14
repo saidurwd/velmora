@@ -17,11 +17,11 @@ beforeEach(function () {
     $this->withoutMiddleware(EnforceSessionPolicy::class);
 });
 
-it('defaults to the blue brand and shows the store name', function () {
+it('defaults to the emerald brand and shows the store name', function () {
     $branding = app(Branding::class);
 
-    expect($branding->color())->toBe('#1d4ed8')
-        ->and($branding->cssVariables())->toContain('--color-brand-600:#1d4ed8')
+    expect($branding->color())->toBe('#0f6b5c')
+        ->and($branding->cssVariables())->toContain('--color-brand-600:#0f6b5c')
         ->and($branding->logoUrl())->toBeNull();
 });
 
@@ -59,7 +59,7 @@ it('refuses a colour that white text could not be read on', function () {
 
     $this->actingAs($staff, 'admin')->put('/admin/settings/branding', ['name' => 'Velmora', 'color' => '#ffee00'])->assertSessionHasErrors('color');
     $this->actingAs($staff, 'admin')->put('/admin/settings/branding', ['name' => 'Velmora', 'color' => 'blue'])->assertSessionHasErrors('color');
-    expect(app(Branding::class)->color())->toBe('#1d4ed8');
+    expect(app(Branding::class)->color())->toBe('#0f6b5c');   // unchanged: still the default
 });
 
 it('refuses non-images and svg as a logo, and replaces the old file', function () {
@@ -84,4 +84,35 @@ it('computes contrast correctly', function () {
     expect(Branding::contrastWithWhite('#000000'))->toBeGreaterThan(20)
         ->and(Branding::contrastWithWhite('#ffffff'))->toBeLessThan(1.1)
         ->and(Branding::contrastWithWhite('#1d4ed8'))->toBeGreaterThan(Branding::MIN_CONTRAST);
+});
+
+it('shows the brand kit logo when the shop has one, the light version on dark backgrounds, and otherwise falls back to an upload or the name', function () {
+    $branding = app(Branding::class);
+    expect($branding->logo())->toEndWith('/brand/logo-horizontal.svg')->and($branding->logo(onDark: true))->toEndWith('/brand/logo-horizontal-light.svg');
+
+    app(Settings::class)->set('brand.logo', 'branding/uploaded.png');
+    expect($branding->logo())->toEndWith('/brand/logo-horizontal.svg');   // the kit wins over an upload
+
+    $empty = sys_get_temp_dir().'/velmora-public-'.bin2hex(random_bytes(4));
+    @mkdir($empty);
+    app()->usePublicPath($empty);   // a shop without the kit
+    expect($branding->logo())->toEndWith('branding/uploaded.png')->and($branding->logo(onDark: true))->toBeNull();
+
+    app(Settings::class)->set('brand.logo', '');
+    expect($branding->logo())->toBeNull();
+});
+
+it('puts the logo in the shop header and footer, the icons in every page head, and explains the built-in logo on the branding screen', function () {
+    app(Settings::class)->set('brand.name', 'Letizia Lifestyle');
+    $html = (string) $this->get('/en')->assertOk()->getContent();
+
+    expect($html)->toContain('aria-label="Letizia Lifestyle"')->toContain('/brand/logo-horizontal.svg"')
+        ->toContain('/brand/logo-horizontal-light.svg" alt="Letizia Lifestyle"')
+        ->toContain('rel="icon" href="'.asset('favicon.svg').'" type="image/svg+xml"')->toContain('rel="apple-touch-icon"')->toContain('rel="manifest"')
+        ->toContain('<meta name="theme-color" content="'.app(Branding::class)->color().'">');
+
+    $this->actingAs(catalogStaff(['settings.view', 'settings.manage']), 'admin')->get('/admin/settings/branding')->assertOk()->assertSee('built-in logo');
+    foreach (['favicon.ico', 'favicon.svg', 'favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png', 'android-chrome-192x192.png', 'android-chrome-512x512.png', 'site.webmanifest', 'brand/logo-horizontal.svg', 'brand/logo-horizontal-light.svg'] as $file) {
+        expect(public_path($file))->toBeFile();
+    }
 });

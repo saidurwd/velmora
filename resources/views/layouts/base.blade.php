@@ -6,6 +6,14 @@
     <title>@yield('title', config('app.name'))</title>
     <x-platform::seo-head :title="trim($__env->yieldContent('title'))" />
     <style>{!! app(\App\Modules\Platform\Support\Branding::class)->cssVariables() !!}</style>
+    {{-- Brand icons (files in public/, sources in docs/Logos/favicon). The phone's browser bar takes the shop's brand colour. --}}
+    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="48x48">
+    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+    <meta name="theme-color" content="{{ app(\App\Modules\Platform\Support\Branding::class)->color() }}">
     @stack('head')
     @php
         // Preload only the fonts this language needs for the first paint (Latin always; Bangla regular on /bn): fewer late swaps, less layout shift.

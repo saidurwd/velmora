@@ -61,12 +61,12 @@ class HomeController
         return view('catalog::storefront.home', $data);
     }
 
-    /** @return list<array{name: string, url: string}> the first eight active top-level categories */
+    /** @return list<array{name: string, url: string, key: string}> the first twelve active top-level categories; `key` (the English slug) picks the tile's icon */
     private function categories(string $locale): array
     {
         $out = [];
-        foreach (Category::query()->with('translations')->whereNull('parent_id')->where('is_active', true)->orderBy('sort_order')->orderBy('id')->limit(8)->get() as $c) {
-            $out[] = ['name' => (string) $c->translate('name'), 'url' => url("/{$locale}/c/".$c->translate('slug'))];
+        foreach (Category::query()->with('translations')->whereNull('parent_id')->where('is_active', true)->orderBy('sort_order')->orderBy('id')->limit(12)->get() as $c) {
+            $out[] = ['name' => (string) $c->translate('name'), 'url' => url("/{$locale}/c/".$c->translate('slug')), 'key' => (string) ($c->translations->firstWhere('locale', 'en')->slug ?? '')];
         }
 
         return $out;
