@@ -6,7 +6,7 @@
 
 @section('content')
 <div class="space-y-6">
-    <h1 class="text-3xl font-bold">{{ __('cart::cart.title') }}</h1>
+    <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">{{ __('cart::cart.title') }}</h1>
     @if (session('status'))<x-platform::alert type="success">{{ session('status') }}</x-platform::alert>@endif
     @error('cart')<x-platform::alert type="error">{{ $message }}</x-platform::alert>@enderror
 
@@ -23,10 +23,10 @@
             </x-platform::alert>
         @endif
 
-        <ul class="divide-y divide-line rounded-lg border border-line">
+        <ul class="divide-y divide-line rounded-2xl border border-line bg-surface shadow-card">
             @foreach ($cart->lines as $line)
                 <li class="grid gap-3 p-4 sm:grid-cols-[5rem_1fr_auto]">
-                    <div class="size-20 overflow-hidden rounded-md bg-surface-alt">@if ($line->imageUrl)<img src="{{ $line->imageUrl }}" alt="" width="80" height="80" loading="lazy" class="size-full object-cover">@endif</div>
+                    <div class="motif size-20 overflow-hidden rounded-xl bg-surface-alt">@if ($line->imageUrl)<img src="{{ $line->imageUrl }}" alt="" width="80" height="80" loading="lazy" class="size-full object-cover">@endif</div>
                     <div class="space-y-1">
                         <p class="font-medium">@if ($line->productSlug !== '')<a class="hover:underline" href="{{ url('/'.app()->getLocale().'/p/'.rawurlencode($line->productSlug)) }}">{{ $line->name }}</a>@else{{ $line->name ?: __('cart::cart.removed_product') }}@endif</p>
                         @if ($line->optionsLabel)<p class="text-sm text-muted">{{ $line->optionsLabel }}</p>@endif
@@ -41,7 +41,7 @@
                             <form method="POST" action="{{ route('cart.update', ['locale' => app()->getLocale(), 'variant' => $line->variantPublicId]) }}" class="flex items-end gap-2 sm:justify-end">
                                 @csrf @method('PATCH')
                                 <div><label for="q-{{ $line->variantPublicId }}" class="block text-xs text-muted">{{ __('cart::cart.quantity') }}</label>
-                                    <input id="q-{{ $line->variantPublicId }}" name="quantity" inputmode="numeric" value="{{ $line->quantity }}" class="w-20 rounded-md border border-line px-2 py-2 text-center"></div>
+                                    <input id="q-{{ $line->variantPublicId }}" name="quantity" inputmode="numeric" value="{{ $line->quantity }}" class="field-input w-20 px-2 py-2 text-center"></div>
                                 <x-platform::btn type="submit" size="sm" variant="secondary">{{ __('cart::cart.update') }}</x-platform::btn>
                             </form>
                         @endif
@@ -51,7 +51,7 @@
             @endforeach
         </ul>
 
-        <section aria-labelledby="sum-h" class="ms-auto max-w-sm space-y-2 rounded-lg border border-line p-4">
+        <section aria-labelledby="sum-h" class="ms-auto max-w-sm space-y-3 rounded-2xl border border-line bg-surface-alt p-5">
             <h2 id="sum-h" class="sr-only">{{ __('cart::cart.summary') }}</h2>
             <p class="flex justify-between text-lg font-semibold"><span>{{ __('cart::cart.subtotal') }}</span><span>{{ $fmt($cart->subtotal) }}</span></p>
             @foreach ($cart->discounts?->applied ?? [] as $d)
@@ -69,7 +69,7 @@
                 @csrf
                 <label for="coupon-code" class="block text-sm font-medium">{{ __('cart::cart.coupon_label') }}</label>
                 <div class="flex gap-2">
-                    <input id="coupon-code" name="code" value="{{ old('code') }}" autocomplete="off" autocapitalize="characters" maxlength="100" class="min-w-0 flex-1 rounded-md border border-line px-3 py-2" @error('coupon') aria-invalid="true" aria-describedby="coupon-error" @enderror>
+                    <input id="coupon-code" name="code" value="{{ old('code') }}" autocomplete="off" autocapitalize="characters" maxlength="100" class="field-input min-w-0 flex-1 px-3 py-2" @error('coupon') aria-invalid="true" aria-describedby="coupon-error" @enderror>
                     <x-platform::btn type="submit" size="sm" variant="secondary">{{ __('cart::cart.coupon_apply') }}</x-platform::btn>
                 </div>
                 @error('coupon')<p id="coupon-error" class="text-sm text-danger">{{ $message }}</p>@enderror

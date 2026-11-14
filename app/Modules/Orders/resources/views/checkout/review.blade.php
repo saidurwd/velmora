@@ -1,6 +1,7 @@
 @extends('layouts.storefront')
 
 @section('title', __('orders::checkout.review_title'))
+@section('checkout', '1'){{-- the footer leaves out the shop-wide "We accept" list: the methods for THIS order are on the page --}}
 
 @php
     $fmt = fn (int $minor) => \App\Modules\Platform\Support\Fmt::money(\App\Modules\Platform\DTOs\Money::of($minor, $review->quote->breakdown->currency));

@@ -17,11 +17,11 @@ beforeEach(function () {
     $this->withoutMiddleware(EnforceSessionPolicy::class);
 });
 
-it('defaults to the blue brand and shows the store name', function () {
+it('defaults to the emerald brand and shows the store name', function () {
     $branding = app(Branding::class);
 
-    expect($branding->color())->toBe('#1d4ed8')
-        ->and($branding->cssVariables())->toContain('--color-brand-600:#1d4ed8')
+    expect($branding->color())->toBe('#0f6b5c')
+        ->and($branding->cssVariables())->toContain('--color-brand-600:#0f6b5c')
         ->and($branding->logoUrl())->toBeNull();
 });
 
@@ -59,7 +59,7 @@ it('refuses a colour that white text could not be read on', function () {
 
     $this->actingAs($staff, 'admin')->put('/admin/settings/branding', ['name' => 'Velmora', 'color' => '#ffee00'])->assertSessionHasErrors('color');
     $this->actingAs($staff, 'admin')->put('/admin/settings/branding', ['name' => 'Velmora', 'color' => 'blue'])->assertSessionHasErrors('color');
-    expect(app(Branding::class)->color())->toBe('#1d4ed8');
+    expect(app(Branding::class)->color())->toBe('#0f6b5c');   // unchanged: still the default
 });
 
 it('refuses non-images and svg as a logo, and replaces the old file', function () {

@@ -72,7 +72,7 @@ it('shows a category description as plain text, cut at a word, never as half an 
     DB::table('category_translations')->where('locale', 'en')->where('slug', 'clothing')->update(['description' => '<p>Everyday <a href="https://example.test/a">wear</a> &amp; more.</p><script>alert(1)</script>'.$filler.'<a href="https://example.test/very-long-address">cut here</a>']);
 
     $html = $this->get('/en/c/clothing')->assertOk()->getContent();
-    preg_match('#<header class="space-y-2">(.*?)</header>#s', (string) $html, $m);
+    preg_match('#<header class="motif [^"]*">(.*?)</header>#s', (string) $html, $m);   // the category's own header band, not the site header
 
     expect($m[1])->toContain('Everyday wear &amp; more.')->not->toContain('<a ')->not->toContain('<script')->not->toContain('&amp;amp;')->not->toContain('very-long-address')->toContain('…');
 });

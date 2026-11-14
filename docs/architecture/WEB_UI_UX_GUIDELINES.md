@@ -14,6 +14,26 @@ Stack [PINNED]: Blade components + Tailwind + Alpine via Vite; no SPA. Mobile-fi
 | Motion | ≤ 200ms, respects `prefers-reduced-motion` |
 | Direction | `dir` from `languages.direction`; logical CSS properties (margin-inline) so RTL languages later need no rewrite |
 
+### 1a. Storefront identity as built (November 2026)
+The values live in `resources/css/app.css` (`@theme`); views use the token names, never raw hex values.
+
+| Token | Value | Use |
+|---|---|---|
+| `brand-50/500/600/700` | emerald, default `#0f6b5c` | Primary buttons, links, active states. The owner can change it in the admin (`Branding::cssVariables` overrides the four shades at run time) |
+| `accent-100/400/500/800` | marigold `#f5b841` | Highlights: hero call to action, cart count, small labels. Text on `accent-400` is `ink`, never white |
+| `ink` / `muted` | `#1c1917` / `#57534e` | Text and secondary text |
+| `surface` / `surface-alt` / `line` | white / ivory `#faf7f2` / `#e7e0d6` | Page, bands and cards, borders |
+| `night` / `night-soft` | `#10231f` / `#1b352f` | Top bar and footer |
+| `sale` | `#b42318` | Sale price and the −N% badge only |
+| `shadow-card` / `shadow-lift` | | Card at rest / on hover |
+
+- **Motif:** `.motif` (on light) and `.motif-dark` (on dark) draw a jamdani-inspired diamond pattern in CSS. It is used on the hero, the listing header band, the footer and as the placeholder where a product has no photo. No image file, so it costs nothing to load.
+- **Shape:** buttons, chips and the search box are pills; cards and panels use large rounded corners; product photos are 4:5.
+- **Layout:** top bar (promise, help, my orders, language) → sticky header (menu, logo, search, account, cart) → page → dark footer (contact, payment methods the shop really offers, footer menu). Content width `max-w-7xl`.
+- **Honesty rule:** the value strip and "We accept" show cash on delivery or online payment only when that payment method is active. Nothing promises a delivery time, a return window or a discount that settings do not back.
+- **Behaviour without inline script (CSP):** menus are `<details data-menu>` / `<details data-popover>`, carousels `data-carousel`, the filter panel `<details data-open-desktop>`; `resources/js/behaviors.js` adds one-open-at-a-time, click-away, Escape and hover. With JavaScript off they still open and close as plain `<details>`.
+- **Contrast:** every text and background pair above is at least 4.5:1; the browser suite checks the key pages with axe in both languages.
+
 ## 2. Component inventory (Blade `<x-…>`; living page `/dev/components`, non-prod)
 Foundations: button (primary/secondary/ghost/danger, loading), link, icon, input, textarea, select, checkbox, radio, switch, phone input (digit normalisation), OTP input, quantity stepper, form field (label/help/error), error summary. Display: badge/status pill, price (regular/compare-at/sale/tax note), rating, product card, service card, digital card, breadcrumb, pagination, tabs (bn/en), table (sortable/filterable), card, empty state, skeleton, avatar. Overlay: modal, drawer (cart/filters), toast, tooltip, dropdown. Layout: storefront shell, admin shell (sidebar), account shell, page header, filter bar. Commerce: address form (cascading geography), shipping option, payment option (with fee/COD note), order summary, order timeline, stock indicator, coupon box, policy accordion.
 

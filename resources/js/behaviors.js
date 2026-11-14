@@ -53,3 +53,57 @@ document.addEventListener('change', (event) => {
 document.querySelectorAll('select[data-bulk-action]').forEach((select) => {
     if (select.form) select.form.action = select.value;
 });
+
+// ---- Menus built from <details> (they open and close without any script; this only makes them behave like menus) ----
+// In a [data-menu] bar only one group is open at a time; a click elsewhere or Escape closes what is open (also for a [data-popover], such as the phone menu).
+const openMenus = () => document.querySelectorAll('[data-menu] details[open], details[data-popover][open]');
+
+document.addEventListener('toggle', (event) => {
+    const details = event.target;
+    if (!(details instanceof HTMLDetailsElement) || !details.open) return;
+    const bar = details.closest('[data-menu]');
+    if (bar) bar.querySelectorAll('details[open]').forEach((other) => { if (other !== details) other.open = false; });
+}, true);
+
+document.addEventListener('click', (event) => {
+    openMenus().forEach((details) => { if (!details.contains(event.target)) details.open = false; });
+});
+
+document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    openMenus().forEach((details) => {
+        const hadFocus = details.contains(document.activeElement);
+        details.open = false;
+        if (hadFocus) details.querySelector('summary')?.focus();
+    });
+});
+
+// With a mouse, a group in the bar also opens when pointed at and closes when left. (Touch and keyboard keep the plain click / Enter.)
+if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    document.querySelectorAll('[data-menu] details').forEach((details) => {
+        const item = details.parentElement;
+        item.addEventListener('mouseenter', () => { details.open = true; });
+        item.addEventListener('mouseleave', () => { details.open = false; });
+        // a mouse click on the heading would close what the pointer just opened: keep it open instead
+        details.querySelector('summary')?.addEventListener('click', (event) => {
+            if (event.detail > 0) { event.preventDefault(); details.open = true; }
+        });
+    });
+}
+
+// ---- Carousels: a scroll-snap row; the two buttons scroll one slide. Shown only here, because without scripts they would do nothing. ----
+document.querySelectorAll('[data-carousel]').forEach((carousel) => {
+    const track = carousel.querySelector('[data-carousel-track]');
+    const controls = carousel.querySelector('[data-carousel-controls]');
+    if (!track || !controls) return;
+    controls.hidden = false;
+    const rtl = getComputedStyle(track).direction === 'rtl';
+    const step = (direction) => track.scrollBy({ left: direction * (rtl ? -1 : 1) * track.clientWidth, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    controls.querySelector('[data-carousel-prev]')?.addEventListener('click', () => step(-1));
+    controls.querySelector('[data-carousel-next]')?.addEventListener('click', () => step(1));
+});
+
+// A <details data-open-desktop> (the listing filters) is a closed drawer on phones and simply open on large screens.
+if (window.matchMedia('(min-width: 64rem)').matches) {
+    document.querySelectorAll('details[data-open-desktop]').forEach((details) => { details.open = true; });
+}

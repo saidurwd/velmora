@@ -11,22 +11,22 @@
 <div class="space-y-10">
     <x-platform::breadcrumb :items="$page->breadcrumb" />
 
-    <div class="grid gap-8 lg:grid-cols-2">
+    <div class="grid gap-8 lg:grid-cols-2 lg:gap-12">
         {{-- Gallery: CSS scroll-snap, so it swipes on phones and scrolls with the keyboard, no JavaScript needed. --}}
         <section aria-label="{{ __('catalog::storefront.gallery') }}">
             @if ($page->gallery !== [])
-                <ul class="flex snap-x snap-mandatory gap-2 overflow-x-auto rounded-lg" tabindex="0" aria-label="{{ __('catalog::storefront.gallery_hint', ['count' => count($page->gallery)]) }}">
+                <ul class="scroll-row flex snap-x snap-mandatory gap-2 overflow-x-auto rounded-3xl" tabindex="0" aria-label="{{ __('catalog::storefront.gallery_hint', ['count' => count($page->gallery)]) }}">
                     @foreach ($page->gallery as $i => $img)
                         <li class="w-full shrink-0 snap-center">
                             <img src="{{ $img['src'] }}" srcset="{{ $img['srcset'] }}" sizes="(min-width: 1024px) 560px, 100vw" alt="{{ $img['alt'] }}"
-                                 width="{{ $img['width'] }}" height="{{ $img['height'] }}" class="aspect-square w-full rounded-lg bg-surface-alt object-cover"
+                                 width="{{ $img['width'] }}" height="{{ $img['height'] }}" class="aspect-square w-full rounded-3xl bg-surface-alt object-cover"
                                  @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif decoding="async">
                         </li>
                     @endforeach
                 </ul>
                 @if (count($page->gallery) > 1)<p class="mt-2 text-sm text-muted">{{ __('catalog::storefront.gallery_hint', ['count' => \App\Modules\Platform\Support\Fmt::number(count($page->gallery))]) }}</p>@endif
             @else
-                <div class="aspect-square rounded-lg bg-surface-alt" role="img" aria-label="{{ __('catalog::storefront.no_image') }}"></div>
+                <div class="motif flex aspect-square items-center justify-center rounded-3xl border border-line bg-surface-alt" role="img" aria-label="{{ __('catalog::storefront.no_image') }}"><svg aria-hidden="true" class="size-16 text-brand-600/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m4 17 5-4.5 3.5 3L16 12l4 4"/></svg></div>
             @endif
         </section>
 
@@ -34,9 +34,9 @@
             <div class="space-y-2">
                 <div class="flex flex-wrap items-center gap-2">
                     @if ($page->type !== 'physical')<x-platform::badge tone="brand">{{ __('catalog::storefront.types.'.$page->type) }}</x-platform::badge>@endif
-                    @if ($page->onSale)<x-platform::badge tone="danger">{{ __('platform::ui.sale') }}</x-platform::badge>@endif
+                    @if ($page->onSale)<x-platform::badge tone="sale">{{ __('platform::ui.sale') }}</x-platform::badge>@endif
                 </div>
-                <h1 id="product-h" class="text-3xl font-bold">{{ $page->name }}</h1>
+                <h1 id="product-h" class="text-3xl font-bold tracking-tight sm:text-4xl">{{ $page->name }}</h1>
                 @if ($page->brandName)<p><a class="text-brand-700 underline underline-offset-2" href="{{ $page->brandUrl }}">{{ $page->brandName }}</a></p>@endif
                 @if ($page->shortDescription)<p class="text-muted">{{ $page->shortDescription }}</p>@endif
             </div>
@@ -56,7 +56,7 @@
                                 @foreach ($option['values'] as $value)
                                     <label class="relative">
                                         <input type="radio" name="opt[{{ $option['code'] }}]" value="{{ $value['code'] }}" @checked($value['selected']) data-autosubmit class="peer sr-only">
-                                        <span class="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-md border px-4 peer-checked:border-brand-600 peer-checked:bg-brand-50 peer-checked:font-semibold peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 {{ $value['inStock'] ? 'border-line' : 'border-dashed border-line text-muted line-through' }}">
+                                        <span class="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-full border px-5 peer-checked:border-brand-600 peer-checked:bg-brand-600 peer-checked:font-semibold peer-checked:text-white peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 {{ $value['inStock'] ? 'border-line' : 'border-dashed border-line text-muted line-through' }}">
                                             {{ $value['label'] }}@unless ($value['inStock'])<span class="sr-only"> — {{ __('platform::ui.out_of_stock') }}</span>@endunless
                                         </span>
                                     </label>
@@ -68,7 +68,7 @@
                 </form>
             @endif
 
-            <div class="space-y-3 rounded-lg border border-line p-4">
+            <div class="space-y-3 rounded-2xl border border-line bg-surface-alt p-5">
                 @if ($stockTone)<p><x-platform::badge :tone="$stockTone">{{ __('platform::ui.'.$page->stockState) }}</x-platform::badge></p>@endif
                 <p class="text-sm text-muted">{{ __('catalog::storefront.sku') }}: {{ $page->sku }}</p>
                 <p class="text-sm text-muted">{{ __('catalog::storefront.note_'.$page->type) }}</p>
@@ -83,9 +83,9 @@
                         <input type="hidden" name="variant" value="{{ $page->variantPublicId }}">
                         <div>
                             <label for="qty" class="block text-sm font-medium">{{ __('cart::cart.quantity') }}</label>
-                            <input id="qty" name="quantity" inputmode="numeric" value="{{ $page->minQty }}" class="w-24 rounded-md border border-line px-3 py-2 text-center" @if ($page->qtyStep > 1 || $page->minQty > 1) aria-describedby="qty-help" @endif>
+                            <input id="qty" name="quantity" inputmode="numeric" value="{{ $page->minQty }}" class="field-input w-24 px-3 py-2.5 text-center" @if ($page->qtyStep > 1 || $page->minQty > 1) aria-describedby="qty-help" @endif>
                         </div>
-                        <x-platform::btn type="submit" class="flex-1">{{ __('cart::cart.add') }}</x-platform::btn>
+                        <x-platform::btn type="submit" class="flex-1"><svg aria-hidden="true" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.7 12.4a1 1 0 0 0 1 .8h9.1a1 1 0 0 0 1-.8L21 7H6"/></svg>{{ __('cart::cart.add') }}</x-platform::btn>
                     </form>
                     @if ($page->qtyStep > 1 || $page->minQty > 1)<p id="qty-help" class="text-sm text-muted">{{ __('catalog::storefront.qty_rule', ['min' => $page->minQty, 'step' => $page->qtyStep]) }}</p>@endif
                 @endif
@@ -94,12 +94,14 @@
         </section>
     </div>
 
+    @if ($page->type === 'physical')@include('partials.storefront.value-props')@endif
+
     @if ($page->type === 'digital')@include('digital-products::partials.refund-policy', ['skus' => [$page->sku]])@endif
     @if ($page->type === 'service')@include('bookings::partials.cancellation-policy', ['skus' => [$page->sku]])@endif
 
     @if ($page->descriptionHtml)
         <section aria-labelledby="desc-h" class="max-w-3xl space-y-3">
-            <h2 id="desc-h" class="text-xl font-semibold">{{ __('catalog::storefront.description') }}</h2>
+            <h2 id="desc-h" class="text-2xl font-bold tracking-tight">{{ __('catalog::storefront.description') }}</h2>
             <div class="space-y-3 leading-relaxed [&_a]:text-brand-700 [&_a]:underline [&_ol]:list-decimal [&_ol]:ps-6 [&_ul]:list-disc [&_ul]:ps-6">{!! $page->descriptionHtml !!}</div>
         </section>
     @endif
@@ -112,10 +114,10 @@
 
     {{-- Recently viewed: kept only in this browser (localStorage); nothing is sent to the server. --}}
     <section x-data="recentlyViewed" data-current="{{ json_encode(['id' => $page->publicId, 'name' => $page->name, 'url' => $productPath, 'image' => $page->gallery[0]['src'] ?? null], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}" x-show="items.length" x-cloak style="display:none" aria-labelledby="rv-h" class="space-y-4">
-        <h2 id="rv-h" class="text-2xl font-bold">{{ __('catalog::storefront.recently_viewed') }}</h2>
+        <h2 id="rv-h" class="text-2xl font-bold tracking-tight sm:text-3xl">{{ __('catalog::storefront.recently_viewed') }}</h2>
         <ul class="grid grid-cols-2 gap-4 md:grid-cols-4">
             <template x-for="item in items" :key="item.id">
-                <li class="space-y-2"><a :href="item.url" class="block"><img x-show="item.image" :src="item.image" alt="" width="160" height="160" loading="lazy" class="aspect-square w-full rounded-lg bg-surface-alt object-cover"><span class="mt-1 block font-medium" x-text="item.name"></span></a></li>
+                <li class="space-y-2"><a :href="item.url" class="block"><img x-show="item.image" :src="item.image" alt="" width="160" height="160" loading="lazy" class="aspect-square w-full rounded-2xl bg-surface-alt object-cover"><span class="mt-1 block font-medium" x-text="item.name"></span></a></li>
             </template>
         </ul>
     </section>

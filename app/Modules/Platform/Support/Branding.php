@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
  */
 final class Branding
 {
-    public const DEFAULT_COLOR = '#1d4ed8';
+    public const DEFAULT_COLOR = '#0f6b5c';
 
     /** WCAG AA for normal text: white on the primary colour must reach this ratio. */
     public const MIN_CONTRAST = 4.5;

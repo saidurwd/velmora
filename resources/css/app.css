@@ -10,19 +10,30 @@
 @source '../../storage/framework/views/*.php';
 @source '../../app/Modules/**/resources/views/**/*.blade.php';
 
-/* Design tokens (WEB_UI_UX_GUIDELINES §1). Brand colours are placeholders until the brand is final. */
+/*
+ * Design tokens. The identity: deep emerald (the brand colour, changeable in the admin), marigold as the accent, warm ivory surfaces and a jamdani-inspired diamond motif.
+ * `brand-*` are overridden at run time from the colour the owner chose (Branding::cssVariables); everything else is fixed here.
+ * Contrast (WCAG AA): white on brand-600/700, ink and muted on surface and surface-alt, ink on accent-400, white on sale and night are all above 4.5:1.
+ */
 @theme {
     --font-sans: 'Inter Variable', 'Noto Sans Bengali', ui-sans-serif, system-ui, sans-serif;
 
-    --color-brand-50: #eef6ff;
-    --color-brand-500: #2563eb;
-    --color-brand-600: #1d4ed8;
-    --color-brand-700: #1e40af;
-    --color-ink: #0f172a;
-    --color-muted: #475569;
+    --color-brand-50: #eef6f3;
+    --color-brand-500: #2b7d70;
+    --color-brand-600: #0f6b5c;
+    --color-brand-700: #0c584c;
+    --color-accent-100: #fdf1d3;
+    --color-accent-400: #f5b841;
+    --color-accent-500: #e9a20b;
+    --color-accent-800: #7a4f05;
+    --color-ink: #1c1917;
+    --color-muted: #57534e;
     --color-surface: #ffffff;
-    --color-surface-alt: #f8fafc;
-    --color-line: #e2e8f0;
+    --color-surface-alt: #faf7f2;
+    --color-line: #e7e0d6;
+    --color-night: #10231f;
+    --color-night-soft: #1b352f;
+    --color-sale: #b42318;
     --color-danger: #b91c1c;
     --color-success: #15803d;
     --color-warning: #b45309;
@@ -34,6 +45,9 @@
     --radius-sm: 4px;
     --radius-md: 8px;
     --radius-lg: 16px;
+
+    --shadow-card: 0 1px 2px rgb(28 25 23 / 0.05), 0 10px 24px -14px rgb(28 25 23 / 0.22);
+    --shadow-lift: 0 2px 4px rgb(28 25 23 / 0.06), 0 18px 36px -16px rgb(28 25 23 / 0.3);
 
     --breakpoint-xs: 22.5rem; /* 360px design floor */
 }
@@ -72,6 +86,40 @@
 }
 
 @layer components {
+    /* The jamdani-inspired diamond motif: a decoration only (never carries meaning). `motif` for light surfaces, `motif-dark` over dark ones. */
+    .motif {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cg fill='none' stroke='%230f6b5c' stroke-opacity='.11' stroke-width='1'%3E%3Cpath d='M22 4 40 22 22 40 4 22Z'/%3E%3Cpath d='M22 14l8 8-8 8-8-8Z'/%3E%3C/g%3E%3Ccircle cx='22' cy='22' r='1.4' fill='%230f6b5c' fill-opacity='.16'/%3E%3C/svg%3E");
+        background-size: 44px 44px;
+    }
+
+    .motif-dark {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.07' stroke-width='1'%3E%3Cpath d='M22 4 40 22 22 40 4 22Z'/%3E%3Cpath d='M22 14l8 8-8 8-8-8Z'/%3E%3C/g%3E%3Ccircle cx='22' cy='22' r='1.4' fill='%23ffffff' fill-opacity='.1'/%3E%3C/svg%3E");
+        background-size: 44px 44px;
+    }
+
+    /* A row that scrolls sideways by touch or keyboard, with no visible scrollbar (rails and tile rows on phones). */
+    .scroll-row {
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .scroll-row::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Text inputs everywhere: one look, a clear focus ring. */
+    .field-input {
+        border: 1px solid var(--color-line);
+        border-radius: 0.75rem;
+        background: var(--color-surface);
+    }
+
+    .field-input:focus {
+        border-color: var(--color-brand-600);
+        outline: 3px solid color-mix(in srgb, var(--color-brand-500) 35%, transparent);
+        outline-offset: 0;
+    }
+
     .skip-link {
         position: absolute;
         inset-inline-start: 0.5rem;

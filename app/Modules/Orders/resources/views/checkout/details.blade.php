@@ -1,6 +1,7 @@
 @extends('layouts.storefront')
 
 @section('title', __('orders::checkout.details_title'))
+@section('checkout', '1'){{-- the footer leaves out the shop-wide "We accept" list: the methods for THIS order are on the page --}}
 
 @php($fmt = fn ($m) => \App\Modules\Platform\Support\Fmt::money($m))
 
