@@ -52,7 +52,7 @@
             {{-- The logo (Branding::logo: the brand kit's vector file, else an uploaded one, else the name). Its viewBox has room around the mark, so it is pulled in at the start. --}}
             <a href="{{ $home }}" class="flex shrink-0 items-center rounded-lg" aria-label="{{ $brand->name() }}">
                 @if ($logo = $brand->logo())
-                    <img src="{{ $logo }}" alt="" width="335" height="100" class="-ms-3 h-12 w-auto sm:h-14" fetchpriority="high">
+                    <img src="{{ $logo }}" alt="" width="335" height="100" class="-ms-3 h-12 w-auto sm:h-14">
                 @else
                     <span class="text-2xl font-bold tracking-tight text-brand-700">{{ $brand->name() }}</span>
                 @endif
