@@ -39,7 +39,15 @@ return [
         'revoke_others' => 'Sign out all other devices',
         'revoked' => ':count other session(s) signed out.',
     ],
+    'password' => [
+        'title' => 'Change password',
+        'intro' => 'Choose a new password for your staff account. You need your current one to do it.',
+        'current' => 'Current password', 'new' => 'New password', 'confirm' => 'New password again',
+        'after' => 'Afterwards you stay signed in here; every other device is signed out, and we email you that the password was changed. Your two-step sign-in stays as it is.',
+        'save' => 'Change password', 'changed' => 'Your password was changed. Other devices were signed out.',
+    ],
     'menu' => [
+        'password' => 'Change password',
         'staff' => 'Staff',
         'roles' => 'Roles & permissions',
         'sessions' => 'My sessions',

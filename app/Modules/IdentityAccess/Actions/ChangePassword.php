@@ -12,7 +12,10 @@ use App\Modules\Platform\Enums\ActorType;
 use App\Modules\Platform\Support\AuditLogger;
 use Illuminate\Support\Facades\Hash;
 
-/** Sets a new password and ends every other session. The caller has already required recent re-authentication. */
+/**
+ * Sets a new password and ends every other session (website, staff area and app). Used by customers (website, app) and by staff (staff area). The caller
+ * has already proved it is the person: recent re-authentication for customers, the current password for staff.
+ */
 final class ChangePassword
 {
     public function __construct(private readonly AuditLogger $audit, private readonly UserSessionRegistry $sessions, private readonly EndApiSessions $apiSessions) {}
@@ -25,7 +28,7 @@ final class ChangePassword
         $this->sessions->revokeOthers($user->id, $currentSessionId);
         $this->apiSessions->all($user->id, $keepApiSession, 'password_changed');
 
-        $this->audit->record($hadPassword ? 'auth.password_changed' : 'auth.password_set', $user, actor: new Actor(ActorType::Customer, $user->id, $user->public_id));
+        $this->audit->record($hadPassword ? 'auth.password_changed' : 'auth.password_set', $user, actor: new Actor($user->isStaff() ? ActorType::Staff : ActorType::Customer, $user->id, $user->public_id));
 
         if ($user->email !== null) {
             $user->notify(new SecurityChangeNotification('password'));

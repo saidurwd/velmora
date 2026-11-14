@@ -101,6 +101,7 @@
                                     </div>
                                     <ul class="py-1 text-sm">
                                         @if (Route::has('admin.sessions'))<li><a href="{{ route('admin.sessions') }}" class="flex min-h-10 items-center rounded-lg px-3 hover:bg-surface-alt">{{ __('identity-access::admin.menu.sessions') }}</a></li>@endif
+                                        @if (Route::has('admin.account.password'))<li><a href="{{ route('admin.account.password') }}" class="flex min-h-10 items-center rounded-lg px-3 hover:bg-surface-alt">{{ __('identity-access::admin.menu.password') }}</a></li>@endif
                                         @if (Route::has('admin.account.activity'))<li><a href="{{ route('admin.account.activity') }}" class="flex min-h-10 items-center rounded-lg px-3 hover:bg-surface-alt">{{ __('platform::security.activity.mine_title') }}</a></li>@endif
                                         <li><a href="{{ url('/'.app()->getLocale()) }}" class="flex min-h-10 items-center rounded-lg px-3 hover:bg-surface-alt md:hidden">{{ __('layout.admin_ui.view_shop') }}</a></li>
                                     </ul>

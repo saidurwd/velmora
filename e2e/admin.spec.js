@@ -22,6 +22,7 @@ const SCREENS = [
     ['security events', '/admin/security/events'],
     ['login history', '/admin/security/logins'],
     ['my sessions and recent sign-ins', '/admin/account/sessions'],
+    ['change password', '/admin/account/password'],
     ['queue monitor', '/admin/ops/queues'],
     ['about', '/admin/ops/about'],
 ];

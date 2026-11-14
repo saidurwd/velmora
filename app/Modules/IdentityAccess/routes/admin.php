@@ -7,6 +7,7 @@ use App\Modules\IdentityAccess\Http\Controllers\Admin\AdminPasswordController;
 use App\Modules\IdentityAccess\Http\Controllers\Admin\MfaController;
 use App\Modules\IdentityAccess\Http\Controllers\Admin\RoleController;
 use App\Modules\IdentityAccess\Http\Controllers\Admin\StaffController;
+use App\Modules\IdentityAccess\Http\Controllers\Admin\StaffPasswordController;
 use App\Modules\IdentityAccess\Http\Controllers\Admin\StaffSessionController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,6 +36,8 @@ Route::middleware(['auth:admin', 'session.policy:admin'])->group(function (): vo
     Route::get('/mfa/recovery-codes', [MfaController::class, 'showRecovery'])->name('mfa.recovery');
     Route::get('/account/sessions', [StaffSessionController::class, 'index'])->name('sessions');
     Route::post('/account/sessions/revoke-others', [StaffSessionController::class, 'revokeOthers'])->name('sessions.revoke-others');
+    Route::get('/account/password', [StaffPasswordController::class, 'edit'])->name('account.password');
+    Route::put('/account/password', [StaffPasswordController::class, 'update'])->middleware('throttle:6,1,staff-password')->name('account.password.update');   // 6 tries a minute: guessing the current password is slow
 
     // Staff administration (permission-gated; escalation rules are enforced again inside the Actions).
     Route::prefix('staff')->name('staff.')->group(function (): void {
