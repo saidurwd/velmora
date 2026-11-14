@@ -18,6 +18,12 @@ const SCREENS = [
     ['scheduled tasks', '/admin/ops/scheduler'],
     ['audit log', '/admin/audit'],
     ['support', '/admin/support'],
+    ['activity log', '/admin/security/activity'],
+    ['security events', '/admin/security/events'],
+    ['login history', '/admin/security/logins'],
+    ['my sessions and recent sign-ins', '/admin/account/sessions'],
+    ['queue monitor', '/admin/ops/queues'],
+    ['about', '/admin/ops/about'],
 ];
 
 function base32(s) {

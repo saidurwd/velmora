@@ -32,7 +32,9 @@ final class AdminMenu
         'customers' => ['admin.support.index', 'admin.support.canned.*', 'admin.support.contact', 'admin.reviews.*', 'admin.privacy.*', 'admin.notifications.templates', 'admin.notifications.logs'],
         'content' => ['admin.cms.home.*', 'admin.cms.pages.*', 'admin.cms.banners.*', 'admin.cms.faq.*', 'admin.cms.policies.*', 'admin.cms.menus.*', 'admin.cms.translations'],
         'reports' => ['admin.reports.sales', 'admin.reports.index', 'admin.reports.exports'],
-        'administration' => ['admin.settings.*', 'admin.staff.*', 'admin.roles.*', 'admin.audit.*', 'admin.ops.*', 'admin.sessions'],
+        'security' => ['admin.audit.*', 'admin.security.activity', 'admin.security.events', 'admin.security.logins', 'admin.sessions'],
+        'system' => ['admin.ops.index', 'admin.ops.health', 'admin.ops.queues', 'admin.ops.scheduler', 'admin.ops.failed', 'admin.ops.integrity', 'admin.ops.about'],
+        'administration' => ['admin.settings.*', 'admin.staff.*', 'admin.roles.*'],
     ];
 
     /** Route names shown on their own above the areas. */

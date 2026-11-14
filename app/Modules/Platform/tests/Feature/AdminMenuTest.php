@@ -46,8 +46,8 @@ it('shows a viewer only the areas they may use, and no empty area', function () 
 
     $keys = array_column($this->menu->groupedFor($staff)['areas'], 'key');
 
-    expect($keys)->toBe(['catalog', 'administration'])   // administration: everyone has "My sessions"
-        ->and(array_column($this->menu->groupedFor($staff)['top'], 'route'))->toBe(['admin.dashboard'])->and(array_column($this->menu->groupedFor(null)['areas'], 'key'))->toBe(['administration']);   // only "My sessions", which needs no permission (the page itself needs a sign-in)
+    expect($keys)->toBe(['catalog', 'security'])   // security: everyone has "My sessions"
+        ->and(array_column($this->menu->groupedFor($staff)['top'], 'route'))->toBe(['admin.dashboard'])->and(array_column($this->menu->groupedFor(null)['areas'], 'key'))->toBe(['security']);   // only "My sessions", which needs no permission (the page itself needs a sign-in)
 });
 
 it('draws the sidebar with area headings, opens the area of the current page and marks the current link', function () {

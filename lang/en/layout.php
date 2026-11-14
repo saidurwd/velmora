@@ -35,7 +35,7 @@ return [
         'customers' => 'Customers and messages',
         'content' => 'Website content',
         'reports' => 'Reports',
-        'administration' => 'Administration',
+        'security' => 'Security', 'system' => 'System', 'administration' => 'Administration',
         'other' => 'More',
     ],
     'store' => [

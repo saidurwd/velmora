@@ -35,7 +35,7 @@ return [
         'customers' => 'গ্রাহক ও বার্তা',
         'content' => 'ওয়েবসাইটের বিষয়বস্তু',
         'reports' => 'রিপোর্ট',
-        'administration' => 'প্রশাসন',
+        'security' => 'নিরাপত্তা', 'system' => 'সিস্টেম', 'administration' => 'প্রশাসন',
         'other' => 'আরও',
     ],
     'store' => [

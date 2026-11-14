@@ -9,6 +9,7 @@ use App\Modules\Platform\Console\ApiCompatCommand;
 use App\Modules\Platform\Console\DispatchOutboxCommand;
 use App\Modules\Platform\Console\MakeModuleCommand;
 use App\Modules\Platform\Console\PreflightCommand;
+use App\Modules\Platform\Contracts\AuditPeople;
 use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\DTOs\Actor;
 use App\Modules\Platform\DTOs\Money;
@@ -37,6 +38,7 @@ use App\Modules\Platform\Support\IntegrationTests;
 use App\Modules\Platform\Support\Integrity\StuckOutboxCheck;
 use App\Modules\Platform\Support\IntegrityRegistry;
 use App\Modules\Platform\Support\ModuleServiceProvider;
+use App\Modules\Platform\Support\NullAuditPeople;
 use App\Modules\Platform\Support\PageSeo;
 use App\Modules\Platform\Support\SavedFilterScreens;
 use App\Modules\Platform\Support\SearchProviders;
@@ -74,6 +76,9 @@ class PlatformServiceProvider extends ModuleServiceProvider
     public function register(): void
     {
         $this->commands([MakeModuleCommand::class, DispatchOutboxCommand::class, ApiCompatCommand::class, ApiCollectionCommand::class, PreflightCommand::class]);
+
+        // Names on the audit and security screens; the module that owns accounts binds the real one (IdentityAccess).
+        $this->app->bindIf(AuditPeople::class, NullAuditPeople::class);
 
         // The API document is a committed file (docs/api/openapi.json), not a web page: no documentation routes on any server.
         if (class_exists(Scramble::class)) {
@@ -131,7 +136,19 @@ class PlatformServiceProvider extends ModuleServiceProvider
         $this->app->make(AdminMenu::class)->add('platform::admin.dashboard', 'admin.dashboard', 'dashboard.view', 10);
         $this->app->make(AdminMenu::class)->add('platform::settings.menu', 'admin.settings.index', 'settings.view', 89);
         $this->app->make(AdminMenu::class)->add('platform::audit.menu', 'admin.audit.index', 'audit.view', 91);
-        $this->app->make(AdminMenu::class)->add('platform::ops.menu', 'admin.ops.index', 'system.view', 92);
+        $menu = $this->app->make(AdminMenu::class);
+        // Security: what people did and how they signed in
+        $menu->add('platform::security.menu.activity', 'admin.security.activity', 'audit.view', 92);
+        $menu->add('platform::security.menu.events', 'admin.security.events', 'audit.view', 93);
+        $menu->add('platform::security.menu.logins', 'admin.security.logins', 'audit.view', 94);
+        // System: is it working, and what is it
+        $menu->add('platform::ops.menu', 'admin.ops.index', 'system.view', 92);
+        $menu->add('platform::ops.menu_items.health', 'admin.ops.health', 'system.view', 93);
+        $menu->add('platform::ops.menu_items.queues', 'admin.ops.queues', 'queues.view', 94);
+        $menu->add('platform::ops.menu_items.scheduler', 'admin.ops.scheduler', 'system.view', 95);
+        $menu->add('platform::ops.menu_items.failed', 'admin.ops.failed', 'queues.view', 96);
+        $menu->add('platform::ops.menu_items.integrity', 'admin.ops.integrity', 'system.view', 97);
+        $menu->add('platform::ops.menu_items.about', 'admin.ops.about', 'system.view', 98);
         $this->app->make(IntegrityRegistry::class)->add(StuckOutboxCheck::class);
         $this->app->make(IntegrationTests::class)->add('mail', MailHandshakeTest::class);
 

@@ -7,6 +7,7 @@ namespace App\Modules\IdentityAccess\Http\Controllers\Web;
 use App\Modules\Cms\Contracts\PolicyAcceptances;
 use App\Modules\IdentityAccess\Actions\LoginWithPassword;
 use App\Modules\IdentityAccess\Actions\RegisterCustomerWithEmail;
+use App\Modules\IdentityAccess\Actions\SignOut;
 use App\Modules\IdentityAccess\Enums\LoginStatus;
 use App\Modules\IdentityAccess\Http\Requests\LoginRequest;
 use App\Modules\IdentityAccess\Http\Requests\RegisterRequest;
@@ -70,11 +71,9 @@ class AuthController
         return view('identity-access::auth.register-sent');
     }
 
-    public function logout(Request $request): RedirectResponse
+    public function logout(Request $request, SignOut $signOut): RedirectResponse
     {
-        Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        $signOut->handle($request, 'web');
 
         return redirect()->route('home');
     }

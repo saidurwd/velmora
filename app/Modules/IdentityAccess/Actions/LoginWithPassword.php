@@ -92,7 +92,9 @@ final class LoginWithPassword
             }
         }
 
-        $this->audit->record('auth.login_failed', after: ['identifier_type' => $label, 'known' => $user !== null, 'ip' => $ip], actor: Actor::guest());
+        // Tied to the account when there is one, so login history and security events can show attempts on it (owner decision, November 2026). Only staff
+        // with the audit permission read this; the visitor gets the same answer whether or not the account exists.
+        $this->audit->record('auth.login_failed', $user, after: ['identifier_type' => $label, 'known' => $user !== null, 'ip' => $ip], actor: Actor::guest());
     }
 
     private function markSuccess(User $user, string $password): void

@@ -32,7 +32,9 @@ use App\Modules\IdentityAccess\Privacy\AccountPersonalData;
 use App\Modules\IdentityAccess\Services\DatabaseApiSessions;
 use App\Modules\IdentityAccess\Services\PasswordReauthentication;
 use App\Modules\IdentityAccess\Support\DatabaseAccountLocales;
+use App\Modules\IdentityAccess\Support\DatabaseAuditPeople;
 use App\Modules\IdentityAccess\Support\DatabaseStaffDirectory;
+use App\Modules\Platform\Contracts\AuditPeople;
 use App\Modules\Platform\Contracts\Clock;
 use App\Modules\Platform\Contracts\StaffReauthentication;
 use App\Modules\Platform\Events\LocaleChosen;
@@ -58,6 +60,7 @@ class IdentityAccessServiceProvider extends ModuleServiceProvider
         $this->app->singleton(DatabaseApiSessions::class);
         $this->app->bind(ApiSessionResolver::class, DatabaseApiSessions::class);
         $this->app->bind(StaffDirectory::class, DatabaseStaffDirectory::class);
+        $this->app->bind(AuditPeople::class, DatabaseAuditPeople::class);   // names for the audit and security screens
         $this->app->bind(AccountLocales::class, DatabaseAccountLocales::class);
         $this->app->bind(CustomerRegistration::class, RegisterCustomerWithEmail::class);
         $this->app->bind(StaffReauthentication::class, PasswordReauthentication::class);
