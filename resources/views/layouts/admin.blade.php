@@ -19,13 +19,15 @@
 
         <nav id="admin-menu" aria-label="{{ __('layout.admin_navigation') }}" x-bind:class="drawerClass"
              class="motif-dark w-full bg-night text-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col">
-            <div class="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-white/10 px-5">
-                <a href="{{ Route::has('admin.dashboard') ? route('admin.dashboard') : url('/admin') }}" class="flex min-w-0 items-center gap-3 rounded-lg focus-visible:outline-accent-400">
-                    <span aria-hidden="true" class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-base font-bold text-white shadow-sm">{{ mb_strtoupper(mb_substr($brand, 0, 1)) }}</span>
-                    <span class="min-w-0">
-                        <span class="block truncate font-semibold leading-tight">{{ $brand }}</span>
-                        <span class="block text-xs leading-tight text-white/75">{{ __('layout.admin_ui.panel') }}</span>
-                    </span>
+            <div class="flex h-20 shrink-0 items-center justify-between gap-3 border-b border-white/10 px-5">
+                {{-- The logo for dark backgrounds (Branding::logo). Its words are in the image, so the alt text is the shop's name. --}}
+                <a href="{{ Route::has('admin.dashboard') ? route('admin.dashboard') : url('/admin') }}" class="flex min-w-0 flex-col gap-1 rounded-lg focus-visible:outline-accent-400">
+                    @if ($logo = app(\App\Modules\Platform\Support\Branding::class)->logo(onDark: true))
+                        <img src="{{ $logo }}" alt="{{ $brand }}" width="335" height="100" class="-ms-2 h-11 w-auto">
+                    @else
+                        <span class="ms-1 text-lg font-bold leading-tight">{{ $brand }}</span>
+                    @endif
+                    <span class="ms-1 text-[0.6875rem] font-semibold uppercase leading-none tracking-[0.14em] text-white/70">{{ __('layout.admin_ui.panel') }}</span>
                 </a>
                 <button type="button" x-cloak x-ref="closeButton" @click="close" class="flex size-10 items-center justify-center rounded-lg text-white/80 hover:bg-white/10 hover:text-white focus-visible:outline-accent-400 lg:hidden" aria-label="{{ __('layout.admin_ui.close_menu') }}">
                     <svg aria-hidden="true" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>

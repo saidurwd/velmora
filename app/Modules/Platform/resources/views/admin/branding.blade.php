@@ -25,6 +25,13 @@
 
         <div class="space-y-2">
             <label for="logo" class="block text-sm font-medium">{{ __('platform::branding.logo') }}</label>
+            @if (is_file(public_path('brand/'.\App\Modules\Platform\Support\Branding::KIT_LOGO)))
+                {{-- The brand kit's own logo wins, so say so: otherwise an upload would seem to do nothing. --}}
+                <div class="flex flex-wrap items-center gap-4 rounded-lg border border-line bg-surface-alt p-3">
+                    <img src="{{ $branding->logo() }}" alt="{{ $branding->name() }}" width="335" height="100" class="h-12 w-auto">
+                    <p class="min-w-0 flex-1 text-sm text-muted">{{ __('platform::branding.kit_logo') }}</p>
+                </div>
+            @endif
             @if ($branding->logoUrl())
                 <img src="{{ $branding->logoUrl() }}" alt="{{ $branding->name() }}" class="max-h-16 rounded border border-line p-2">
                 <label class="flex items-center gap-2"><input type="checkbox" name="remove_logo" value="1" class="size-4"> {{ __('platform::branding.remove_logo') }}</label>

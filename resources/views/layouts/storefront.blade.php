@@ -49,13 +49,13 @@
                 </details>
             @endif
 
-            <a href="{{ $home }}" class="flex shrink-0 items-center gap-3" aria-label="{{ $brand->name() }}">
-                @if ($brand->logoUrl())
-                    <img src="{{ $brand->logoUrl() }}" alt="" height="40" class="h-10 w-auto">
+            {{-- The logo (Branding::logo: the brand kit's vector file, else an uploaded one, else the name). Its viewBox has room around the mark, so it is pulled in at the start. --}}
+            <a href="{{ $home }}" class="flex shrink-0 items-center rounded-lg" aria-label="{{ $brand->name() }}">
+                @if ($logo = $brand->logo())
+                    <img src="{{ $logo }}" alt="" width="335" height="100" class="-ms-3 h-12 w-auto sm:h-14" fetchpriority="high">
                 @else
                     <span class="text-2xl font-bold tracking-tight text-brand-700">{{ $brand->name() }}</span>
                 @endif
-                @if ($brand->tagline() !== '')<span class="hidden text-sm text-muted xl:inline">{{ $brand->tagline() }}</span>@endif
             </a>
 
             <x-platform::search-box class="order-last basis-full lg:order-none lg:basis-auto lg:flex-1" :action="url('/'.$locale.'/search')" :suggest-url="url('/'.$locale.'/search/suggest')" />
@@ -79,7 +79,11 @@
         <div class="motif-dark">
             <div class="mx-auto grid max-w-7xl gap-10 px-4 py-12 lg:grid-cols-[1fr_2fr]">
                 <div class="space-y-4">
-                    <p class="text-2xl font-bold tracking-tight text-white">{{ $brand->name() }}</p>
+                    @if ($footerLogo = $brand->logo(onDark: true))
+                        <p><img src="{{ $footerLogo }}" alt="{{ $brand->name() }}" width="335" height="100" loading="lazy" class="-ms-3 h-16 w-auto"></p>
+                    @else
+                        <p class="text-2xl font-bold tracking-tight text-white">{{ $brand->name() }}</p>
+                    @endif
                     @if ($brand->tagline() !== '')<p class="max-w-sm">{{ $brand->tagline() }}</p>@endif
                     @if ($business->phone() !== '' || $business->email() !== '')
                         <ul class="space-y-1 text-sm">
