@@ -2,6 +2,22 @@
 
 declare(strict_types=1);
 
+// Images come from 'self' or any https: address. A developer's media store is usually plain http on another port (the local S3 at http://127.0.0.1:9010,
+// or APP_URL with MEDIA_DRIVER=local), which that rule blocks, so every product and banner image is missing on a dev site. Outside production that one
+// address is allowed too; production never gets an http image source.
+$devMediaOrigin = (function (): ?string {
+    if (env('APP_ENV') === 'production') {
+        return null;
+    }
+    $url = (string) (env('MEDIA_DRIVER', 's3') === 'local' ? env('APP_URL', '') : (env('MEDIA_PUBLIC_URL') ?: env('AWS_ENDPOINT', '')));
+    $parts = parse_url($url);
+    if (! is_array($parts) || ($parts['scheme'] ?? '') !== 'http' || ! isset($parts['host']) || ! preg_match('/^[A-Za-z0-9.\-]+$/', $parts['host'])) {
+        return null;
+    }
+
+    return 'http://'.$parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : '');
+})();
+
 return [
     // Sign-in, sign-up, password reset and similar doors: tries per minute from one network address. Production keeps 10; only the browser tests raise it, because
     // every one of their sign-ins comes from the same address (see e2e/prepare.sh).
@@ -14,7 +30,7 @@ return [
         'enforce' => (bool) env('CSP_ENFORCE', true),
         'policy' => implode('; ', [
             "default-src 'self'",
-            "img-src 'self' data: https:",
+            "img-src 'self' data: https:".($devMediaOrigin === null ? '' : ' '.$devMediaOrigin),
             "font-src 'self'",
             "style-src 'self' 'unsafe-inline'",
             // No 'unsafe-eval' and no 'unsafe-inline': Alpine runs as its CSP build (its own safe interpreter, no eval), see resources/js/app.js.
