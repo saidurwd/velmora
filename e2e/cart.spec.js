@@ -18,7 +18,7 @@ test('add from the product page, see it in the cart, change it, remove it', asyn
     await expect(page.getByRole('link', { name: 'Cotton Panjabi' })).toBeVisible();
     await expect(page.getByRole('link', { name: /Cart, 1 item/ })).toBeVisible();
 
-    await page.getByLabel('Quantity').fill('3');
+    await page.getByLabel('Quantity', { exact: true }).fill('3');
     await page.getByRole('button', { name: 'Update' }).click();
     await expect(page.getByRole('link', { name: /Cart, 3 items/ })).toBeVisible();
     await expect(page.getByText('5,550', { exact: false }).first()).toBeVisible(); // 3 × ৳1,850
@@ -29,7 +29,7 @@ test('add from the product page, see it in the cart, change it, remove it', asyn
 
 test('a friendly message instead of an error when asking for more than is in stock', async ({ page }) => {
     await page.goto('/en/p/cotton-panjabi');
-    await page.getByLabel('Quantity').fill('9999');
+    await page.getByLabel('Quantity', { exact: true }).fill('9999');
     await page.getByRole('button', { name: 'Add to cart' }).click();
     await expect(page).toHaveURL(/\/en\/p\//);
     await expect(page.getByRole('alert').or(page.locator('[role=status]')).filter({ hasText: /only \d+ left|at most/i })).toBeVisible();
@@ -37,11 +37,11 @@ test('a friendly message instead of an error when asking for more than is in sto
 
 test('Bangla digits work in the quantity box and the Bangla cart reads in Bangla', async ({ page }) => {
     await page.goto('/bn/p/' + encodeURIComponent('সুতির-পাঞ্জাবি'));
-    await page.getByLabel('পরিমাণ').fill('২');
+    await page.getByLabel('পরিমাণ', { exact: true }).fill('২');
     await page.getByRole('button', { name: 'কার্টে যোগ করুন' }).click();
     await expect(page).toHaveURL(/\/bn\/cart$/);
     await expect(page.getByText('আপনার কার্ট')).toBeVisible();
-    await expect(page.getByLabel('পরিমাণ')).toHaveValue('2');
+    await expect(page.getByLabel('পরিমাণ', { exact: true })).toHaveValue('2');
 });
 
 test('the cart works with JavaScript off, and the cart survives a reload (cookie)', async ({ browser }) => {
@@ -55,9 +55,28 @@ test('the cart works with JavaScript off, and the cart survives a reload (cookie
     await context.close();
 });
 
+test('the quantity stepper: − stops at the minimum, + and the arrow keys change it, Tab skips the buttons', async ({ page }) => {
+    await page.goto('/en/p/cotton-panjabi');
+    const box = page.getByRole('spinbutton', { name: 'Quantity' });
+    const less = page.getByRole('button', { name: 'Decrease quantity' });
+    const more = page.getByRole('button', { name: 'Increase quantity' });
+    await expect(box).toHaveValue('1');
+    await expect(less).toBeDisabled();
+    await more.click();
+    await more.click();
+    await expect(box).toHaveValue('3');
+    await box.press('ArrowDown');
+    await expect(box).toHaveValue('2');
+    await box.press('Tab');
+    await expect(page.getByRole('button', { name: 'Add to cart' })).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(/\/en\/cart$/);
+    await expect(page.getByRole('link', { name: /Cart, 2 items/ })).toBeVisible();
+});
+
 test('keyboard only: quantity field to submit', async ({ page }) => {
     await page.goto('/en/p/cotton-panjabi');
-    await page.getByLabel('Quantity').focus();
+    await page.getByLabel('Quantity', { exact: true }).focus();
     await page.keyboard.press('Tab');
     await expect(page.getByRole('button', { name: 'Add to cart' })).toBeFocused();
     await page.keyboard.press('Enter');

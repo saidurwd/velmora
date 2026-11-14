@@ -80,7 +80,7 @@ test('a wrong phone number is explained beside the field and nothing is lost', a
 
 test('a large cash order asks to confirm the phone first, and the order button waits (axe clean)', async ({ page }) => {
     await page.goto('/en/p/embroidered-panjabi');   // ৳3,200 each: four are over the ৳10,000 limit for cash orders
-    await page.getByLabel('Quantity').fill('4');
+    await page.getByLabel('Quantity', { exact: true }).fill('4');
     await page.getByRole('button', { name: 'Add to cart' }).click();
     await expect(page).toHaveURL(/\/en\/cart$/);
     await page.getByRole('button', { name: 'No thanks' }).click(); // the consent banner would cover the page
